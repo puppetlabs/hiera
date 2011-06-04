@@ -13,7 +13,11 @@ class Hiera
         end
 
         def warn(msg)
-            STDERR.puts("%s: %s" % [Time.now.to_s, msg])
+            STDERR.puts("WARN: %s: %s" % [Time.now.to_s, msg])
+        end
+
+        def debug(msg)
+            STDERR.puts("DEBUG: %s: %s" % [Time.now.to_s, msg])
         end
     end
 

@@ -5,20 +5,18 @@ class Hiera
                 parse_string(Config[backend.to_sym][:datadir] || "/var/lib/hiera", scope)
             end
 
-            def datasources(scope, override=nil, precedence=nil)
-                if precedence
-                    precedence = [precedence]
-                elsif Config.include?(:precedence)
-                    precedence = [Config[:precedence]]
+            def datasources(scope, override=nil, hierarchy=nil)
+                if hierarchy
+                    hierarchy = [hierarchy]
+                elsif Config.include?(:hierarchy)
+                    hierarchy = [Config[:hierarchy]].flatten
                 else
-                    precedence = ["common"]
+                    hierarchy = ["common"]
                 end
 
-                precedence.insert(0, override) if override
+                hierarchy.insert(0, override) if override
 
-                sources = []
-
-                precedence.flatten.map do |source|
+                hierarchy.flatten.map do |source|
                     yield(parse_string(source, scope))
                 end
             end
@@ -26,33 +24,41 @@ class Hiera
             def parse_string(data, scope)
                 tdata = data.clone
 
-                while tdata =~ /%\{(.+?)\}/
-                    var = $1
-                    val = scope[var] || ""
+                if tdata.is_a?(String)
+                    while tdata =~ /%\{(.+?)\}/
+                        var = $1
+                        val = scope[var] || ""
 
-                    tdata.gsub!(/%\{#{var}\}/, val)
+                        tdata.gsub!(/%\{#{var}\}/, val)
+                    end
                 end
 
                 return tdata
             end
 
+            # Calls out to all configured backends in the order they
+            # were specified.  The first one to answer will win.
+            #
+            # This lets you declare multiple backends, a possible
+            # use case might be in Puppet where a Puppet module declares
+            # default data using in-module data while users can override
+            # using JSON/YAML etc.  By layering the backends and putting
+            # the Puppet one last you can override module author data
+            # easily.
             def lookup(key, default, scope, order_override=nil)
                 @backends ||= {}
                 answer = nil
 
                 Config[:backends].each do |backend|
                     if constants.include?("#{backend.capitalize}_backend")
-                        begin
-                            @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-                            answer = @backends[backend].lookup(key, default, scope, order_override)
+                        @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
+                        answer = @backends[backend].lookup(key, scope, order_override)
 
-                            break if answer
-                        rescue NoDataFound
-                        end
+                        break if answer
                     end
                 end
 
-                answer
+                answer || parse_string(default, scope)
             end
         end
     end

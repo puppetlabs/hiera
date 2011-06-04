@@ -11,10 +11,10 @@ class Hiera
                 Hiera.warn("YAML Starting")
             end
 
-            def lookup(key, default, scope, order_override=nil)
+            def lookup(key, scope, order_override=nil)
                 answer = nil
 
-                Hiera.warn("Looking up #{key} with default #{default} in YAML backup")
+                Hiera.warn("Looking up #{key} in YAML backup")
 
                 datadir = Backend.datadir(:yaml, scope)
 
@@ -36,17 +36,13 @@ class Hiera
                         next if data.empty?
                         next unless data.include?(key)
 
-                        if data[key].is_a?(String)
-                            answer = Backend.parse_string(data[key], scope)
-                        else
-                            answer = data[key]
-                        end
+                        answer = Backend.parse_string(data[key], scope)
                     else
                         break
                     end
                 end
 
-                answer || default or raise(NoDataFound, "No match found for '#{key}' in any data file during hiera lookup")
+                answer
             end
         end
     end
