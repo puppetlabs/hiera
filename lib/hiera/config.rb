@@ -16,6 +16,12 @@ class Hiera::Config
 
             @config[:backends] = [ @config[:backends] ].flatten
 
+            if @config.include?(:logger)
+                Hiera.logger = @config[:logger].to_s
+            else
+                Hiera.logger = "console"
+            end
+
             @config
         end
 
@@ -34,7 +40,7 @@ class Hiera::Config
         end
 
         def [](key)
-            @config[key] || {}
+            @config[key]
         end
     end
 end

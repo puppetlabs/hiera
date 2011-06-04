@@ -21,13 +21,15 @@ class Hiera
                 end
             end
 
-            def parse_string(data, scope)
+            def parse_string(data, scope, extra_data={})
+                return nil unless data
+
                 tdata = data.clone
 
                 if tdata.is_a?(String)
                     while tdata =~ /%\{(.+?)\}/
                         var = $1
-                        val = scope[var] || ""
+                        val = scope[var] || extra_data[var] || ""
 
                         tdata.gsub!(/%\{#{var}\}/, val)
                     end
@@ -45,14 +47,14 @@ class Hiera
             # using JSON/YAML etc.  By layering the backends and putting
             # the Puppet one last you can override module author data
             # easily.
-            def lookup(key, default, scope, order_override=nil)
+            def lookup(key, default, scope, order_override, resolution_type)
                 @backends ||= {}
                 answer = nil
 
                 Config[:backends].each do |backend|
                     if constants.include?("#{backend.capitalize}_backend")
                         @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-                        answer = @backends[backend].lookup(key, scope, order_override)
+                        answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
                         break if answer
                     end

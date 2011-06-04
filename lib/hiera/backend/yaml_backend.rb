@@ -1,20 +1,16 @@
 class Hiera
     module Backend
         class Yaml_backend
-            attr_reader :configkey
-
             def initialize
                 require 'yaml'
 
-                @configkey = :yaml
-
-                Hiera.warn("YAML Starting")
+                Hiera.debug("Hiera YAML backend starting")
             end
 
-            def lookup(key, scope, order_override=nil)
+            def lookup(key, scope, order_override, resolution_type)
                 answer = nil
 
-                Hiera.warn("Looking up #{key} in YAML backup")
+                Hiera.debug("Looking up #{key} in YAML backend")
 
                 datadir = Backend.datadir(:yaml, scope)
 
@@ -22,7 +18,7 @@ class Hiera
 
                 Backend.datasources(scope, order_override) do |source|
                     unless answer
-                        Hiera.warn("Looking for data source #{source}")
+                        Hiera.debug("Looking for data source #{source}")
 
                         datafile = File.join([datadir, "#{source}.yaml"])
 
