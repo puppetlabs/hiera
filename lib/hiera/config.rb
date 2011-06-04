@@ -29,6 +29,10 @@ class Hiera::Config
             end
         end
 
+        def include?(key)
+            @config.include?(key)
+        end
+
         def [](key)
             @config[key] || {}
         end

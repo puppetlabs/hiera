@@ -5,6 +5,8 @@ class Hiera
     autoload :Config, "hiera/config"
     autoload :Backend, "hiera/backend"
 
+    class NoDataFound < RuntimeError; end;
+
     class << self
         def version
             VERSION
