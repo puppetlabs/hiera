@@ -22,6 +22,8 @@ class Hiera
                 Backend.datasources({}, nil, ["one", "two"]) do |backend|
                     backend.should == expected.delete_at(0)
                 end
+
+                expected.empty?.should == true
             end
 
             it "should use the configured hierarchy if none is supplied" do
@@ -47,11 +49,24 @@ class Hiera
                 Backend.datasources({}, "override") do |backend|
                     backend.should == expected.delete_at(0)
                 end
+
+                expected.empty?.should == true
             end
 
             it "should parse the sources based on scope" do
                 Backend.expects(:parse_string).with("common", {:rspec => :tests})
                 Backend.datasources({:rspec => :tests}) { }
+            end
+
+            it "should not return empty sources" do
+                Config.load({})
+
+                expected = ["common"]
+                Backend.datasources({}, "%{rspec}") do |backend|
+                    backend.should == expected.delete_at(0)
+                end
+
+                expected.empty?.should == true
             end
         end
 

@@ -38,7 +38,8 @@ class Hiera
                 hierarchy.insert(0, override) if override
 
                 hierarchy.flatten.map do |source|
-                    yield(parse_string(source, scope))
+                    source = parse_string(source, scope)
+                    yield(source) unless source == ""
                 end
             end
 

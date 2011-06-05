@@ -122,7 +122,7 @@ end
 begin
     hiera = Hiera.new(:config => options[:config])
 rescue Exception => e
-    if options[:debug]
+    if options[:verbose]
         raise
     else
         STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"

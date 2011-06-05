@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'yaml'
 
 class Hiera
     VERSION = "0.0.1"
