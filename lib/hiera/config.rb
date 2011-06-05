@@ -1,24 +1,28 @@
 class Hiera::Config
     class << self
+        # Takes a string or hash as input, strings are treated as filenames
+        # hashes are stored as data that would have been in the config file
+        #
+        # Unless specified it will only use YAML as backend with a single
+        # 'common' hierarchy and console logger
         def load(source)
-            default_config = {:backends => "yaml",
-                              :hierarchy => "common"}
+            @config = {:backends => "yaml",
+                       :hierarchy => "common"}
 
             if source.is_a?(String)
                 raise "Config file #{source} not found" unless File.exist?(source)
 
-                @config = YAML.load_file(source)
+                @config.merge! YAML.load_file(source)
             elsif source.is_a?(Hash)
-                @config = source
+                @config.merge! source
             end
-
-            default_config.merge! @config
 
             @config[:backends] = [ @config[:backends] ].flatten
 
             if @config.include?(:logger)
                 Hiera.logger = @config[:logger].to_s
             else
+                @config[:logger] = "console"
                 Hiera.logger = "console"
             end
 
@@ -26,7 +30,7 @@ class Hiera::Config
         end
 
         def load_backends
-            [@config[:backends]].flatten.each do |backend|
+            @config[:backends].each do |backend|
                 begin
                     require "hiera/backend/#{backend.downcase}_backend"
                 rescue LoadError => e

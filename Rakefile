@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake/gempackagetask'
+require 'rspec/core/rake_task'
 
 spec = Gem::Specification.new do |s|
   s.name = "hiera"
@@ -19,3 +20,11 @@ end
 Rake::GemPackageTask.new(spec) do |pkg|
   pkg.need_tar = true
 end
+
+desc "Run all specs"
+RSpec::Core::RakeTask.new(:test) do |t|
+    t.pattern = 'spec/**/*_spec.rb'
+    t.rspec_opts = File.read("spec/spec.opts").chomp || ""
+end
+
+task :default => [:test, :repackage]
