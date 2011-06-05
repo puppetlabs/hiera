@@ -71,7 +71,6 @@ so it's a good time to retire the old data format.
 Future Enhancements?
 ====================
 
- * The data should be queryable from the command line
  * In addition to the current priority based search it should support a merge based
    search where each tier contribute to the answer rather than the first tier have
    priority.
@@ -114,11 +113,31 @@ A sample configuration file can be seen here:
    :datasource: data
 </pre>
 
-Querying from code?
-===================
+Querying from CLI?
+==================
+
+You can query your data from the CLI.  By default the CLI expects a config file in _/etc/hiera.yaml_
+but you can pass _--config_ to override that.
 
 This example searches Hiera for node data.  Scope is loaded from a Puppet created YAML facts
 store as found on your Puppet Masters.
+
+If no data is found and the facts had a location=dc1 fact the default would be _sites/dc1_
+
+<pre>
+$ hiera acme_version 'sites/%{location}' --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+</pre>
+
+You can also supply extra facts on the CLI, assuming fact did not have a location fact:
+
+<pre>
+$ hiera acme_version 'sites/%{location}' location=dc1 --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+</pre>
+
+Querying from code?
+===================
+
+This is the same query programatically as in the above CLI example:
 
 <pre>
 require 'rubygems'

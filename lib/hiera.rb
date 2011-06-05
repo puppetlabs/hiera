@@ -18,9 +18,11 @@ class Hiera
         # See hiera-puppet for an example that uses the Puppet
         # loging system instead of our own
         def logger=(logger)
-            require "hiera/#{logger}_logger"
+            loggerclass = "#{logger.capitalize}_logger"
 
-            @logger = const_get("#{logger.capitalize}_logger")
+            require "hiera/#{logger}_logger" unless constants.include?(loggerclass)
+
+            @logger = const_get(loggerclass)
         rescue Exception => e
             @logger = Console_logger
             warn("Failed to load #{logger} logger: #{e.class}: #{e}")

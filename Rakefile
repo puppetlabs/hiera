@@ -14,7 +14,8 @@ spec = Gem::Specification.new do |s|
   s.require_path = "lib"
   s.test_files = FileList["{test}/**/*test.rb"].to_a
   s.has_rdoc = true
-  s.extra_rdoc_files = ["README.md"]
+  s.executables = "hiera"
+  s.default_executable = "hiera"
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|

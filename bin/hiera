@@ -1,0 +1,143 @@
+#!/bin/env ruby
+
+# CLI client for Hiera.
+#
+# To lookup the 'release' key for a node given Puppet YAML facts:
+#
+# $ hiera release 'rel/%{location}' --yaml some.node.yaml
+#
+# If the node yaml had a location fact the default would match that
+# else you can supply scope values on the command line
+#
+# $ hiera release 'rel/%{location}' location=dc2 --yaml some.node.yaml
+
+require 'rubygems'
+require 'hiera'
+require 'optparse'
+
+
+options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false}
+
+class Hiera::Noop_logger
+    class << self
+        def warn(msg);end
+        def debug(msg);end
+    end
+end
+
+# Loads the scope from YAML or JSON files
+def load_scope(file, type=:yaml)
+    raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
+
+    case type
+    when :yaml
+        require 'yaml'
+
+        # Attempt to load puppet in case we're going to be fed
+        # Puppet yaml files
+        begin
+            require 'puppet'
+        rescue
+        end
+
+        scope = YAML.load_file(file)
+
+        # Puppet makes dumb yaml files that do not promote data reuse.
+        scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+    when :json
+        require 'json'
+
+        scope = JSON.load(File.read(file))
+    else
+        raise "Don't know how to load data type #{type}"
+    end
+
+    raise "Scope from #{type} file #{file} should be a Hash" unless scope.is_a?(Hash)
+
+    scope
+end
+
+OptionParser.new do |opts|
+    opts.on("--version", "-V", "Version information") do
+        puts Hiera.version
+        exit
+    end
+
+    opts.on("--debug", "-d", "Show debugging information") do
+        options[:verbose] = true
+    end
+
+    opts.on("--config CONFIG", "-c", "Configuration file") do |v|
+        if File.exist?(v)
+            options[:config] = v
+        else
+            STDERR.puts "Cannot find config file: #{v}"
+            exit 1
+        end
+    end
+
+    opts.on("--json SCOPE", "-j", "JSON format file to load scope from") do |v|
+        begin
+            options[:scope] = load_scope(v, :json)
+        rescue Exception => e
+            STDERR.puts "Could not load JSON scope: #{e.class}: #{e}"
+            exit 1
+        end
+    end
+
+    opts.on("--yaml SCOPE", "-y", "YAML format file to load scope from") do |v|
+        begin
+            options[:scope] = load_scope(v)
+        rescue Exception => e
+            STDERR.puts "Could not load YAML scope: #{e.class}: #{e}"
+            exit 1
+        end
+    end
+end.parse!
+
+# arguments can be:
+#
+# key default var=val another=val
+#
+# The var=val's assign scope
+unless ARGV.empty?
+    options[:key] = ARGV.delete_at(0)
+
+    ARGV.each do |arg|
+        if arg =~ /^(.+?)=(.+?)$/
+            options[:scope][$1] = $2
+        else
+            unless options[:default]
+                options[:default] = arg.dup
+            else
+                STDERR.puts "Don't know how to parse scope argument: #{arg}"
+            end
+        end
+    end
+else
+    STDERR.puts "Please supply a data item to look up"
+    exit 1
+end
+
+begin
+    hiera = Hiera.new(:config => options[:config])
+rescue Exception => e
+    if options[:debug]
+        raise
+    else
+        STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"
+        exit 1
+    end
+end
+
+unless options[:verbose]
+    Hiera.logger = "noop"
+end
+
+ans = hiera.lookup(options[:key], options[:default], options[:scope])
+
+if ans.is_a?(String)
+    puts ans
+else
+    p ans
+end
