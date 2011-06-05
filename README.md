@@ -107,10 +107,33 @@ A sample configuration file can be seen here:
 :hierarchy: - %{location}
             - common
 :yaml:
-   :datadir: /etc/puppet/extdata
+   :datadir: /etc/puppet/hieradata
 
 :puppet:
    :datasource: data
+</pre>
+
+This configuration will require YAML files in  _/etc/puppet/hieradata_ these need to contain
+Hash data, sample files matching the hierarchy described in the _Why?_ section are below:
+
+_/etc/puppet/hieradata/dc1.yaml_:
+<pre>
+----
+ntpserver: ntp1.dc1.example.com
+sysadmin: dc1noc@example.com
+</pre>
+
+_/etc/puppet/hieradata/dc2.yaml_:
+<pre>
+----
+ntpserver: ntp1.dc2.example.com
+</pre>
+
+_/etc/puppet/hieradata/common.yaml_:
+<pre>
+----
+sysadmin: sysadmin@example.com
+ntpserver: 1.pool.ntp.org
 </pre>
 
 Querying from CLI?
