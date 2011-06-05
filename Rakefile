@@ -4,7 +4,7 @@ require 'rspec/core/rake_task'
 
 spec = Gem::Specification.new do |s|
   s.name = "hiera"
-  s.version = "0.0.1"
+  s.version = "0.1.0"
   s.author = "R.I.Pienaar"
   s.email = "rip@devco.net"
   s.homepage = "http://devco.net/"
