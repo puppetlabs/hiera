@@ -72,10 +72,14 @@ Future Enhancements?
 ====================
 
  * The data should be queryable from the command line
- * A Puppet ENC should be written
+ * In addition to the current priority based search it should support a merge based
+   search where each tier contribute to the answer rather than the first tier have
+   priority.
+ * A Puppet ENC should be written.  Requires merge based search
  * More backends should be created
  * A webservice that exposes the data
- * Tools to help maintain the data files
+ * Tools to help maintain the data files.  Ideally this would be Foreman and Dashboard
+   with their own backends
 
 Installation?
 =============
