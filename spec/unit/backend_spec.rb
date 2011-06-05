@@ -89,6 +89,11 @@ class Hiera
         end
 
         describe "#lookup" do
+            before do
+                Hiera.stubs(:debug)
+                Hiera.stubs(:warn)
+            end
+
             it "should cache backends" do
                 Hiera.stubs(:debug)
                 Hiera.expects(:debug).with(regexp_matches(/Hiera YAML backend starting/)).once
