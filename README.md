@@ -153,7 +153,7 @@ If no data is found and the facts had a location=dc1 fact the default would be _
 $ hiera acme_version 'sites/%{location}' --yaml /var/lib/puppet/yaml/facts/example.com.yaml
 </pre>
 
-You can also supply extra facts on the CLI, assuming fact did not have a location fact:
+You can also supply extra facts on the CLI, assuming Puppet facts did not have a location fact:
 
 <pre>
 $ hiera acme_version 'sites/%{location}' location=dc1 --yaml /var/lib/puppet/yaml/facts/example.com.yaml
