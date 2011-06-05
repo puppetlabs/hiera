@@ -27,14 +27,16 @@ correct answer easily:
                                   \                  /
                            /------------- COMMON -------------\
                           | ntpserver: 1.pool.ntp.org          |
-                          | sysadmin: sysadmin@example.com     |
+                          | sysadmin: sysadmin@%{domain}       |
                            \-----------------------------------/
 </pre>
 
 In this simple example machines in DC1 and DC2 have their own NTP servers, additionaly
 DC1 has its own sysadmin contact - perhaps because its a remote DR site - while DC2
-and all the other environments would revert to the common contact.  The other environment
-like development and staging would all use the public NTP infrastructure.
+and all the other environments would revert to the common contact that would have the
+machines domain fact expanded into the result.
+
+The other environment like development and staging would all use the public NTP infrastructure.
 
 This is the data model that extlookup() have promoted in Puppet, Hiera has taken this
 data model and extracted it into a standalone project that is pluggable and have a few
@@ -132,7 +134,7 @@ ntpserver: ntp1.dc2.example.com
 _/etc/puppet/hieradata/common.yaml_:
 <pre>
 ----
-sysadmin: sysadmin@example.com
+sysadmin: sysadmin@%{domain}
 ntpserver: 1.pool.ntp.org
 </pre>
 
