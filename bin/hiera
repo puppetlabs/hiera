@@ -15,7 +15,6 @@ require 'rubygems'
 require 'hiera'
 require 'optparse'
 
-
 options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false}
 
 class Hiera::Noop_logger

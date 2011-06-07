@@ -23,7 +23,7 @@ class Hiera
                         datafile = File.join([datadir, "#{source}.yaml"])
 
                         unless File.exist?(datafile)
-                            Hiera.warn("Cannot find datafile #{datafile}, skipping")
+                            Hiera.debug("Cannot find datafile #{datafile}, skipping")
                             next
                         end
 
