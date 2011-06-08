@@ -159,6 +159,12 @@ You can also supply extra facts on the CLI, assuming Puppet facts did not have a
 $ hiera acme_version 'sites/%{location}' location=dc1 --yaml /var/lib/puppet/yaml/facts/example.com.yaml
 </pre>
 
+Or if you use MCollective you can fetch the scope from a remote node's facts:
+
+<pre>
+$ hiera acme_version 'sites/%{location}' -m box.example.com
+</pre>
+
 Querying from code?
 ===================
 
