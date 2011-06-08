@@ -26,10 +26,23 @@ end
 
 # Loads the scope from YAML or JSON files
 def load_scope(file, type=:yaml)
-    raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
-
     case type
+    when :mcollective
+        require 'mcollective'
+
+        include MCollective::RPC
+
+        util = rpcclient("rpcutil")
+        util.progress = false
+        nodestats = util.custom_request("inventory", {}, file, {"identity" => file}).first
+
+        raise "Failed to retrieve facts for node #{file}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
+
+        scope = nodestats[:data][:facts]
+
     when :yaml
+        raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
+
         require 'yaml'
 
         # Attempt to load puppet in case we're going to be fed
@@ -44,6 +57,8 @@ def load_scope(file, type=:yaml)
         # Puppet makes dumb yaml files that do not promote data reuse.
         scope = scope.values if scope.is_a?(Puppet::Node::Facts)
     when :json
+        raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
+
         require 'json'
 
         scope = JSON.load(File.read(file))
@@ -86,9 +101,18 @@ OptionParser.new do |opts|
 
     opts.on("--yaml SCOPE", "-y", "YAML format file to load scope from") do |v|
         begin
-            options[:scope] = load_scope(v)
+            options[:scope] = load_scope(v, :json)
         rescue Exception => e
             STDERR.puts "Could not load YAML scope: #{e.class}: #{e}"
+            exit 1
+        end
+    end
+
+    opts.on("--mcollective IDENTITY", "-m", "Retrieve facts from a node via mcollective as scope") do |v|
+        begin
+            options[:scope] = load_scope(v, :mcollective)
+        rescue Exception => e
+            STDERR.puts "Could not load MCollective scope: #{e.class}: #{e}"
             exit 1
         end
     end

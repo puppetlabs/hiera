@@ -1,2 +1,4 @@
+2011/06/08 - Support reading facts from a mcollective server as scope
+             on the CLI
 2011/06/05 - Change /bin/env to /usr/bin/env for better portability
 2011/06/05 - Correct URL for homepage and paths to tests in the Gem
