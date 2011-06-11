@@ -20,21 +20,18 @@ class Hiera
 
             describe "#lookup" do
                 it "should look for data in all sources" do
-                    Backend.expects(:datadir).returns("/nonexisting").twice
                     Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-                    File.expects(:exist?).with("/nonexisting/one.yaml").returns(false)
-                    File.expects(:exist?).with("/nonexisting/two.yaml").returns(false)
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns(nil)
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil)
 
                     @backend.lookup("key", {}, nil, :priority)
                 end
 
                 it "should pick data earliest source that has it for priority searches" do
-                    Backend.expects(:datadir).returns("/nonexisting")
                     Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-                    File.expects(:exist?).with("/nonexisting/one.yaml").returns(true)
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil).never
                     YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "answer"})
-
-                    File.expects(:exist?).with("/nonexisting/two.yaml").never
 
                     @backend.lookup("key", {}, nil, :priority).should == "answer"
                 end
@@ -52,10 +49,10 @@ class Hiera
                 end
 
                 it "should parse the answer for scope variables" do
-                    Backend.expects(:datadir).returns("/nonexisting")
                     Backend.expects(:datasources).yields("one")
-                    File.expects(:exist?).with("/nonexisting/one.yaml").returns(true)
+                    Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
                     YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "test_%{rspec}"})
+
 
                     @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
                 end
