@@ -16,6 +16,30 @@ class Hiera
             end
         end
 
+        describe "#empty_anwer" do
+            it "should return [] for array searches" do
+                Backend.empty_answer(:array).should == []
+            end
+
+            it "should return nil otherwise" do
+                Backend.empty_answer(:meh).should == nil
+            end
+        end
+
+        describe "#datafile" do
+            it "should check if the file exist and return nil if not" do
+                Hiera.expects(:debug).with("Cannot find datafile /nonexisting/test.yaml, skipping")
+                Backend.expects(:datadir).returns("/nonexisting")
+                Backend.datafile(:yaml, {}, "test", "yaml").should == nil
+            end
+
+            it "should return the correct file name" do
+                Backend.expects(:datadir).returns("/nonexisting")
+                File.expects(:exist?).with("/nonexisting/test.yaml").returns(true)
+                Backend.datafile(:yaml, {}, "test", "yaml").should == "/nonexisting/test.yaml"
+            end
+        end
+
         describe "#datasources" do
             it "should use the supplied hierarchy" do
                 expected = ["one", "two"]

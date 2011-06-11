@@ -15,6 +15,32 @@ class Hiera
                 end
             end
 
+            # Finds the path to a datafile based on the Backend#datadir
+            # and extension
+            #
+            # If the file is not found nil is returned
+            def datafile(backend, scope, source, extension)
+                file = File.join([datadir(backend, scope), "#{source}.#{extension}"])
+
+                unless File.exist?(file)
+                    Hiera.debug("Cannot find datafile #{file}, skipping")
+
+                    return nil
+                end
+
+                return file
+            end
+
+            # Returns an appropriate empty answer dependant on resolution type
+            def empty_answer(resolution_type)
+                case resolution_type
+                when :array
+                    return []
+                else
+                    return nil
+                end
+            end
+
             # Constructs a list of data sources to search
             #
             # If you give it a specific hierarchy it will just use that
