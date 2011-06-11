@@ -62,11 +62,47 @@ class Hiera
                         var = $1
                         val = scope[var] || extra_data[var] || ""
 
+                        # Puppet can return this for unknown scope vars
+                        val = "" if val == :undefined
+
                         tdata.gsub!(/%\{#{var}\}/, val)
                     end
                 end
 
                 return tdata
+            end
+
+            # Parses a answer received from data files
+            #
+            # Ultimately it just pass the data through parse_string but
+            # it makes some effort to handle arrays of strings as well
+            def parse_answer(data, scope, extra_data={})
+                if data.is_a?(String)
+                    return parse_string(data, scope, extra_data)
+                elsif data.is_a?(Hash)
+                    answer = {}
+                    data.each_pair do |key, val|
+                        answer[key] = parse_answer(val, scope, extra_data)
+                    end
+
+                    return answer
+                elsif data.is_a?(Array)
+                    answer = []
+                    data.each do |item|
+                        answer << parse_answer(item, scope, extra_data)
+                    end
+
+                    return answer
+                end
+            end
+
+            def resolve_answer(answer, resolution_type)
+                case resolution_type
+                when :array
+                    [answer].flatten.uniq.sort
+                else
+                    answer
+                end
             end
 
             # Calls out to all configured backends in the order they
@@ -95,7 +131,7 @@ class Hiera
                     end
                 end
 
-                answer || parse_string(default, scope)
+                resolve_answer(answer, resolution_type) || parse_string(default, scope)
             end
         end
     end

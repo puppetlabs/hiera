@@ -1,4 +1,4 @@
-$:.insert(0, File.join([File.dirname(__FILE__), "..", "..", "lib"]))
+$:.insert(0, File.join([File.dirname(__FILE__), "..", "lib"]))
 
 require 'rubygems'
 require 'rspec'

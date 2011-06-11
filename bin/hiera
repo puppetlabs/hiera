@@ -15,7 +15,7 @@ require 'rubygems'
 require 'hiera'
 require 'optparse'
 
-options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false}
+options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false, :resolution_type => :priority}
 
 class Hiera::Noop_logger
     class << self
@@ -25,23 +25,28 @@ class Hiera::Noop_logger
 end
 
 # Loads the scope from YAML or JSON files
-def load_scope(file, type=:yaml)
+def load_scope(source, type=:yaml)
     case type
     when :mcollective
-        require 'mcollective'
+        begin
+            require 'mcollective'
 
-        include MCollective::RPC
+            include MCollective::RPC
 
-        util = rpcclient("rpcutil")
-        util.progress = false
-        nodestats = util.custom_request("inventory", {}, file, {"identity" => file}).first
+            util = rpcclient("rpcutil")
+            util.progress = false
+            nodestats = util.custom_request("inventory", {}, source, {"identity" => source}).first
 
-        raise "Failed to retrieve facts for node #{file}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
+            raise "Failed to retrieve facts for node #{source}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
 
-        scope = nodestats[:data][:facts]
+            scope = nodestats[:data][:facts]
+        rescue Exception => e
+            STDERR.puts "MCollective lookup failed: #{e.class}: #{e}"
+            exit 1
+        end
 
     when :yaml
-        raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
+        raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
 
         require 'yaml'
 
@@ -52,21 +57,21 @@ def load_scope(file, type=:yaml)
         rescue
         end
 
-        scope = YAML.load_file(file)
+        scope = YAML.load_file(source)
 
         # Puppet makes dumb yaml files that do not promote data reuse.
         scope = scope.values if scope.is_a?(Puppet::Node::Facts)
     when :json
-        raise "Cannot find scope #{type} file #{file}" unless File.exist?(file)
+        raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
 
         require 'json'
 
-        scope = JSON.load(File.read(file))
+        scope = JSON.load(File.read(source))
     else
         raise "Don't know how to load data type #{type}"
     end
 
-    raise "Scope from #{type} file #{file} should be a Hash" unless scope.is_a?(Hash)
+    raise "Scope from #{type} file #{source} should be a Hash" unless scope.is_a?(Hash)
 
     scope
 end
@@ -79,6 +84,10 @@ OptionParser.new do |opts|
 
     opts.on("--debug", "-d", "Show debugging information") do
         options[:verbose] = true
+    end
+
+    opts.on("--array", "-a", "Array search") do
+        options[:resolution_type] = :array
     end
 
     opts.on("--config CONFIG", "-c", "Configuration file") do |v|
@@ -157,7 +166,7 @@ unless options[:verbose]
     Hiera.logger = "noop"
 end
 
-ans = hiera.lookup(options[:key], options[:default], options[:scope])
+ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
 
 if ans.is_a?(String)
     puts ans

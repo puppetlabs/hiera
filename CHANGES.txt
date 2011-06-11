@@ -1,3 +1,6 @@
+2011/06/11 - Parse variables in String, Hash and Array data
+2011/06/11 - Add a array merge search option to the framework and yaml
+             data source
 2011/06/08 - Support reading facts from a mcollective server as scope
              on the CLI
 2011/06/05 - Change /bin/env to /usr/bin/env for better portability

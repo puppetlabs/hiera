@@ -101,6 +101,43 @@ class Hiera
                 input = "test_%{rspec}_test"
                 Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
             end
+
+            it "should treat :undefined in scope as empty" do
+                input = "test_%{rspec}_test"
+                Backend.parse_string(input, {"rspec" => :undefined}).should == "test__test"
+            end
+        end
+
+        describe "#parse_answer" do
+            it "should parse strings correctly" do
+                input = "test_%{rspec}_test"
+                Backend.parse_answer(input, {"rspec" => "test"}).should == "test_test_test"
+            end
+
+            it "should parse each string in an array" do
+                input = ["test_%{rspec}_test", "test_%{rspec}_test", ["test_%{rspec}_test"]]
+                Backend.parse_answer(input, {"rspec" => "test"}).should == ["test_test_test", "test_test_test", ["test_test_test"]]
+            end
+
+            it "should parse each string in a hash" do
+                input = {"foo" => "test_%{rspec}_test", "bar" => "test_%{rspec}_test"}
+                Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
+            end
+
+            it "should parse mixed arrays and hashes" do
+                input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
+                Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
+            end
+        end
+
+        describe "#resolve_answer" do
+            it "should correctly parse array data" do
+                Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array).should == ["bar", "foo"]
+            end
+
+            it "should just return the answer for non array data" do
+                Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :priority).should == ["foo", ["foo", "foo"], "bar"]
+            end
         end
 
         describe "#lookup" do
@@ -110,7 +147,6 @@ class Hiera
             end
 
             it "should cache backends" do
-                Hiera.stubs(:debug)
                 Hiera.expects(:debug).with(regexp_matches(/Hiera YAML backend starting/)).once
 
                 Config.load({:yaml => {:datadir => "/tmp"}})
@@ -121,7 +157,6 @@ class Hiera
             end
 
             it "should return the answer from the backend" do
-                Hiera.stubs(:debug)
                 Config.load({:yaml => {:datadir => "/tmp"}})
                 Config.load_backends
 
@@ -133,7 +168,6 @@ class Hiera
             it "should call to all backends till an answer is found" do
                 backend = mock
                 backend.expects(:lookup).returns("answer")
-                Hiera.stubs(:debug)
                 Config.load({})
                 Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
                 Backend.instance_variable_set("@backends", {"rspec" => backend})
@@ -144,8 +178,17 @@ class Hiera
 
             end
 
+            it "should parse the answers based on resolution_type" do
+                Config.load({:yaml => {:datadir => "/tmp"}})
+                Config.load_backends
+
+                Backend.expects(:resolve_answer).with("test_test", :priority).returns("parsed")
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, :priority).returns("test_test")
+
+                Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority).should == "parsed"
+            end
+
             it "should return the default with variables parsed if nothing is found" do
-                Hiera.stubs(:debug)
                 Config.load({:yaml => {:datadir => "/tmp"}})
                 Config.load_backends
 

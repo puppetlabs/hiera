@@ -7,38 +7,65 @@ class Hiera
                 Hiera.debug("Hiera YAML backend starting")
             end
 
-            def lookup(key, scope, order_override, resolution_type)
-                answer = nil
-
-                Hiera.debug("Looking up #{key} in YAML backend")
-
+            def datadir(scope)
                 datadir = Backend.datadir(:yaml, scope)
 
                 raise "Cannot find data directory #{datadir}" unless File.directory?(datadir)
 
+                return datadir
+            end
+
+            def datafile(scope, source)
+                file = File.join([datadir(scope), "#{source}.yaml"])
+
+                unless File.exist?(file)
+                    Hiera.debug("Cannot find datafile #{file}, skipping")
+
+                    return nil
+                end
+
+                return file
+            end
+
+            def empty_answer(resolution_type)
+                case resolution_type
+                when :array
+                    return []
+                else
+                    return nil
+                end
+            end
+
+            def lookup(key, scope, order_override, resolution_type)
+                answer = empty_answer(resolution_type)
+
+                Hiera.debug("Looking up #{key} in YAML backend")
+
                 Backend.datasources(scope, order_override) do |source|
-                    unless answer
-                        Hiera.debug("Looking for data source #{source}")
+                    Hiera.debug("Looking for data source #{source}")
 
-                        datafile = File.join([datadir, "#{source}.yaml"])
+                    yamlfile = datafile(scope, source) || next
 
-                        unless File.exist?(datafile)
-                            Hiera.debug("Cannot find datafile #{datafile}, skipping")
-                            next
-                        end
+                    data = YAML.load_file(yamlfile)
 
-                        data = YAML.load_file(datafile)
+                    next if data.empty?
+                    next unless data.include?(key)
 
-                        next if data.empty?
-                        next unless data.include?(key)
-
-                        answer = Backend.parse_string(data[key], scope)
+                    # for array resolution we just append to the array whatever
+                    # we find, we then goes onto the next file and keep adding to
+                    # the array
+                    #
+                    # for priority searches we break after the first found data item
+                    case resolution_type
+                    when :array
+                        answer << Backend.parse_answer(data[key], scope)
                     else
+                        answer = Backend.parse_answer(data[key], scope)
                         break
                     end
                 end
 
-                answer
+                return answer
             end
         end
     end
