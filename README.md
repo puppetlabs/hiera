@@ -22,19 +22,25 @@ correct answer easily:
      /------------- DC1 -------------\             /------------- DC2 -------------\
     | ntpserver: ntp1.dc1.example.com |           | ntpserver: ntp1.dc2.example.com |
     | sysadmin: dc1noc@example.com    |           |                                 |
+    | classes: users::dc1             |           | classes: users::dc2             |
      \-------------------------------/             \-------------------------------/
                                 \                      /
                                   \                  /
                            /------------- COMMON -------------\
                           | ntpserver: 1.pool.ntp.org          |
                           | sysadmin: sysadmin@%{domain}       |
-                           \-----------------------------------/
+			  | classes: users::common             |
+                           \----------------------------------/
 </pre>
 
 In this simple example machines in DC1 and DC2 have their own NTP servers, additionaly
 DC1 has its own sysadmin contact - perhaps because its a remote DR site - while DC2
 and all the other environments would revert to the common contact that would have the
 machines domain fact expanded into the result.
+
+The _classes_ variable can be searched using the array method which would build up a
+list of classes to include on a node based on the hierarchy.  Machines in DC1 would have
+the classes _users::common_ and _users::dc1_.
 
 The other environment like development and staging would all use the public NTP infrastructure.
 
@@ -70,13 +76,15 @@ Puppet language only supports strings and arrays of strings which mapped well to
 Puppet has become (a bit) better wrt data and can now handle hashes and arrays of hashes
 so it's a good time to retire the old data format.
 
+Array Searches
+--------------
+Hiera can search through all the tiers in a hierarchy and merge the result into a single
+array.  This is used in the hiera-puppet project to replace External Node Classifiers by
+creating a Hiera compatible include function.
+
 Future Enhancements?
 ====================
 
- * In addition to the current priority based search it should support a merge based
-   search where each tier contribute to the answer rather than the first tier have
-   priority.
- * A Puppet ENC should be written.  Requires merge based search
  * More backends should be created
  * A webservice that exposes the data
  * Tools to help maintain the data files.  Ideally this would be Foreman and Dashboard
@@ -163,6 +171,13 @@ Or if you use MCollective you can fetch the scope from a remote node's facts:
 
 <pre>
 $ hiera acme_version 'sites/%{location}' -m box.example.com
+</pre>
+
+You can also do array merge searches on the CLI:
+
+<pre>
+$ hiera - a classes location=dc1
+["users::common", "users::dc1"]
 </pre>
 
 Querying from code?
