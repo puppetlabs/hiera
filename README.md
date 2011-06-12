@@ -176,7 +176,7 @@ $ hiera acme_version 'sites/%{location}' -m box.example.com
 You can also do array merge searches on the CLI:
 
 <pre>
-$ hiera - a classes location=dc1
+$ hiera -a classes location=dc1
 ["users::common", "users::dc1"]
 </pre>
 
