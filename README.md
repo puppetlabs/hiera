@@ -29,7 +29,7 @@ correct answer easily:
                            /------------- COMMON -------------\
                           | ntpserver: 1.pool.ntp.org          |
                           | sysadmin: sysadmin@%{domain}       |
-			  | classes: users::common             |
+                          | classes: users::common             |
                            \----------------------------------/
 </pre>
 
