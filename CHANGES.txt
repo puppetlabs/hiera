@@ -1,3 +1,4 @@
+2011/06/12 - Release 0.2.0
 2011/06/11 - Add a Puppet logger plugin
 2011/06/11 - Parse variables in String, Hash and Array data
 2011/06/11 - Add a array merge search option to the framework and yaml
