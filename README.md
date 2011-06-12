@@ -63,8 +63,8 @@ provide an answer the Puppet backend will get an oppertunity to provide an answe
 More scope based variable expansion
 -----------------------------------
 Extlookup could parse data like %{foo} into a scope lookup for the variable foo.  Hiera
-retains this ability but since you can now return rich data - hashes, arrays of hashes
-etc. - we're currently only parsing the variables in String data.
+retains this ability and any Arrays or Hashes will be recursively searched for all strings
+that will then be parsed.
 
 The datadir and defaults are now also subject to variable parsing based on scope.
 
