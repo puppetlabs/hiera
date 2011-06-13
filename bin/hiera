@@ -110,7 +110,7 @@ OptionParser.new do |opts|
 
     opts.on("--yaml SCOPE", "-y", "YAML format file to load scope from") do |v|
         begin
-            options[:scope] = load_scope(v, :json)
+            options[:scope] = load_scope(v)
         rescue Exception => e
             STDERR.puts "Could not load YAML scope: #{e.class}: #{e}"
             exit 1
