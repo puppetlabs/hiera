@@ -2,11 +2,12 @@ require 'rubygems'
 require 'yaml'
 
 class Hiera
-    VERSION = "0.1.0"
+    VERSION = "0.2.1"
 
     autoload :Config, "hiera/config"
     autoload :Backend, "hiera/backend"
     autoload :Console_logger, "hiera/console_logger"
+    autoload :Puppet_logger, "hiera/puppet_logger"
 
     class << self
         def version
@@ -54,9 +55,6 @@ class Hiera
     #
     # The order-override will insert as first in the hierarchy a data source
     # of your choice.
-    #
-    # TODO: resolution_type is to eventually support top down priority based
-    #       lookups or bottom up merging type lookups like an ENC might need
     def lookup(key, default, scope, order_override=nil, resolution_type=:priority)
         Backend.lookup(key, default, scope, order_override, resolution_type)
     end
