@@ -90,6 +90,10 @@ OptionParser.new do |opts|
         options[:resolution_type] = :array
     end
 
+    opts.on("--hash", "", "Hash search") do
+        options[:resolution_type] = :hash
+    end
+
     opts.on("--config CONFIG", "-c", "Configuration file") do |v|
         if File.exist?(v)
             options[:config] = v

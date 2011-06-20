@@ -36,6 +36,8 @@ class Hiera
                 case resolution_type
                 when :array
                     return []
+                when :hash
+                    return {}
                 else
                     return nil
                 end
