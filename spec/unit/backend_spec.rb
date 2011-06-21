@@ -220,6 +220,20 @@ class Hiera
 
                 Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
             end
+
+            it "should correctly handle string default data" do
+                Config.load({:yaml => {:datadir => "/tmp"}})
+                Config.load_backends
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil)
+                Backend.lookup("key", "test", {}, nil, nil).should == "test"
+            end
+
+            it "should correctly handle array default data" do
+                Config.load({:yaml => {:datadir => "/tmp"}})
+                Config.load_backends
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array)
+                Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
+            end
         end
     end
 end
