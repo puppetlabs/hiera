@@ -36,6 +36,8 @@ class Hiera
                 case resolution_type
                 when :array
                     return []
+                when :hash
+                    return {}
                 else
                     return nil
                 end
@@ -126,6 +128,8 @@ class Hiera
                 case resolution_type
                 when :array
                     [answer].flatten.uniq.compact.sort
+                when :hash
+                    answer # Hash structure should be preserved
                 else
                     answer
                 end

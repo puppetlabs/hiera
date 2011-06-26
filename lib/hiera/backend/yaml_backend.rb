@@ -30,6 +30,8 @@ class Hiera
                     case resolution_type
                     when :array
                         answer << Backend.parse_answer(data[key], scope)
+                    when :hash
+                        answer.merge! Backend.parse_answer(data[key], scope)
                     else
                         answer = Backend.parse_answer(data[key], scope)
                         break
