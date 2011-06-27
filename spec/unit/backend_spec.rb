@@ -242,7 +242,7 @@ class Hiera
             it "should correctly handle hash default data" do
                 Config.load({:yaml => {:datadir => "/tmp"}})
                 Config.load_backends
-                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array)
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash)
                 Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
             end
         end
