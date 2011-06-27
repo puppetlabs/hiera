@@ -21,6 +21,10 @@ class Hiera
                 Backend.empty_answer(:array).should == []
             end
 
+            it "should return {} for hash searches" do
+                Backend.empty_answer(:hash).should == {}
+            end
+
             it "should return nil otherwise" do
                 Backend.empty_answer(:meh).should == nil
             end
@@ -233,6 +237,13 @@ class Hiera
                 Config.load_backends
                 Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array)
                 Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
+            end
+
+            it "should correctly handle hash default data" do
+                Config.load({:yaml => {:datadir => "/tmp"}})
+                Config.load_backends
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash)
+                Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
             end
         end
     end
