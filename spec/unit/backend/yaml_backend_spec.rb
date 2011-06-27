@@ -37,15 +37,25 @@ class Hiera
                 end
 
                 it "should build an array of all data sources for array searches" do
+                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-
-                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
 
                     YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "answer"})
                     YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => "answer"})
 
                     @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
+                end
+
+                it "should build an array of all data sources for hash searches" do
+                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"foo" => "zot"}})
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"foo" => "bar", "baaz" => "quux"}})
+
+                    @backend.lookup("key", {}, nil, :hash).should == {"foo" => "zot", "baaz" => "quux"}
                 end
 
                 it "should parse the answer for scope variables" do
