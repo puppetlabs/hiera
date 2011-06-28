@@ -47,22 +47,41 @@ class Hiera
                     @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
                 end
 
-                it "should build an array of all data sources for hash searches" do
+                it "should return empty hash of data sources for hash searches" do
+                    Backend.expects(:datasources).multiple_yields(["one"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns("")
+
+                    @backend.lookup("key", {}, nil, :hash).should == {}
+                end
+
+                it "should ignore empty hash of data sources for hash searches" do
                     Backend.expects(:datasources).multiple_yields(["one"], ["two"])
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"foo" => "zot"}})
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"foo" => "bar", "baaz" => "quux"}})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns("")
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a"=>"answer"}})
 
-                    @backend.lookup("key", {}, nil, :hash).should == {"foo" => "zot", "baaz" => "quux"}
+                    @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer"}
+                end
+
+                it "should build a merged hash of data sources for hash searches" do
+                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"a" => "answer"}})
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a" => "wrong", "b"=>"answer"}})
+
+                    @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer", "b" => "answer"}
                 end
 
                 it "should parse the answer for scope variables" do
                     Backend.expects(:datasources).yields("one")
                     Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
                     YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "test_%{rspec}"})
-
 
                     @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
                 end
