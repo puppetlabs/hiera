@@ -78,6 +78,28 @@ class Hiera
                     @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer", "b" => "answer"}
                 end
 
+                it "should fail when trying to << a Hash" do
+                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => ["a", "answer"]})
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a" => "wrong"}})
+
+                    lambda {@backend.lookup("key", {}, nil, :array)}.should raise_error(Exception, "Hiera type mismatch: expected Array and got Hash")
+                end
+
+                it "should fail when trying to merge an Array" do
+                    Backend.expects(:datasources).multiple_yields(["one"], ["two"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"a" => "answer"}})
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => ["a", "wrong"]})
+
+                    lambda {@backend.lookup("key", {}, nil, :hash)}.should raise_error(Exception, "Hiera type mismatch: expected Hash and got Array")
+                end
+
                 it "should parse the answer for scope variables" do
                     Backend.expects(:datasources).yields("one")
                     Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")

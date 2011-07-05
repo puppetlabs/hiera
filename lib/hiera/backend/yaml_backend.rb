@@ -27,13 +27,16 @@ class Hiera
                     # the array
                     #
                     # for priority searches we break after the first found data item
+                    new_answer = Backend.parse_answer(data[key], scope)
                     case resolution_type
                     when :array
-                        answer << Backend.parse_answer(data[key], scope)
+                        raise Exception, "Hiera type mismatch: expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
+                        answer << new_answer
                     when :hash
-                        answer = Backend.parse_answer(data[key], scope).merge answer
+                        raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
+                        answer = new_answer.merge answer
                     else
-                        answer = Backend.parse_answer(data[key], scope)
+                        answer = new_answer
                         break
                     end
                 end
