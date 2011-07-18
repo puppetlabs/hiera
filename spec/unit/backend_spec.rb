@@ -156,6 +156,26 @@ class Hiera
                 input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
                 Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
             end
+            
+            it "should parse integers correctly" do
+              input = 1
+              Backend.parse_answer(input, {"rspec" => "test"}).should == 1
+            end
+            
+            it "should parse floats correctly" do
+              input = 0.233
+              Backend.parse_answer(input, {"rspec" => "test"}).should == 0.233
+            end
+            
+            it "should parse true boolean values correctly" do
+              input = true
+              Backend.parse_answer(input, {"rspec" => "test"}).should == true
+            end
+            
+            it "should parse false boolean values correctly" do
+              input = false
+              Backend.parse_answer(input, {"rspec" => "test"}).should == false
+            end
         end
 
         describe "#resolve_answer" do

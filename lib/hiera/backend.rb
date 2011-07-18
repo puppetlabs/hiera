@@ -105,7 +105,9 @@ class Hiera
             # Ultimately it just pass the data through parse_string but
             # it makes some effort to handle arrays of strings as well
             def parse_answer(data, scope, extra_data={})
-                if data.is_a?(String)
+                if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
+                    return data
+                elsif data.is_a?(String)
                     return parse_string(data, scope, extra_data)
                 elsif data.is_a?(Hash)
                     answer = {}
