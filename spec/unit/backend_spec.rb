@@ -156,22 +156,22 @@ class Hiera
                 input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
                 Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
             end
-            
+
             it "should parse integers correctly" do
               input = 1
               Backend.parse_answer(input, {"rspec" => "test"}).should == 1
             end
-            
+
             it "should parse floats correctly" do
               input = 0.233
               Backend.parse_answer(input, {"rspec" => "test"}).should == 0.233
             end
-            
+
             it "should parse true boolean values correctly" do
               input = true
               Backend.parse_answer(input, {"rspec" => "test"}).should == true
             end
-            
+
             it "should parse false boolean values correctly" do
               input = false
               Backend.parse_answer(input, {"rspec" => "test"}).should == false
@@ -211,6 +211,19 @@ class Hiera
                 Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil).returns("answer")
 
                 Backend.lookup("key", "default", {}, nil, nil).should == "answer"
+            end
+
+            it "should retain the datatypes as returned by the backend" do
+                Config.load({:yaml => {:datadir => "/tmp"}})
+                Config.load_backends
+
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("stringval", {}, nil, nil).returns("string")
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil).returns(true)
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("numericval", {}, nil, nil).returns(1)
+
+                Backend.lookup("stringval", "default", {}, nil, nil).should == "string"
+                Backend.lookup("boolval", "default", {}, nil, nil).should == true
+                Backend.lookup("numericval", "default", {}, nil, nil).should == 1
             end
 
             it "should call to all backends till an answer is found" do

@@ -85,6 +85,17 @@ class Hiera
 
                     @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
                 end
+
+                it "should retain datatypes found in yaml files" do
+                    Backend.expects(:datasources).yields("one").times(3)
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml").times(3)
+
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
+
+                    @backend.lookup("stringval", {}, nil, :priority).should == "string"
+                    @backend.lookup("boolval", {}, nil, :priority).should == true
+                    @backend.lookup("numericval", {}, nil, :priority).should == 1
+                end
             end
         end
     end
