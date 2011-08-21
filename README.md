@@ -128,20 +128,20 @@ Hash data, sample files matching the hierarchy described in the _Why?_ section a
 
 _/etc/puppet/hieradata/dc1.yaml_:
 <pre>
-----
+---
 ntpserver: ntp1.dc1.example.com
 sysadmin: dc1noc@example.com
 </pre>
 
 _/etc/puppet/hieradata/dc2.yaml_:
 <pre>
-----
+---
 ntpserver: ntp1.dc2.example.com
 </pre>
 
 _/etc/puppet/hieradata/common.yaml_:
 <pre>
-----
+---
 sysadmin: sysadmin@%{domain}
 ntpserver: 1.pool.ntp.org
 </pre>
