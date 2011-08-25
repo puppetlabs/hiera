@@ -67,7 +67,7 @@ class Hiera
 
                 hierarchy.flatten.map do |source|
                     source = parse_string(source, scope)
-                    yield(source) unless source == ""
+                    yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
                 end
             end
 
