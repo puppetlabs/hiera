@@ -61,12 +61,38 @@ def load_scope(source, type=:yaml)
 
         # Puppet makes dumb yaml files that do not promote data reuse.
         scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+
     when :json
         raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
 
         require 'json'
 
         scope = JSON.load(File.read(source))
+
+    when :inventory_service
+        # For this to work the machine running the hiera command needs access to
+        # /facts REST endpoint on your inventory server.  This access is
+        # controlled in auth.conf and identification is by the certname of the
+        # machine running hiera commands.
+        #
+        # Another caveat is that if your inventory server isn't at the short dns
+        # name of 'puppet' you will need to set the inventory_sever option in
+        # your puppet.conf.  Set it in either the master or main sections.  It
+        # is fine to have the inventory_server option set even if the config
+        # doesn't have the fact_terminus set to rest.
+        begin
+          require 'puppet/util/run_mode'
+          $puppet_application_mode = Puppet::Util::RunMode[:master]
+          require 'puppet'
+          Puppet.settings.parse
+          Puppet::Node::Facts.indirection.terminus_class = :rest
+          scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
+          # Puppet makes dumb yaml files that do not promote data reuse.
+          scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+        rescue Exception => e
+            STDERR.puts "Puppet inventory service lookup failed: #{e.class}: #{e}"
+            exit 1
+        end
     else
         raise "Don't know how to load data type #{type}"
     end
@@ -126,6 +152,15 @@ OptionParser.new do |opts|
             options[:scope] = load_scope(v, :mcollective)
         rescue Exception => e
             STDERR.puts "Could not load MCollective scope: #{e.class}: #{e}"
+            exit 1
+        end
+    end
+
+    opts.on("--inventory_service IDENTITY", "-i", "Retrieve facts for a node via Puppet's inventory service as scope") do |v|
+        begin
+            options[:scope] = load_scope(v, :inventory_service)
+        rescue Exception => e
+            STDERR.puts "Could not load Puppet inventory service scope: #{e.class}: #{e}"
             exit 1
         end
     end
