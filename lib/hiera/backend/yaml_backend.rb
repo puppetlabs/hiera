@@ -19,6 +19,7 @@ class Hiera
 
                     data = YAML.load_file(yamlfile)
 
+                    next if ! data
                     next if data.empty?
                     next unless data.include?(key)
 

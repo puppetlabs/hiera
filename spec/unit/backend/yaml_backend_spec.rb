@@ -31,9 +31,25 @@ class Hiera
                     Backend.expects(:datasources).multiple_yields(["one"], ["two"])
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil).never
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "answer"})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey: answer"))
 
                     @backend.lookup("key", {}, nil, :priority).should == "answer"
+                end
+
+                it "should not look up missing data files" do
+                    Backend.expects(:datasources).multiple_yields(["one"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns(nil)
+                    YAML.expects(:load_file).never
+
+                    @backend.lookup("key", {}, nil, :priority)
+                end
+
+                it "should return nil for empty data files" do
+                    Backend.expects(:datasources).multiple_yields(["one"])
+                    Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load(""))
+
+                    @backend.lookup("key", {}, nil, :priority).should be_nil
                 end
 
                 it "should build an array of all data sources for array searches" do
@@ -41,8 +57,8 @@ class Hiera
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "answer"})
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => "answer"})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey: answer"))
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey: answer"))
 
                     @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
                 end
@@ -51,7 +67,7 @@ class Hiera
                     Backend.expects(:datasources).multiple_yields(["one"])
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns("")
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load(""))
 
                     @backend.lookup("key", {}, nil, :hash).should == {}
                 end
@@ -61,8 +77,8 @@ class Hiera
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns("")
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a"=>"answer"}})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load(""))
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey:\n a: answer"))
 
                     @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer"}
                 end
@@ -72,8 +88,8 @@ class Hiera
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"a" => "answer"}})
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a" => "wrong", "b"=>"answer"}})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey:\n a: answer"))
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey:\n a: wrong\n b: answer"))
 
                     @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer", "b" => "answer"}
                 end
@@ -83,8 +99,8 @@ class Hiera
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => ["a", "answer"]})
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => {"a" => "wrong"}})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey:\n- a\n- answer"))
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey:\n a: answer"))
 
                     lambda {@backend.lookup("key", {}, nil, :array)}.should raise_error(Exception, "Hiera type mismatch: expected Array and got Hash")
                 end
@@ -94,8 +110,8 @@ class Hiera
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
                     Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => {"a" => "answer"}})
-                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns({"key" => ["a", "wrong"]})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey:\n a: answer"))
+                    YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey:\n- a\n- wrong"))
 
                     lambda {@backend.lookup("key", {}, nil, :hash)}.should raise_error(Exception, "Hiera type mismatch: expected Hash and got Array")
                 end
@@ -103,7 +119,7 @@ class Hiera
                 it "should parse the answer for scope variables" do
                     Backend.expects(:datasources).yields("one")
                     Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"key" => "test_%{rspec}"})
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey: 'test_%{rspec}'"))
 
                     @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
                 end
@@ -112,7 +128,7 @@ class Hiera
                     Backend.expects(:datasources).yields("one").times(3)
                     Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml").times(3)
 
-                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
+                    YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nstringval: 'string'\nboolval: true\nnumericval: 1")).times(3)
 
                     @backend.lookup("stringval", {}, nil, :priority).should == "string"
                     @backend.lookup("boolval", {}, nil, :priority).should == true
