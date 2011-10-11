@@ -9,11 +9,25 @@ class Hiera
                 }.to raise_error("Config file /nonexisting not found")
             end
 
+            it "should raise error for missing config files" do
+                File.expects(:exist?).with("/nonexisting").returns(false)
+                YAML.expects(:load_file).with("/nonexisting").never
+
+                expect { Config.load("/nonexisting") }.should raise_error RuntimeError, /not found/
+            end
+
             it "should attempt to YAML load config files" do
                 File.expects(:exist?).with("/nonexisting").returns(true)
-                YAML.expects(:load_file).with("/nonexisting").returns({})
+                YAML.expects(:load_file).with("/nonexisting").returns(YAML.load("---\n"))
 
                 Config.load("/nonexisting")
+            end
+
+            it "should use defaults on empty YAML config file" do
+                File.expects(:exist?).with("/nonexisting").returns(true)
+                YAML.expects(:load_file).with("/nonexisting").returns(YAML.load(""))
+
+                Config.load("/nonexisting").should == {:backends => ["yaml"], :hierarchy => "common", :logger => "console"}
             end
 
             it "should use hash data as source if supplied" do
