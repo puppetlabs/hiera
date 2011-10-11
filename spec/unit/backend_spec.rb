@@ -218,11 +218,11 @@ class Hiera
                 Config.load_backends
 
                 Backend::Yaml_backend.any_instance.expects(:lookup).with("stringval", {}, nil, nil).returns("string")
-                Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil).returns(true)
+                Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil).returns(false)
                 Backend::Yaml_backend.any_instance.expects(:lookup).with("numericval", {}, nil, nil).returns(1)
 
                 Backend.lookup("stringval", "default", {}, nil, nil).should == "string"
-                Backend.lookup("boolval", "default", {}, nil, nil).should == true
+                Backend.lookup("boolval", "default", {}, nil, nil).should == false
                 Backend.lookup("numericval", "default", {}, nil, nil).should == 1
             end
 
