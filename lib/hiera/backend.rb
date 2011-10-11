@@ -163,7 +163,8 @@ class Hiera
                     end
                 end
 
-                answer = resolve_answer(answer, resolution_type) || parse_string(default, scope)
+                answer = resolve_answer(answer, resolution_type)
+                answer = parse_string(default, scope) if answer.nil?
 
                 return default if answer == empty_answer(resolution_type)
                 return answer
