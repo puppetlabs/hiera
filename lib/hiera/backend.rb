@@ -129,7 +129,7 @@ class Hiera
             def resolve_answer(answer, resolution_type)
                 case resolution_type
                 when :array
-                    [answer].flatten.uniq.compact.sort
+                    [answer].flatten.uniq.compact
                 when :hash
                     answer # Hash structure should be preserved
                 else
