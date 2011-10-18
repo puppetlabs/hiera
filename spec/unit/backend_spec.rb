@@ -180,7 +180,7 @@ class Hiera
 
         describe "#resolve_answer" do
             it "should correctly parse array data" do
-                Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array).should == ["bar", "foo"]
+                Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array).should == ["foo", "bar"]
             end
 
             it "should just return the answer for non array data" do
