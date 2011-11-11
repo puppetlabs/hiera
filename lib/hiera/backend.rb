@@ -168,7 +168,7 @@ class Hiera
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
             answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
-            break if answer
+            break if answer != nil
           end
         end
 
