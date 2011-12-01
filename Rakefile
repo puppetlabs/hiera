@@ -5,9 +5,9 @@ require 'rspec/core/rake_task'
 spec = Gem::Specification.new do |s|
   s.name = "hiera"
   s.version = "0.2.0"
-  s.author = "R.I.Pienaar"
-  s.email = "rip@devco.net"
-  s.homepage = "https://github.com/ripienaar/hiera/"
+  s.author = "Puppet Labs"
+  s.email = "info@puppetlabs.com"
+  s.homepage = "https://github.com/puppetlabs/hiera/"
   s.summary = "Light weight hierarcical data store"
   s.description = "A pluggable data store for hierarcical data"
   s.files = FileList["{bin,lib}/**/*"].to_a
