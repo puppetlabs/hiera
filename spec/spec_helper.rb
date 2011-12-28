@@ -7,13 +7,13 @@ require 'rspec/mocks'
 require 'mocha'
 
 RSpec.configure do |config|
-    config.mock_with :mocha
+  config.mock_with :mocha
 end
 
 class Puppet
-    class Parser
-        class Functions
-        end
+  class Parser
+    class Functions
     end
+  end
 end
 
