@@ -5,14 +5,14 @@ class Hiera::Config
         #
         # Unless specified it will only use YAML as backend with a single
         # 'common' hierarchy and console logger
-        def load(source)
+        def load(source, scope = {})
             @config = {:backends => "yaml",
                        :hierarchy => "common"}
 
             if source.is_a?(String)
                 raise "Config file #{source} not found" unless File.exist?(source)
 
-                config = YAML.load_file(source)
+                config = YAML.load(Hiera.parse_string(File.read(source), scope))
                 @config.merge! config if config
             elsif source.is_a?(Hash)
                 @config.merge! source
@@ -26,6 +26,8 @@ class Hiera::Config
                 @config[:logger] = "console"
                 Hiera.logger = "console"
             end
+
+            Hiera.debug "Hiera config: #{@config.inspect}"
 
             @config
         end

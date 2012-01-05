@@ -3,15 +3,20 @@ require 'spec_helper'
 class Hiera
     describe Backend do
         describe "#datadir" do
+            before do
+                Hiera.stubs(:debug)
+                Hiera.stubs(:warn)
+            end
+
             it "should use the backend configured dir" do
                 Config.load({:rspec => {:datadir => "/tmp"}})
-                Backend.expects(:parse_string).with("/tmp", {})
+                Hiera.expects(:parse_string).with("/tmp", {})
                 Backend.datadir(:rspec, {})
             end
 
             it "should default to /var/lib/hiera" do
                 Config.load({})
-                Backend.expects(:parse_string).with("/var/lib/hiera", {})
+                Hiera.expects(:parse_string).with("/var/lib/hiera", {})
                 Backend.datadir(:rspec, {})
             end
         end
@@ -45,6 +50,11 @@ class Hiera
         end
 
         describe "#datasources" do
+            before do
+                Hiera.stubs(:debug)
+                Hiera.stubs(:warn)
+            end
+
             it "should use the supplied hierarchy" do
                 expected = ["one", "two"]
                 Backend.datasources({}, nil, ["one", "two"]) do |backend|
@@ -82,7 +92,7 @@ class Hiera
             end
 
             it "should parse the sources based on scope" do
-                Backend.expects(:parse_string).with("common", {:rspec => :tests})
+                Hiera.expects(:parse_string).with("common", {:rspec => :tests})
                 Backend.datasources({:rspec => :tests}) { }
             end
 
@@ -95,44 +105,6 @@ class Hiera
                 end
 
                 expected.empty?.should == true
-            end
-        end
-
-        describe "#parse_string" do
-            it "should not try to parse invalid data" do
-                Backend.parse_string(nil, {}).should == nil
-            end
-
-            it "should clone the supplied data" do
-                data = ""
-                data.expects(:clone).returns("")
-                Backend.parse_string(data, {})
-            end
-
-            it "should only parse string data" do
-                data = ""
-                data.expects(:is_a?).with(String)
-                Backend.parse_string(data, {})
-            end
-
-            it "should match data from scope" do
-                input = "test_%{rspec}_test"
-                Backend.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
-            end
-
-            it "should match data from extra_data" do
-                input = "test_%{rspec}_test"
-                Backend.parse_string(input, {}, {"rspec" => "test"}).should == "test_test_test"
-            end
-
-            it "should prefer scope over extra_data" do
-                input = "test_%{rspec}_test"
-                Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
-            end
-
-            it "should treat :undefined in scope as empty" do
-                input = "test_%{rspec}_test"
-                Backend.parse_string(input, {"rspec" => :undefined}).should == "test__test"
             end
         end
 

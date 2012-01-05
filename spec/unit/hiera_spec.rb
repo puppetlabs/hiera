@@ -14,6 +14,44 @@ describe "Hiera" do
         end
     end
 
+    describe "#parse_string" do
+        it "should not try to parse invalid data" do
+            Hiera.parse_string(nil, {}).should == nil
+        end
+
+        it "should clone the supplied data" do
+            data = ""
+            data.expects(:clone).returns("")
+            Hiera.parse_string(data, {})
+        end
+
+        it "should only parse string data" do
+            data = ""
+            data.expects(:is_a?).with(String)
+            Hiera.parse_string(data, {})
+        end
+
+        it "should match data from scope" do
+            input = "test_%{rspec}_test"
+            Hiera.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
+        end
+
+        it "should match data from extra_data" do
+            input = "test_%{rspec}_test"
+            Hiera.parse_string(input, {}, {"rspec" => "test"}).should == "test_test_test"
+        end
+
+        it "should prefer scope over extra_data" do
+            input = "test_%{rspec}_test"
+            Hiera.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
+        end
+
+        it "should treat :undefined in scope as empty" do
+            input = "test_%{rspec}_test"
+            Hiera.parse_string(input, {"rspec" => :undefined}).should == "test__test"
+        end
+    end
+
     describe "#warn" do
         it "should call the supplied logger" do
             Hiera::Console_logger.expects(:warn).with("rspec")
@@ -30,13 +68,13 @@ describe "Hiera" do
 
     describe "#initialize" do
         it "should default to /etc/hiera.yaml for config" do
-            Hiera::Config.expects(:load).with("/etc/hiera.yaml")
+            Hiera::Config.expects(:load).with("/etc/hiera.yaml", {})
             Hiera::Config.stubs(:load_backends)
             Hiera.new
         end
 
         it "should pass the supplied config to the config class" do
-            Hiera::Config.expects(:load).with({"test" => "rspec"})
+            Hiera::Config.expects(:load).with({"test" => "rspec"}, {})
             Hiera::Config.stubs(:load_backends)
             Hiera.new(:config => {"test" => "rspec"})
         end

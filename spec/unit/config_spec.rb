@@ -2,6 +2,11 @@ require 'spec_helper'
 
 class Hiera
     describe Config do
+        before do
+            Hiera.stubs(:debug)
+            Hiera.stubs(:warn)
+        end
+
         describe "#load" do
             it "should treat string sources as a filename" do
                 expect {
@@ -18,14 +23,14 @@ class Hiera
 
             it "should attempt to YAML load config files" do
                 File.expects(:exist?).with("/nonexisting").returns(true)
-                YAML.expects(:load_file).with("/nonexisting").returns(YAML.load("---\n"))
+                File.expects(:read).with("/nonexisting").returns("---\n")
 
                 Config.load("/nonexisting")
             end
 
             it "should use defaults on empty YAML config file" do
                 File.expects(:exist?).with("/nonexisting").returns(true)
-                YAML.expects(:load_file).with("/nonexisting").returns(YAML.load(""))
+                File.expects(:read).with("/nonexisting").returns("")
 
                 Config.load("/nonexisting").should == {:backends => ["yaml"], :hierarchy => "common", :logger => "console"}
             end

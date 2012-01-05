@@ -9,9 +9,9 @@ class Hiera
                 default = "/var/lib/hiera"
 
                 if Config.include?(backend)
-                    parse_string(Config[backend][:datadir] || default, scope)
+                    Hiera.parse_string(Config[backend][:datadir] || default, scope)
                 else
-                    parse_string(default, scope)
+                    Hiera.parse_string(default, scope)
                 end
             end
 
@@ -66,49 +66,20 @@ class Hiera
                 hierarchy.insert(0, override) if override
 
                 hierarchy.flatten.map do |source|
-                    source = parse_string(source, scope)
+                    source = Hiera.parse_string(source, scope)
                     yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
                 end
             end
 
-            # Parse a string like '%{foo}' against a supplied
-            # scope and additional scope.  If either scope or
-            # extra_scope includes the varaible 'foo' it will
-            # be replaced else an empty string will be placed.
-            #
-            # If both scope and extra_data has "foo" scope
-            # will win.  See hiera-puppet for an example of
-            # this to make hiera aware of additional non scope
-            # variables
-            def parse_string(data, scope, extra_data={})
-                return nil unless data
-
-                tdata = data.clone
-
-                if tdata.is_a?(String)
-                    while tdata =~ /%\{(.+?)\}/
-                        var = $1
-                        val = scope[var] || extra_data[var] || ""
-
-                        # Puppet can return this for unknown scope vars
-                        val = "" if val == :undefined
-
-                        tdata.gsub!(/%\{#{var}\}/, val)
-                    end
-                end
-
-                return tdata
-            end
-
             # Parses a answer received from data files
             #
-            # Ultimately it just pass the data through parse_string but
+            # Ultimately it just pass the data through Hiera.parse_string but
             # it makes some effort to handle arrays of strings as well
             def parse_answer(data, scope, extra_data={})
                 if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
                     return data
                 elsif data.is_a?(String)
-                    return parse_string(data, scope, extra_data)
+                    return Hiera.parse_string(data, scope, extra_data)
                 elsif data.is_a?(Hash)
                     answer = {}
                     data.each_pair do |key, val|
@@ -164,7 +135,7 @@ class Hiera
                 end
 
                 answer = resolve_answer(answer, resolution_type)
-                answer = parse_string(default, scope) if answer.nil?
+                answer = Hiera.parse_string(default, scope) if answer.nil?
 
                 return default if answer == empty_answer(resolution_type)
                 return answer
