@@ -30,6 +30,35 @@ class Hiera
             warn("Failed to load #{logger} logger: #{e.class}: #{e}")
         end
 
+        # Parse a string like '%{foo}' against a supplied
+        # scope and additional scope.  If either scope or
+        # extra_scope includes the varaible 'foo' it will
+        # be replaced else an empty string will be placed.
+        #
+        # If both scope and extra_data has "foo" scope
+        # will win.  See hiera-puppet for an example of
+        # this to make hiera aware of additional non scope
+        # variables
+        def parse_string(data, scope, extra_data={})
+            return nil unless data
+
+            tdata = data.clone
+
+            if tdata.is_a?(String)
+                while tdata =~ /%\{(.+?)\}/
+                    var = $1
+                    val = scope[var] || extra_data[var] || ""
+
+                    # Puppet can return this for unknown scope vars
+                    val = "" if val == :undefined
+
+                    tdata.gsub!(/%\{#{var}\}/, val)
+                end
+            end
+
+            return tdata
+        end
+
         def warn(msg); @logger.warn(msg); end
         def debug(msg); @logger.debug(msg); end
     end
@@ -38,10 +67,10 @@ class Hiera
 
     # If the config option is a string its assumed to be a filename,
     # else a hash of what would have been in the YAML config file
-    def initialize(options={})
+    def initialize(options={}, scope={})
         options[:config] ||= "/etc/hiera.yaml"
 
-        @config = Config.load(options[:config])
+        @config = Config.load(options[:config], scope)
 
         Config.load_backends
     end
