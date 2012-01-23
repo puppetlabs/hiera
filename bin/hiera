@@ -18,152 +18,152 @@ require 'optparse'
 options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false, :resolution_type => :priority}
 
 class Hiera::Noop_logger
-    class << self
-        def warn(msg);end
-        def debug(msg);end
-    end
+  class << self
+    def warn(msg);end
+    def debug(msg);end
+  end
 end
 
 # Loads the scope from YAML or JSON files
 def load_scope(source, type=:yaml)
-    case type
-    when :mcollective
-        begin
-            require 'mcollective'
+  case type
+  when :mcollective
+    begin
+      require 'mcollective'
 
-            include MCollective::RPC
+      include MCollective::RPC
 
-            util = rpcclient("rpcutil")
-            util.progress = false
-            nodestats = util.custom_request("inventory", {}, source, {"identity" => source}).first
+      util = rpcclient("rpcutil")
+      util.progress = false
+      nodestats = util.custom_request("inventory", {}, source, {"identity" => source}).first
 
-            raise "Failed to retrieve facts for node #{source}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
+      raise "Failed to retrieve facts for node #{source}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
 
-            scope = nodestats[:data][:facts]
-        rescue Exception => e
-            STDERR.puts "MCollective lookup failed: #{e.class}: #{e}"
-            exit 1
-        end
-
-    when :yaml
-        raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
-
-        require 'yaml'
-
-        # Attempt to load puppet in case we're going to be fed
-        # Puppet yaml files
-        begin
-            require 'puppet'
-        rescue
-        end
-
-        scope = YAML.load_file(source)
-
-        # Puppet makes dumb yaml files that do not promote data reuse.
-        scope = scope.values if scope.is_a?(Puppet::Node::Facts)
-
-    when :json
-        raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
-
-        require 'json'
-
-        scope = JSON.load(File.read(source))
-
-    when :inventory_service
-        # For this to work the machine running the hiera command needs access to
-        # /facts REST endpoint on your inventory server.  This access is
-        # controlled in auth.conf and identification is by the certname of the
-        # machine running hiera commands.
-        #
-        # Another caveat is that if your inventory server isn't at the short dns
-        # name of 'puppet' you will need to set the inventory_sever option in
-        # your puppet.conf.  Set it in either the master or main sections.  It
-        # is fine to have the inventory_server option set even if the config
-        # doesn't have the fact_terminus set to rest.
-        begin
-          require 'puppet/util/run_mode'
-          $puppet_application_mode = Puppet::Util::RunMode[:master]
-          require 'puppet'
-          Puppet.settings.parse
-          Puppet::Node::Facts.indirection.terminus_class = :rest
-          scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
-          # Puppet makes dumb yaml files that do not promote data reuse.
-          scope = scope.values if scope.is_a?(Puppet::Node::Facts)
-        rescue Exception => e
-            STDERR.puts "Puppet inventory service lookup failed: #{e.class}: #{e}"
-            exit 1
-        end
-    else
-        raise "Don't know how to load data type #{type}"
+      scope = nodestats[:data][:facts]
+    rescue Exception => e
+      STDERR.puts "MCollective lookup failed: #{e.class}: #{e}"
+      exit 1
     end
 
-    raise "Scope from #{type} file #{source} should be a Hash" unless scope.is_a?(Hash)
+  when :yaml
+    raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
 
-    scope
+    require 'yaml'
+
+    # Attempt to load puppet in case we're going to be fed
+    # Puppet yaml files
+    begin
+        require 'puppet'
+    rescue
+    end
+
+    scope = YAML.load_file(source)
+
+    # Puppet makes dumb yaml files that do not promote data reuse.
+    scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+
+  when :json
+    raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
+
+    require 'json'
+
+    scope = JSON.load(File.read(source))
+
+  when :inventory_service
+    # For this to work the machine running the hiera command needs access to
+    # /facts REST endpoint on your inventory server.  This access is
+    # controlled in auth.conf and identification is by the certname of the
+    # machine running hiera commands.
+    #
+    # Another caveat is that if your inventory server isn't at the short dns
+    # name of 'puppet' you will need to set the inventory_sever option in
+    # your puppet.conf.  Set it in either the master or main sections.  It
+    # is fine to have the inventory_server option set even if the config
+    # doesn't have the fact_terminus set to rest.
+    begin
+      require 'puppet/util/run_mode'
+      $puppet_application_mode = Puppet::Util::RunMode[:master]
+      require 'puppet'
+      Puppet.settings.parse
+      Puppet::Node::Facts.indirection.terminus_class = :rest
+      scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
+      # Puppet makes dumb yaml files that do not promote data reuse.
+      scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+    rescue Exception => e
+        STDERR.puts "Puppet inventory service lookup failed: #{e.class}: #{e}"
+        exit 1
+    end
+  else
+    raise "Don't know how to load data type #{type}"
+  end
+
+  raise "Scope from #{type} file #{source} should be a Hash" unless scope.is_a?(Hash)
+
+  scope
 end
 
 OptionParser.new do |opts|
-    opts.on("--version", "-V", "Version information") do
-        puts Hiera.version
-        exit
-    end
+  opts.on("--version", "-V", "Version information") do
+    puts Hiera.version
+    exit
+  end
 
-    opts.on("--debug", "-d", "Show debugging information") do
-        options[:verbose] = true
-    end
+  opts.on("--debug", "-d", "Show debugging information") do
+    options[:verbose] = true
+  end
 
-    opts.on("--array", "-a", "Array search") do
-        options[:resolution_type] = :array
-    end
+  opts.on("--array", "-a", "Array search") do
+    options[:resolution_type] = :array
+  end
 
-    opts.on("--hash", "-h", "Hash search") do
-        options[:resolution_type] = :hash
-    end
+  opts.on("--hash", "-h", "Hash search") do
+    options[:resolution_type] = :hash
+  end
 
-    opts.on("--config CONFIG", "-c", "Configuration file") do |v|
-        if File.exist?(v)
-            options[:config] = v
-        else
-            STDERR.puts "Cannot find config file: #{v}"
-            exit 1
-        end
+  opts.on("--config CONFIG", "-c", "Configuration file") do |v|
+    if File.exist?(v)
+      options[:config] = v
+    else
+      STDERR.puts "Cannot find config file: #{v}"
+      exit 1
     end
+  end
 
-    opts.on("--json SCOPE", "-j", "JSON format file to load scope from") do |v|
-        begin
-            options[:scope] = load_scope(v, :json)
-        rescue Exception => e
-            STDERR.puts "Could not load JSON scope: #{e.class}: #{e}"
-            exit 1
-        end
+  opts.on("--json SCOPE", "-j", "JSON format file to load scope from") do |v|
+    begin
+      options[:scope] = load_scope(v, :json)
+    rescue Exception => e
+      STDERR.puts "Could not load JSON scope: #{e.class}: #{e}"
+      exit 1
     end
+  end
 
-    opts.on("--yaml SCOPE", "-y", "YAML format file to load scope from") do |v|
-        begin
-            options[:scope] = load_scope(v)
-        rescue Exception => e
-            STDERR.puts "Could not load YAML scope: #{e.class}: #{e}"
-            exit 1
-        end
+  opts.on("--yaml SCOPE", "-y", "YAML format file to load scope from") do |v|
+    begin
+      options[:scope] = load_scope(v)
+    rescue Exception => e
+      STDERR.puts "Could not load YAML scope: #{e.class}: #{e}"
+      exit 1
     end
+  end
 
-    opts.on("--mcollective IDENTITY", "-m", "Retrieve facts from a node via mcollective as scope") do |v|
-        begin
-            options[:scope] = load_scope(v, :mcollective)
-        rescue Exception => e
-            STDERR.puts "Could not load MCollective scope: #{e.class}: #{e}"
-            exit 1
-        end
+  opts.on("--mcollective IDENTITY", "-m", "Retrieve facts from a node via mcollective as scope") do |v|
+    begin
+      options[:scope] = load_scope(v, :mcollective)
+    rescue Exception => e
+      STDERR.puts "Could not load MCollective scope: #{e.class}: #{e}"
+      exit 1
     end
+  end
 
-    opts.on("--inventory_service IDENTITY", "-i", "Retrieve facts for a node via Puppet's inventory service as scope") do |v|
-        begin
-            options[:scope] = load_scope(v, :inventory_service)
-        rescue Exception => e
-            STDERR.puts "Could not load Puppet inventory service scope: #{e.class}: #{e}"
-            exit 1
-        end
+  opts.on("--inventory_service IDENTITY", "-i", "Retrieve facts for a node via Puppet's inventory service as scope") do |v|
+    begin
+      options[:scope] = load_scope(v, :inventory_service)
+    rescue Exception => e
+      STDERR.puts "Could not load Puppet inventory service scope: #{e.class}: #{e}"
+      exit 1
     end
+  end
 end.parse!
 
 # arguments can be:
@@ -172,43 +172,43 @@ end.parse!
 #
 # The var=val's assign scope
 unless ARGV.empty?
-    options[:key] = ARGV.delete_at(0)
+  options[:key] = ARGV.delete_at(0)
 
-    ARGV.each do |arg|
-        if arg =~ /^(.+?)=(.+?)$/
-            options[:scope][$1] = $2
-        else
-            unless options[:default]
-                options[:default] = arg.dup
-            else
-                STDERR.puts "Don't know how to parse scope argument: #{arg}"
-            end
-        end
+  ARGV.each do |arg|
+    if arg =~ /^(.+?)=(.+?)$/
+      options[:scope][$1] = $2
+    else
+      unless options[:default]
+        options[:default] = arg.dup
+      else
+        STDERR.puts "Don't know how to parse scope argument: #{arg}"
+      end
     end
+  end
 else
-    STDERR.puts "Please supply a data item to look up"
-    exit 1
+  STDERR.puts "Please supply a data item to look up"
+  exit 1
 end
 
 begin
-    hiera = Hiera.new(:config => options[:config])
+  hiera = Hiera.new(:config => options[:config])
 rescue Exception => e
-    if options[:verbose]
-        raise
-    else
-        STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"
-        exit 1
-    end
+  if options[:verbose]
+    raise
+  else
+    STDERR.puts "Failed to start Hiera: #{e.class}: #{e}"
+    exit 1
+  end
 end
 
 unless options[:verbose]
-    Hiera.logger = "noop"
+  Hiera.logger = "noop"
 end
 
 ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
 
 if ans.is_a?(String)
-    puts ans
+  puts ans
 else
-    p ans
+  p ans
 end
