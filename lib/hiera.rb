@@ -2,7 +2,7 @@ require 'rubygems'
 require 'yaml'
 
 class Hiera
-  VERSION = "0.2.1"
+  VERSION = "0.3.0"
 
   autoload :Config, "hiera/config"
   autoload :Backend, "hiera/backend"
