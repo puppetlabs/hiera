@@ -164,6 +164,16 @@ OptionParser.new do |opts|
       exit 1
     end
   end
+  opts.on("--format FORMAT", "-f", "Specify format for output (currently json or ruby)") do |v|
+    if v == "json" 
+      options[:format] = :json
+    elsif v == "ruby"
+      options[:format] = :ruby
+    else
+      STDERR.puts "Invalid format specified (expected json or ruby)"
+      exit 1
+    end
+  end
 end.parse!
 
 # arguments can be:
@@ -209,6 +219,9 @@ ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, optio
 
 if ans.is_a?(String)
   puts ans
+elsif options[:format] == :json
+  require 'json'
+  puts JSON.generate(ans)
 else
   p ans
 end
