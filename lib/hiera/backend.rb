@@ -155,11 +155,20 @@ class Hiera
         answer = nil
 
         Config[:backends].each do |backend|
-          if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
+          if constants.include?("#{backend.capitalize}_backend")
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
-
-            break if answer
+            this_answ = @backends[backend].lookup(key, scope, order_override, resolution_type)
+            case resolution_type
+              when :priority
+                answer = this_answ
+                break if answer
+              when :array
+                answer ||= []
+                answer << this_answ
+              when :hash
+                answer ||= {}
+                answer = this_answ.merge answer
+            end
           end
         end
 
