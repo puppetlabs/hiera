@@ -155,7 +155,7 @@ class Hiera
         answer = nil
 
         Config[:backends].each do |backend|
-          if constants.include?("#{backend.capitalize}_backend")
+          if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
             this_answ = @backends[backend].lookup(key, scope, order_override, resolution_type)
             case resolution_type
