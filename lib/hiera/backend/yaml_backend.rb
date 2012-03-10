@@ -35,7 +35,7 @@ class Hiera
             answer << new_answer
           when :hash
             raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
-            answer = new_answer.merge answer
+            answer.merge! new_answer
           else
             answer = new_answer
             break

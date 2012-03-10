@@ -167,7 +167,7 @@ class Hiera
                 answer << this_answ
               when :hash
                 answer ||= {}
-                answer = this_answ.merge answer
+                answer.merge! this_answ
             end
           end
         end
