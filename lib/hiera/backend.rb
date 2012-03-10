@@ -175,7 +175,7 @@ class Hiera
         answer = resolve_answer(answer, resolution_type)
         answer = parse_string(default, scope) if answer.nil?
 
-        return default if answer == empty_answer(resolution_type)
+        return default if answer == empty_answer(resolution_type) unless default.nil?
         return answer
       end
     end
