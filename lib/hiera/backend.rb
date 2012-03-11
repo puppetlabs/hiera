@@ -161,7 +161,7 @@ class Hiera
             case resolution_type
               when :priority
                 answer = new_answer
-                break if answer
+                break if !answer.empty?
               when :array
                 answer << new_answer
               when :hash
