@@ -55,7 +55,15 @@ class Hiera
   #
   # The order-override will insert as first in the hierarchy a data source
   # of your choice.
-  def lookup(key, default, scope, order_override=nil, resolution_type=:priority)
-    Backend.lookup(key, default, scope, order_override, resolution_type)
+  def lookup(key, default, scope, order_override=nil, resolution_type=:priority, resolve_lookups=true)
+	10.times do
+      answer = Backend.lookup(key, default, scope, order_override, resolution_type)
+	  if not resolve_lookups or (answer.respond_to?('match') and not m = answer.match("%(.*)%"))
+        return answer
+	  else
+		key = m[1]
+	  end
+	end
+	#return answer
   end
 end
