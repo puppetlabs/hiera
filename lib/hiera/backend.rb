@@ -165,7 +165,7 @@ class Hiera
               when :array
                 answer << new_answer
               when :hash
-                answer.merge! new_answer
+                answer = new_answer.merge answer
             end
           end
         end
