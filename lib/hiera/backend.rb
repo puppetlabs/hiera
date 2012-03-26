@@ -160,8 +160,8 @@ class Hiera
             new_answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
             case resolution_type
               when :priority
-                answer = new_answer
-                break if !answer.empty?
+                answer = new_answer unless !new_answer.nil?
+                break if answer != empty_answer(:priority)
               when :array
                 answer << new_answer
               when :hash
