@@ -134,6 +134,12 @@ class Hiera
         input = "test_%{rspec}_test"
         Backend.parse_string(input, {"rspec" => :undefined}).should == "test__test"
       end
+
+      it "should match data from extra_data when scope contains :undefined" do
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, {"rspec" => :undefined}, {"rspec" => "test"}).should == "test_test_test"
+      end
+
     end
 
     describe "#parse_answer" do
