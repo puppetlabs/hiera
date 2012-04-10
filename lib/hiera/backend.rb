@@ -90,8 +90,8 @@ class Hiera
             var = $1
 
             val = ""
-            
-            # Puppet can return :undefined for unknown scope vars, 
+
+            # Puppet can return :undefined for unknown scope vars,
             # If it does then we still need to evaluate extra_data
             # before returning an empty string.
             if scope[var] && scope[var] != :undefined
@@ -99,7 +99,6 @@ class Hiera
             elsif extra_data[var]
                 val = extra_data[var]
             end
-
 
             tdata.gsub!(/%\{#{var}\}/, val)
           end
