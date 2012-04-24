@@ -21,7 +21,7 @@ spec = Gem::Specification.new do |s|
 end
 
 Gem::PackageTask.new(spec) do |pkg|
-  pkg.need_tar = true
+  pkg.need_tar_gz = true
 end
 
 desc "Run all specs"
