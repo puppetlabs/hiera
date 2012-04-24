@@ -9,8 +9,9 @@ describe "Hiera" do
     end
 
     it "should fall back to the Console logger on failure" do
-      Hiera.expects(:warn).with("Failed to load foo logger: LoadError: no such file to load -- hiera/foo_logger")
+      Hiera.expects(:warn)
       Hiera.logger = "foo"
+      Hiera.logger.should be Hiera::Console_logger
     end
   end
 
