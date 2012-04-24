@@ -10,6 +10,8 @@ class Hiera
   autoload :Puppet_logger, "hiera/puppet_logger"
 
   class << self
+    attr_reader :logger
+
     def version
       VERSION
     end
