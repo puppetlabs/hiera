@@ -1,6 +1,7 @@
 require 'spec_helper'
-
+require 'tmpdir'
 require 'hiera/backend/yaml_backend'
+require 'fileutils'
 
 class Hiera
   module Backend
@@ -9,6 +10,7 @@ class Hiera
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
         @backend = Yaml_backend.new
+        @backend.stubs(:stale?).returns(true)
       end
 
       describe "#initialize" do
@@ -133,6 +135,61 @@ class Hiera
           @backend.lookup("stringval", {}, nil, :priority).should == "string"
           @backend.lookup("boolval", {}, nil, :priority).should == true
           @backend.lookup("numericval", {}, nil, :priority).should == 1
+        end
+      end
+    end
+
+    describe '#stale?' do
+      before do
+        Hiera.stubs(:debug)
+        Hiera.stubs(:warn)
+        @backend = Yaml_backend.new
+        @fakestat = Struct.new(:ino, :mtime, :size)
+      end
+
+      def create_yaml_file(data, path)
+        File.open(path, 'w') do |f|
+          f.write(data)
+        end
+      end
+
+      def update_file(data, path)
+        File.open(path, 'a') do |f|
+          f.write(data)
+        end
+      end
+
+      it 'should report a stale cache if a data lookup has not been performed' do
+        tmp_yamlfile = Pathname(Dir.mktmpdir('yaml')) + 'yamlfile'
+        create_yaml_file({'foo' => 'bar'}.to_yaml, tmp_yamlfile)
+        @backend.stale?(tmp_yamlfile).should == true
+      end
+
+      describe 'lookup tests' do
+        before(:each) do
+          @tmp_yamlfile = Pathname(Dir.mktmpdir('yaml')) + 'yamlfile'
+          create_yaml_file({'foo' => 'bar'}.to_yaml, @tmp_yamlfile)
+          Backend.expects(:datasources).yields("one")
+          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns(@tmp_yamlfile)
+        end
+
+        it 'should not report a stale cache after a data lookup' do
+          @backend.stale?(@tmp_yamlfile).should == true
+          @backend.lookup('foo', {}, nil, :priority).should == 'bar'
+          @backend.stale?(@tmp_yamlfile).should == false
+        end
+
+        [:ino, :mtime, :size].each do |attribute|
+          it "should report a stale cache if a backend file's #{attribute} has changed" do
+            @stat_instance = @fakestat.new(1234, 1234, 1234)
+            File.expects(:stat).with(@tmp_yamlfile).returns(@stat_instance).twice
+            @backend.stale?(@tmp_yamlfile).should == true
+            @backend.lookup('foo', {}, nil, :priority).should == 'bar'
+            @backend.stale?(@tmp_yamlfile).should == false
+            @stat_instance[attribute] += 1
+            File.unstub && File.expects(:stat).with(@tmp_yamlfile).returns(@stat_instance)
+            @backend.stale?(@tmp_yamlfile).should == true
+          end
         end
       end
     end
