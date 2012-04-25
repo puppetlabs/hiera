@@ -18,14 +18,14 @@ end
 require 'hiera'
 require 'optparse'
 
-options = {:default => nil, :config => "/etc/hiera.yaml", :scope => {}, :key => nil, :verbose => false, :resolution_type => :priority}
-
-class Hiera::Noop_logger
-  class << self
-    def warn(msg);end
-    def debug(msg);end
-  end
-end
+options = {
+  :default => nil,
+  :config  => "/etc/hiera.yaml",
+  :scope   => {},
+  :key     => nil,
+  :verbose => false,
+  :resolution_type => :priority
+}
 
 # Loads the scope from YAML or JSON files
 def load_scope(source, type=:yaml)
