@@ -11,7 +11,10 @@
 #
 # $ hiera release 'rel/%{location}' location=dc2 --yaml some.node.yaml
 
-require 'rubygems'
+begin
+  require 'rubygems'
+rescue LoadError
+end
 require 'hiera'
 require 'optparse'
 
