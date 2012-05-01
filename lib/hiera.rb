@@ -24,7 +24,7 @@ class Hiera
     # Hiera::Foo_logger and respond to :warn and :debug
     #
     # See hiera-puppet for an example that uses the Puppet
-    # loging system instead of our own
+    # logging system instead of our own
     def logger=(logger)
       loggerclass = "#{logger.capitalize}_logger"
 
@@ -63,5 +63,33 @@ class Hiera
   # of your choice.
   def lookup(key, default, scope, order_override=nil, resolution_type=:priority)
     Backend.lookup(key, default, scope, order_override, resolution_type)
+  end
+
+  # Calls the backend to do the actual save.
+  #
+  # The backend should match one of the configured backend plugins by name.
+  #
+  # The source can be any of the items in the hierarchy. For example, if you
+  # have the following hierarchy:
+  #
+  #   :hierarchy:
+  #     - %{environment}
+  #     - common
+  #
+  # And the following scope:
+  #
+  #   { 'environment' => 'production' }
+  #
+  # The source should be either 'common', 'production', or any value you
+  # expect to be matched by %{environment}.
+  def save(key, value, backend, source)
+    Backend.save(key, value, backend, source)
+  end
+
+  # Calls the backend to do the actual delete.
+  #
+  # Works like the save method, but deletes data instead.
+  def delete(key, value, backend, source)
+    Backend.delete(key, value, backend, source)
   end
 end

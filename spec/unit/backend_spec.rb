@@ -284,5 +284,57 @@ class Hiera
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
     end
+
+    describe "#save" do
+      before do
+        Hiera.stubs(:debug)
+        Hiera.stubs(:warn)
+      end
+
+      it "should warn if the backend is not valid" do
+        Config.load({})
+        Hiera.expects(:warn).with("Cannot save data, nobackend is not a valid backend")
+        Backend.save("key", "value", "nobackend", "source")
+      end
+
+      it "should warn if the backend does not support save" do
+        Config.load({})
+        Hiera.expects(:warn).with("Cannot save data, test backend does not support save")
+        Backend.save("key", "value", "test", "source").should be_false
+      end
+
+      it "should return the status from the backend" do
+        Config.load({})
+        Hiera::Backend::Test_backend.any_instance.expects(:save).
+          with("key", "value", "source").returns(true)
+        Backend.save("key", "value", "test", "source").should be_true
+      end
+    end
+
+    describe "#delete" do
+      before do
+        Hiera.stubs(:debug)
+        Hiera.stubs(:warn)
+      end
+
+      it "should warn if the backend is not valid" do
+        Config.load({})
+        Hiera.expects(:warn).with("Cannot delete data, nobackend is not a valid backend")
+        Backend.delete("key", "value", "nobackend", "source")
+      end
+
+      it "should warn if the backend does not support delete" do
+        Config.load({})
+        Hiera.expects(:warn).with("Cannot delete data, test backend does not support delete")
+        Backend.delete("key", "value", "test", "source").should be_false
+      end
+
+      it "should return the status from the backend" do
+        Config.load({})
+        Hiera::Backend::Test_backend.any_instance.expects(:delete).
+          with("key", "value", "source").returns(true)
+        Backend.delete("key", "value", "test", "source").should be_true
+      end
+    end
   end
 end
