@@ -57,4 +57,22 @@ describe "Hiera" do
       Hiera.new.lookup(:key, :default, :scope, :order_override, :resolution_type)
     end
   end
+
+  describe "#save" do
+    it "should proxy to the Backend#save method" do
+      Hiera::Config.stubs(:load)
+      Hiera::Config.stubs(:load_backends)
+      Hiera::Backend.expects(:save).with(:key, :value, :backend, :source)
+      Hiera.new.save(:key, :value, :backend, :source)
+    end
+  end
+
+  describe "#delete" do
+    it "should proxy to the Backend#delete method" do
+      Hiera::Config.stubs(:load)
+      Hiera::Config.stubs(:load_backends)
+      Hiera::Backend.expects(:delete).with(:key, :value, :backend, :source)
+      Hiera.new.delete(:key, :value, :backend, :source)
+    end
+  end
 end

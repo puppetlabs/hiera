@@ -176,6 +176,38 @@ class Hiera
         return default if answer == empty_answer(resolution_type)
         return answer
       end
+
+      # Saves data to the specified backend. Returns status of the action.
+      def save(key, value, backend, source)
+        execute(key, value, backend, source, :save)
+      end
+
+      # Deletes data from the specified backend. Returns status of the action.
+      def delete(key, value, backend, source)
+        execute(key, value, backend, source, :delete)
+      end
+
+      private
+
+      # Calls out to the specified backend to perform an action.
+      def execute(key, value, backend, source, action)
+        status = false
+
+        if constants.include?("#{backend.capitalize}_backend") ||
+           constants.include?("#{backend.capitalize}_backend".to_sym)
+          dest = Backend.const_get("#{backend.capitalize}_backend").new
+
+          if dest.respond_to?(action)
+            status = dest.send(action, key, value, source)
+          else
+            Hiera.warn("Cannot #{action} data, #{backend} backend does not support #{action}")
+          end
+        else
+          Hiera.warn("Cannot #{action} data, #{backend} is not a valid backend")
+        end
+
+        return status
+      end
     end
   end
 end

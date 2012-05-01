@@ -17,3 +17,12 @@ class Puppet
   end
 end
 
+class Hiera
+  module Backend
+    class Test_backend
+      def initialize
+        Hiera.debug("Hiera Test backend starting")
+      end
+    end
+  end
+end
