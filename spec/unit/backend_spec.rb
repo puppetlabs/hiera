@@ -73,6 +73,19 @@ class Hiera
         Backend.datasources({:rspec => :tests}) { }
       end
 
+      it "should check all levels returned by parse" do
+        input = "%{roles}/%{tags}"
+        scope = {"roles" => ['web','app','db'], 'tags' => ['local','www']}
+        output = ['web/local','web/www','app/local','app/www','db/local','db/www']
+        Config.load({:hierarchy => [input]})
+        Backend.expects(:parse_string).with(input, scope).returns(output)
+        yielded_values = Array.new
+        Backend.datasources(scope) do |backend|
+          yielded_values << backend
+        end
+        yielded_values.should == output
+      end
+
       it "should not return empty sources" do
         Config.load({})
 
@@ -130,6 +143,12 @@ class Hiera
       it "should match data in puppet ${::fact} style" do
         input = "test_%{::rspec}_test"
         Backend.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
+      end
+
+      it "should return each possible answer in an array" do
+        input = "%{roles}/%{tags}"
+        scope = {"roles" => ['web','app','db'], 'tags' => ['local','www']}
+        Backend.parse_string(input, scope, {'rspec' => 'fail'}).should == ['web/local','web/www','app/local','app/www','db/local','db/www']
       end
     end
 
