@@ -96,6 +96,8 @@ Installation?
 Hiera is available as a Gem called _hiera_ and out of the box it comes with just a single
 YAML backend.
 
+Hiera is also available as a native package via apt (http://apt.puppetlabs.com) and yum (http://yum.puppetlabs.com). Instructions for adding these repositories can be found at http://docs.puppetlabs.com/guides/installation.html#debian-and-ubuntu and http://docs.puppetlabs.com/guides/installation.html#enterprise-linux respectively.
+
 At present JSON (github/ripienaar/hiera-json) and Puppet (hiera-puppet) backends are availble.
 
 Configuration?
