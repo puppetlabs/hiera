@@ -1,3 +1,23 @@
+1.0.0rc1
+===
+6de3d4c Moving CHANGES.txt to CHANGELOG. Updating CHANGELOG with git log from initial commit to v0.3.0 tag.
+dbf9fe3 Update README to reference deb and rpm packages
+f697b7f Updated hiera.spec to include puppet functions and put in the right place.
+540d2d6 (#14460) Add Puppet parser functions
+29c5ad7 Add hiera.spec for building hiera on redhat
+24ef7b9 (#13600) Monkey patch mktmpdir on ruby 1.8.5
+b7b3280 (maint) Make noop logger work on Ruby 1.9.x
+602c526 (maint) Fix failing spec test on Ruby 1.9.3
+82881e3 (#14150) Use tar_gz instead of tar
+7ef2821 (#14148) Add docs to Hiera packaging
+67f91d6 (#14147) Handle lack of rubygems gracefully
+f6c9f5d (#14124) Load rake tasks directly to fix tests for Ruby 1.9.x
+122b891 (#13641) Fix Hiera::Backend#parse_string to support :undefined in extra_data
+e6dea8e Commit caching on YAML Backend
+ddd5b66 Fix VERSION contant in lib/hiera.rb
+50f9771 hiera working on ruby 1.9.2/1.9.3, issue #10975 (http://projects.puppetlabs.com/issues/10975)
+794265f (maint) Code base cleanup, use 2 space indention.
+
 v0.3.0
 ===
 
