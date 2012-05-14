@@ -1,0 +1,57 @@
+v0.3.0
+===
+
+d3b9c41 Fixes a quoting string issue
+2b6c3e7 Change Rakefile to autoversion
+1e7affb Rspec 2.7 has introduced some non backwards compatible changes that is exposed by using require with full paths.
+d136fc2 Switch branding to Puppet Labs
+731f2ef Fix warnings for rake
+0a53e96 fix failing test after sort was removed
+15fb3bd Do not sort arrays after building them as array data with complex data in them like hashes will fail to sort and raise exceptions
+f296a18 Test cases for #21
+dcf51ce Fixes: Hiera errors on empty yaml files
+d2d59d7 Revising backend bool spec test that nil /= false
+3cd4cec Fixes #15 Hiera return nil for false value
+17a2a98 Adding inventory_service option to scope.
+6ecab35 (#13) Hierarchy includes sub-hierarchy
+79b0d4b Corrected invalid YAML markup.
+c05823a Add specs to verify datatypes are being retained
+dedeb8c Make hiera handle boolean/numeric values correctly instead of just returning nil
+b78b3e4 Add type mismatch error output and test cases
+95e60ce Added additional spec tests for hash.
+f078414 Revising spec test for hash merge.
+9d72afa Hash was merged wrong direction.
+b4a90ba Adding hashes to CHANGES.txt
+90a23be Adding hash spec unit tests
+d1171d7 Adding hash support to hiera and yaml backend
+aa6af39 Fix logic around handling of defaults in array searches.  It used to always return [nil] for unknown data in array searches now it returns the supplied default.
+51a0a57 Fix versioning and autoload the Puppet logger
+fb88a3b Removed :json type from load_scope when parsing YAML format
+3839126 Fix typo
+8b7e036 More 0.2.0 update information
+93711a9 Fix spacing
+e804daf Update readme with information for 0.2.0
+4c990e1 Release 0.2.0
+1977a1e Improve tests based on recent changes
+3683a62 Simplify plugins that reads serialized data from files by moving more to the Backend module
+9d92041 Update changes file
+61e3574 Add Puppet logger plugin
+98a9525 Add array merge searches to the framework and the yaml backend Add array search to the command line Parse %{var}s in Strings, Arrays and Hashes correctly
+19cbf04 Update doco
+0f0837c Add querying facts via mcollective for scope of the CLI
+aeaef32 Remove some stray whitespace Turn a warn message into a debug message to avoid spamming logs
+27d6fd9 Fix /bin/env to /usr/bin/env (#1) Improve gem file
+dde5997 Release 0.1.0
+f69ebb2 Fix verbose checking in the cli Do not return empty sources Improve tests
+6d8130f Small language fix
+23ef93d Show variable expansion in string results
+362710c Add sample data to the readme
+dcc2ad2 Add a CLI query tool
+e3eb8de More todo items
+ced8d33 Add licence and readme
+e5d0106 avoid some debug noise
+dc41bcd Add comments and tests
+19e27c2 Small changes to the yaml backend, add a pluggable logging system and a console logger
+28cdd56 - simplify language by changing precedence with hierarchy - add gem bits - fall through to multiple backends till one provides an answer - make the backend writing process a bit easier
+19e03a7 Working YAML backend
+ca3efeb Add Readme
