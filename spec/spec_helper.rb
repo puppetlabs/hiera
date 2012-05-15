@@ -10,13 +10,6 @@ RSpec.configure do |config|
   config.mock_with :mocha
 end
 
-class Puppet
-  class Parser
-    class Functions
-    end
-  end
-end
-
 # In ruby 1.8.5 Dir does not have mktmpdir defined, so this monkey patches
 # Dir to include the 1.8.7 definition of that method if it isn't already defined.
 # Method definition borrowed from ruby-1.8.7-p357/lib/ruby/1.8/tmpdir.rb
