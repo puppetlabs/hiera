@@ -3,17 +3,25 @@ require 'spec_helper'
 class Hiera
   describe Config do
     describe "#load" do
-      it "should treat string sources as a filename" do
-        expect {
-            Config.load("/nonexisting")
-        }.to raise_error("Config file /nonexisting not found")
+      let(:default_config) do
+        {
+          :backends  => ["yaml"],
+          :hierarchy => "common",
+          :logger    => "console"
+        }
       end
 
-      it "should raise error for missing config files" do
+      it "should treat string sources as a filename" do
+        Hiera.expects(:warn).with("Config file /nonexisting not found")
+        Config.load("/nonexisting")
+      end
+
+      it "should warn for missing config files" do
         File.expects(:exist?).with("/nonexisting").returns(false)
         YAML.expects(:load_file).with("/nonexisting").never
 
-        expect { Config.load("/nonexisting") }.should raise_error RuntimeError, /not found/
+        Hiera.expects(:warn).with("Config file /nonexisting not found")
+        Config.load("/nonexisting")
       end
 
       it "should attempt to YAML load config files" do
@@ -27,7 +35,12 @@ class Hiera
         File.expects(:exist?).with("/nonexisting").returns(true)
         YAML.expects(:load_file).with("/nonexisting").returns(YAML.load(""))
 
-        Config.load("/nonexisting").should == {:backends => ["yaml"], :hierarchy => "common", :logger => "console"}
+        Config.load("/nonexisting").should == default_config
+      end
+
+      it "should use defaults on missing YAML config file" do
+        Hiera.expects(:warn).with("Config file /nonexisting not found")
+        Config.load("/nonexisting").should == default_config
       end
 
       it "should use hash data as source if supplied" do

@@ -10,10 +10,12 @@ class Hiera::Config
                  :hierarchy => "common"}
 
       if source.is_a?(String)
-        raise "Config file #{source} not found" unless File.exist?(source)
-
-        config = YAML.load_file(source)
-        @config.merge! config if config
+        if File.exist?(source)
+          config = YAML.load_file(source)
+          @config.merge! config if config
+        else
+          Hiera.warn "Config file #{source} not found"
+        end
       elsif source.is_a?(Hash)
         @config.merge! source
       end
