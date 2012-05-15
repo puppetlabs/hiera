@@ -4,14 +4,15 @@
 
 Name:		hiera
 Version:	1.0.0
-Release:	0.1rc1%{?dist}
+#Release:	1%{?dist}
+Release:	0.1rc2%{?dist}
 Summary:	A simple pluggable Hierarchical Database.
 
 Group: 		System Environment/Base
 License: 	Apache 2.0
 URL:		http://projects.puppetlabs.com/projects/%{name}/
 #Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{version}.tar.gz
-Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{version}rc1.tar.gz
+Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{version}rc2.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:	noarch
 BuildRequires:	ruby >= 1.8.5
@@ -23,7 +24,7 @@ A simple pluggable Hierarchical Database.
 
 %prep
 #%setup -q  -n %{name}-%{version}
-%setup -q  -n %{name}-%{version}rc1
+%setup -q  -n %{name}-%{version}rc2
 
 
 %build
@@ -53,6 +54,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon May 14 2012 Matthaus Litteken <matthaus@puppetlabs.com> - 1.0.0-0.1rc2
+- 1.0.0rc2 release
+
 * Mon May 14 2012 Matthaus Litteken <matthaus@puppetlabs.com> - 1.0.0-0.1rc1
 - 1.0.0rc1 release
 

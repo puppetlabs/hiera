@@ -5,7 +5,7 @@ end
 require 'yaml'
 
 class Hiera
-  VERSION = "0.3.0"
+  VERSION = "1.0.0"
 
   autoload :Config,         "hiera/config"
   autoload :Backend,        "hiera/backend"

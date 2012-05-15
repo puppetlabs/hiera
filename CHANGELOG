@@ -1,5 +1,6 @@
-1.0.0rc1
+1.0.0rc2
 ===
+fa3081c Updating hiera.spec, CHANGELOG for Hiera 1.0.0rc1
 6de3d4c Moving CHANGES.txt to CHANGELOG. Updating CHANGELOG with git log from initial commit to v0.3.0 tag.
 dbf9fe3 Update README to reference deb and rpm packages
 f697b7f Updated hiera.spec to include puppet functions and put in the right place.
