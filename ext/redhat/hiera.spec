@@ -22,12 +22,12 @@ Requires:	ruby >= 1.8.5
 %description
 A simple pluggable Hierarchical Database.
 
-%package puppet
+%package puppet-functions
 Summary:        A simple pluggable Hierarchical Database.
 Group:          System Environment/Base
 Requires:       hiera-puppet = %{version}-%{release}
 Requires:       puppet
-%description puppet
+%description puppet-functions
 Functions to call hiera from within puppet.
 
 %prep
@@ -58,7 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 %{ruby_sitelibdir}/hiera
 %doc CHANGELOG COPYING README.md
 
-%files puppet
+%files puppet-functions
 # Puppet hiera functions
 %{ruby_sitelibdir}/puppet/parser/functions/*.rb
 
