@@ -14,7 +14,7 @@ class Hiera::Config
           config = YAML.load_file(source)
           @config.merge! config if config
         else
-          Hiera.warn "Config file #{source} not found"
+          raise "Config file #{source} not found"
         end
       elsif source.is_a?(Hash)
         @config.merge! source
