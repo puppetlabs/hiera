@@ -1,6 +1,6 @@
-# Title:        Rake task to build Apple packages for Facter.
+# Title:        Rake task to build Apple packages for hiera.
 # Author:       Gary Larizza
-# Date:         12/5/2011
+# Date:         05/18/2012
 # Description:  This task will create a DMG-encapsulated package that will
 #               install Facter on OS X systems. This happens by building
 #               a directory tree of files that will then be fed to the
@@ -55,6 +55,9 @@ def make_directory_tree
   end
   File.open("#{@scratch}/#{'prototype.plist'}", "w+") do |f|
     f.write(ERB.new(File.read('tasks/templates/prototype.plist.erb')).result())
+  end
+  File.open("#{@working_tree["scripts"]}/preflight", "w+") do |f|
+    f.write(ERB.new(File.read('conf/osx/preflight.erb')).result())
   end
 end
 
@@ -131,7 +134,8 @@ def pack_source
 
   # Setup a preflight script and replace variables in the files with
   # the correct paths.
-  system("#{INSTALL} -o root -g wheel -m 644 #{source}/conf/osx/preflight #{@working_tree['scripts']}")
+  FileUtils.chown('root', 'wheel', "#{@working_tree['scripts']}/preflight")
+  FileUtils.chmod(0644, "#{@working_tree['scripts']}/preflight")
   system("#{SED} -i '' \"s\#{SITELIBDIR}\#/usr/lib/ruby/site_ruby/1.8\#g\" #{@working_tree['scripts']}/preflight")
   system("#{SED} -i '' \"s\#{BINDIR}\#/usr/bin\#g\" #{@working_tree['scripts']}/preflight")
 
