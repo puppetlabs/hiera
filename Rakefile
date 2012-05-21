@@ -1,6 +1,19 @@
 require 'rubygems'
 require 'rubygems/package_task'
-require 'rspec/core/rake_task'
+
+begin
+  require 'rspec/core/rake_task'
+
+  desc "Run all specs"
+  RSpec::Core::RakeTask.new(:test) do |t|
+    t.pattern = 'spec/**/*_spec.rb'
+    t.rspec_opts = File.read("spec/spec.opts").chomp || ""
+  end
+rescue LoadError
+  task :test do
+    warn "RSpec is not installed: skipping tests"
+  end
+end
 
 Dir['tasks/**/*.rake'].each { |t| load t }
 
@@ -23,12 +36,6 @@ end
 
 Gem::PackageTask.new(spec) do |pkg|
   pkg.need_tar_gz = true
-end
-
-desc "Run all specs"
-RSpec::Core::RakeTask.new(:test) do |t|
-  t.pattern = 'spec/**/*_spec.rb'
-  t.rspec_opts = File.read("spec/spec.opts").chomp || ""
 end
 
 task :default => [:test, :repackage]

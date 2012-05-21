@@ -87,20 +87,22 @@ class Hiera
 
         if tdata.is_a?(String)
           while tdata =~ /%\{(.+?)\}/
-            var = $1
+            begin
+              var = $1
 
-            val = ""
+              val = ""
 
-            # Puppet can return :undefined for unknown scope vars,
-            # If it does then we still need to evaluate extra_data
-            # before returning an empty string.
-            if scope[var] && scope[var] != :undefined
-                val = scope[var]
-            elsif extra_data[var]
-                val = extra_data[var]
-            end
+              # Puppet can return :undefined for unknown scope vars,
+              # If it does then we still need to evaluate extra_data
+              # before returning an empty string.
+              if scope[var] && scope[var] != :undefined
+                  val = scope[var]
+              elsif extra_data[var]
+                  val = extra_data[var]
+              end
+            end until val != "" || var !~ /::(.+)/
 
-            tdata.gsub!(/%\{#{var}\}/, val)
+            tdata.gsub!(/%\{(::)?#{var}\}/, val)
           end
         end
 
@@ -166,7 +168,7 @@ class Hiera
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
             answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
-            break if answer
+            break if answer != nil
           end
         end
 
