@@ -1,0 +1,17 @@
+hiera (0.99+1.0.0rc2-1puppet1) unstable; urgency=low
+
+  * Release of 1.0.0rc2
+
+ -- Matthaus Litteken <matthaus@puppetlabs.com>  Tue, 15 May 2012 04:45:08 +0000
+
+hiera (0.99+1.0.0rc1-1puppet1) unstable; urgency=low
+
+  * Release of 1.0.0rc1
+
+ -- Puppet Labs Release Key (Puppet Labs Release Key) <info@puppetlabs.com>  Mon, 14 May 2012 23:55:54 +0000
+
+hiera (0.3.0.24-1) unstable; urgency=low
+
+  * Initial release of upstream 0.3.0.24
+
+ -- Puppet Labs Release Key (Puppet Labs Release Key) <info@puppetlabs.com>  Fri, 04 May 2012 20:43:22 +0000

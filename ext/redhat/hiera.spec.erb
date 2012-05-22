@@ -1,18 +1,21 @@
 %{!?ruby_sitelibdir: %define ruby_sitelibdir %(ruby -rrbconfig -e 'puts Object.const_get(defined?(RbConfig) ? :RbConfig : :Config)::CONFIG["sitelibdir"]')}
 
 %global _ver 1.0.0
+%global confdir ext/redhat
+%global initrddir /etc/rc.d/init.d
+# VERSION is subbed out during rake srpm process
+# %global realversion <%= version %>
+# %global rpmversion <%= rpmversion %>
 
 Name:		hiera
-Version:	1.0.0
-#Release:	1%{?dist}
-Release:	0.1rc2%{?dist}
+Version:        %{rpmversion}
+Release:        <%= release -%>%{?dist}
 Summary:	A simple pluggable Hierarchical Database.
 
 Group: 		System Environment/Base
 License: 	Apache 2.0
 URL:		http://projects.puppetlabs.com/projects/%{name}/
-#Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{version}.tar.gz
-Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{version}rc2.tar.gz
+Source0:	http://downloads.puppetlabs.com/%{name}/%{name}-%{realversion}.tar.gz
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:	noarch
 BuildRequires:	ruby >= 1.8.5
@@ -23,8 +26,7 @@ Requires:	ruby >= 1.8.5
 A simple pluggable Hierarchical Database.
 
 %prep
-#%setup -q  -n %{name}-%{version}
-%setup -q  -n %{name}-%{version}rc2
+%setup -q  -n %{name}-%{realversion}
 
 
 %build
@@ -36,7 +38,6 @@ mkdir -p $RPM_BUILD_ROOT/%{ruby_sitelibdir}
 mkdir -p $RPM_BUILD_ROOT/%{_bindir}
 cp -pr lib/hiera $RPM_BUILD_ROOT/%{ruby_sitelibdir} 
 cp -pr lib/hiera.rb $RPM_BUILD_ROOT/%{ruby_sitelibdir} 
-cp -pr lib/puppet $RPM_BUILD_ROOT/%{ruby_sitelibdir}
 install -p -m0755 bin/hiera $RPM_BUILD_ROOT/%{_bindir}
 
 %clean
@@ -48,12 +49,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/hiera
 %{ruby_sitelibdir}/hiera.rb
 %{ruby_sitelibdir}/hiera
-# Puppet hiera functions
-%{ruby_sitelibdir}/puppet
 %doc CHANGELOG COPYING README.md
 
 
 %changelog
+* <%= spec_date %> Puppet Labs Release <info@puppetlabs.com> -  <%= rpmversion %>-<%= release %>
+- Build for <%= version %>
+
 * Mon May 14 2012 Matthaus Litteken <matthaus@puppetlabs.com> - 1.0.0-0.1rc2
 - 1.0.0rc2 release
 
