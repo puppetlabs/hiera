@@ -1,3 +1,20 @@
+1.0.0rc3
+===
+a1a885a Adding package task liberally copied from puppet-dashboard.
+3527443 Updating apple pkg task to refer to ext directory.
+445a6f2 ext is more appropriate than conf for a dirname.
+ade5567 Adding debian packaging to hiera.
+3ef4f96 Move redhat spec into conf dir, to standardize packaging.
+b6218b9 (maint) Hiera should raise an error when config is missing
+1df7201 Update mac packaging to dynamically generate preflight
+10f930f Add mac packaging to hiera
+22a98ee Remove Puppet parser functions
+0067cd2 (maint) Additional tests for Hiera array and hash lookups
+7312a95 (maint) Add Hiera acceptance tests
+9808a64 (#14514) Use default config when hiera.yaml is missing
+fd644b6 Add require hiera/backend to test
+fe3d509 Remove empty Puppet class definition
+
 1.0.0rc2
 ===
 fa3081c Updating hiera.spec, CHANGELOG for Hiera 1.0.0rc1
