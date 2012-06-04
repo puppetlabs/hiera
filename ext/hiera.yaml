@@ -1,0 +1,11 @@
+---
+:backend:
+  - yaml
+:hierarchy:
+  - defaults
+  - %{certname}
+  - %{environment}
+  - global
+
+:yaml:
+  :datadir: /var/lib/hiera

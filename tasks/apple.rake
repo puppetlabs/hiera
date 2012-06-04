@@ -125,12 +125,15 @@ def pack_source
   # Make all necessary directories
   directories = ["#{work}/usr/bin",
                  "#{work}/usr/share/doc/#{@package_name}",
-                 "#{work}/usr/lib/ruby/site_ruby/1.8/#{@package_name}"]
+                 "#{work}/usr/lib/ruby/site_ruby/1.8/#{@package_name}",
+                 "#{work}/var/lib/#{@package_name}",
+                 "#{work}/etc"]
   FileUtils.mkdir_p(directories)
 
   # Install necessary files
   system("#{DITTO} #{source}/bin/ #{work}/usr/bin")
   system("#{DITTO} #{source}/lib/ #{work}/usr/lib/ruby/site_ruby/1.8/")
+  system("#{DITTO} #{source}/ext/hiera.yaml #{work}/etc")
 
   # Setup a preflight script and replace variables in the files with
   # the correct paths.
