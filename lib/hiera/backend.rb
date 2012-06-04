@@ -159,21 +159,28 @@ class Hiera
       # backend will not create new instances
       def lookup(key, default, scope, order_override, resolution_type)
         @backends ||= {}
-        answer = nil
+        answer = empty_answer(resolution_type)
 
         Config[:backends].each do |backend|
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
-
-            break if answer
+            new_answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
+            case resolution_type
+              when :priority
+                answer = new_answer unless new_answer.nil?
+                break if answer != empty_answer(:priority)
+              when :array
+                answer << new_answer
+              when :hash
+                answer = new_answer.merge answer
+            end
           end
         end
 
         answer = resolve_answer(answer, resolution_type)
         answer = parse_string(default, scope) if answer.nil?
 
-        return default if answer == empty_answer(resolution_type)
+        return default if answer == empty_answer(resolution_type) unless default.nil?
         return answer
       end
     end
