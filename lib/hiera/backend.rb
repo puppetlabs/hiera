@@ -152,9 +152,23 @@ class Hiera
         Config[:backends].each do |backend|
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
+            new_answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
-            break if not answer.nil?
+            if not new_answer.nil?
+              case resolution_type
+              when :array
+                raise Exception, "Hiera type mismatch: expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
+                answer ||= []
+                answer << new_answer
+              when :hash
+                raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
+                answer ||= {}
+                answer = new_answer.merge answer
+              else
+                answer = new_answer
+                break
+              end
+            end
           end
         end
 
