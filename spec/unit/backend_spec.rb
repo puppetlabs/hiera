@@ -16,20 +16,6 @@ class Hiera
       end
     end
 
-    describe "#empty_anwer" do
-      it "should return [] for array searches" do
-        Backend.empty_answer(:array).should == []
-      end
-
-      it "should return {} for hash searches" do
-        Backend.empty_answer(:hash).should == {}
-      end
-
-      it "should return nil otherwise" do
-        Backend.empty_answer(:meh).should == nil
-      end
-    end
-
     describe "#datafile" do
       it "should check if the file exist and return nil if not" do
         Hiera.expects(:debug).with("Cannot find datafile /nonexisting/test.yaml, skipping")
@@ -238,10 +224,33 @@ class Hiera
         Config.load({})
         Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
         Backend.instance_variable_set("@backends", {"rspec" => backend})
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
+        #Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "answer"
+      end
+
+      it "should call to all backends till an answer is found when doing array lookups" do
+        backend = mock
+        backend.expects(:lookup).returns(["answer"])
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
+        Backend.instance_variable_set("@backends", {"rspec" => backend})
+        Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
+
+        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :array).should == ["answer"]
+      end
+
+      it "should call to all backends till an answer is found when doing hash lookups" do
+        thehash = {:answer => "value"}
+        backend = mock
+        backend.expects(:lookup).returns(thehash)
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
+        Backend.instance_variable_set("@backends", {"rspec" => backend})
+        Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
+
+        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash).should == thehash
       end
 
       it "should parse the answers based on resolution_type" do

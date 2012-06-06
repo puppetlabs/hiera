@@ -31,18 +31,6 @@ class Hiera
         return file
       end
 
-      # Returns an appropriate empty answer dependant on resolution type
-      def empty_answer(resolution_type)
-        case resolution_type
-        when :array
-          return []
-        when :hash
-          return {}
-        else
-          return nil
-        end
-      end
-
       # Constructs a list of data sources to search
       #
       # If you give it a specific hierarchy it will just use that
@@ -166,14 +154,14 @@ class Hiera
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
             answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
-            break if answer
+            break if not answer.nil?
           end
         end
 
-        answer = resolve_answer(answer, resolution_type)
+        answer = resolve_answer(answer, resolution_type) unless answer.nil?
         answer = parse_string(default, scope) if answer.nil?
 
-        return default if answer == empty_answer(resolution_type)
+        return default if answer.nil?
         return answer
       end
     end

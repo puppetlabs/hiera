@@ -66,15 +66,6 @@ class Hiera
           @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
         end
 
-        it "should return empty hash of data sources for hash searches" do
-          Backend.expects(:datasources).multiple_yields(["one"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-
-          YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load(""))
-
-          @backend.lookup("key", {}, nil, :hash).should == {}
-        end
-
         it "should ignore empty hash of data sources for hash searches" do
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
