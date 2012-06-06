@@ -253,6 +253,41 @@ class Hiera
         Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash).should == thehash
       end
 
+      it "should build a merged hash from all backends for hash searches" do
+        backend1 = mock :lookup => {"a" => "answer"}
+        backend2 = mock :lookup => {"b" => "bnswer"}
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :hash).should == {"a" => "answer", "b" => "bnswer"}
+      end
+
+      it "should build an array from all backends for array searches" do
+        backend1 = mock :lookup => ["a", "b"]
+        backend2 = mock :lookup => ["c", "d"]
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :array).should == ["a", "b", "c", "d"]
+      end
+
+      it "should use the earliest backend result for priority searches" do
+        backend1 = mock
+        backend1.stubs(:lookup).returns(["a", "b"])
+        backend2 = mock
+        backend2.stubs(:lookup).returns(["c", "d"])
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
+      end
+
       it "should parse the answers based on resolution_type" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
