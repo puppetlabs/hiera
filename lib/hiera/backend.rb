@@ -31,18 +31,6 @@ class Hiera
         return file
       end
 
-      # Returns an appropriate empty answer dependant on resolution type
-      def empty_answer(resolution_type)
-        case resolution_type
-        when :array
-          return []
-        when :hash
-          return {}
-        else
-          return nil
-        end
-      end
-
       # Constructs a list of data sources to search
       #
       # If you give it a specific hierarchy it will just use that
@@ -164,16 +152,30 @@ class Hiera
         Config[:backends].each do |backend|
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
+            new_answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
 
-            break if answer
+            if not new_answer.nil?
+              case resolution_type
+              when :array
+                raise Exception, "Hiera type mismatch: expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
+                answer ||= []
+                answer << new_answer
+              when :hash
+                raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
+                answer ||= {}
+                answer = new_answer.merge answer
+              else
+                answer = new_answer
+                break
+              end
+            end
           end
         end
 
-        answer = resolve_answer(answer, resolution_type)
-        answer = parse_string(default, scope) if answer.nil?
+        answer = resolve_answer(answer, resolution_type) unless answer.nil?
+        answer = parse_string(default, scope) if answer.nil? and default.is_a?(String)
 
-        return default if answer == empty_answer(resolution_type)
+        return default if answer.nil?
         return answer
       end
     end
