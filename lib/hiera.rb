@@ -8,6 +8,7 @@ class Hiera
   VERSION = "1.0.0"
 
   autoload :Config,         "hiera/config"
+  autoload :Util,           "hiera/util"
   autoload :Backend,        "hiera/backend"
   autoload :Console_logger, "hiera/console_logger"
   autoload :Puppet_logger,  "hiera/puppet_logger"
@@ -45,7 +46,7 @@ class Hiera
   # If the config option is a string its assumed to be a filename,
   # else a hash of what would have been in the YAML config file
   def initialize(options={})
-    options[:config] ||= "/etc/hiera.yaml"
+    options[:config] ||= File.join(Util.config_dir, 'hiera.yaml')
 
     @config = Config.load(options[:config])
 
@@ -65,3 +66,4 @@ class Hiera
     Backend.lookup(key, default, scope, order_override, resolution_type)
   end
 end
+

@@ -1,3 +1,5 @@
+require 'hiera/util'
+
 class Hiera
   module Backend
     class << self
@@ -6,7 +8,7 @@ class Hiera
       # subject to variable expansion based on scope
       def datadir(backend, scope)
         backend = backend.to_sym
-        default = "/var/lib/hiera"
+        default = Hiera::Util.var_dir
 
         if Config.include?(backend)
           parse_string(Config[backend][:datadir] || default, scope)

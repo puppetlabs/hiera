@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'hiera/util'
 
 class Hiera
   describe Backend do
@@ -9,9 +10,9 @@ class Hiera
         Backend.datadir(:rspec, {})
       end
 
-      it "should default to /var/lib/hiera" do
+      it "should use a default var directory" do
         Config.load({})
-        Backend.expects(:parse_string).with("/var/lib/hiera", {})
+        Backend.expects(:parse_string).with(Hiera::Util.var_dir, {})
         Backend.datadir(:rspec, {})
       end
     end
