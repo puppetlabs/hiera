@@ -16,11 +16,12 @@ begin
 rescue LoadError
 end
 require 'hiera'
+require 'hiera/util'
 require 'optparse'
 
 options = {
   :default => nil,
-  :config  => "/etc/hiera.yaml",
+  :config  => File.join(Hiera::Util.config_dir, 'hiera.yaml'),
   :scope   => {},
   :key     => nil,
   :verbose => false,
