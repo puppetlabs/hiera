@@ -8,7 +8,7 @@ class Hiera
     end
 
     def microsoft_windows?
-      return false if posix?
+      return false unless File::ALT_SEPARATOR
       
       begin
         require 'win32/dir'
