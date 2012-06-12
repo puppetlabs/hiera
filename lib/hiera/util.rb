@@ -8,7 +8,7 @@ class Hiera
     end
 
     def microsoft_windows?
-      return false unless File::ALT_SEPARATOR
+      return false unless file_alt_separator
       
       begin
         require 'win32/dir'
@@ -21,7 +21,7 @@ class Hiera
 
     def config_dir
       if microsoft_windows?
-         File.join(Dir::COMMON_APPDATA, 'PuppetLabs', 'hiera', 'etc')
+         File.join(common_appdata, 'PuppetLabs', 'hiera', 'etc')
       else
         '/etc'
       end
@@ -29,10 +29,18 @@ class Hiera
 
     def var_dir
       if microsoft_windows?
-        File.join(Dir::COMMON_APPDATA, 'PuppetLabs', 'hiera', 'var')
+        File.join(common_appdata, 'PuppetLabs', 'hiera', 'var')
       else
         '/var/lib/hiera'
       end
+    end
+
+    def file_alt_separator
+      File::ALT_SEPARATOR
+    end
+
+    def common_appdata
+      Dir::COMMON_APPDATA
     end
   end
 end
