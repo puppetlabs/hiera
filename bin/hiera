@@ -120,6 +120,10 @@ OptionParser.new do |opts|
     options[:resolution_type] = :array
   end
 
+  opts.on("--unique", "-u", "Unique array search") do
+    options[:resolution_type] = :unique_array
+  end
+
   opts.on("--hash", "-h", "Hash search") do
     options[:resolution_type] = :hash
   end
