@@ -71,7 +71,7 @@ class Hiera
       # this to make hiera aware of additional non scope
       # variables
       def parse_string(data, scope, extra_data={})
-        return nil unless data
+        return data if data.nil? || data == false || data == true
 
         tdata = data.clone
 

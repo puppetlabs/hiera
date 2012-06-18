@@ -90,6 +90,14 @@ class Hiera
         Backend.parse_string(nil, {}).should == nil
       end
 
+      it "should not try to parse false data" do
+        Backend.parse_string(false, {}).should == false
+      end
+
+      it "should not try to parse true data" do
+        Backend.parse_string(true, {}).should == true
+      end
+
       it "should clone the supplied data" do
         data = ""
         data.expects(:clone).returns("")
