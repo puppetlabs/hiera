@@ -8,4 +8,4 @@
   - global
 
 :yaml:
-  :datadir: /var/lib/hiera
+  :datadir: # /var/lib/hiera
