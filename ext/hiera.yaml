@@ -8,4 +8,6 @@
   - global
 
 :yaml:
-  :datadir: /var/lib/hiera
+# datadir is empty here, so hiera uses its defaults
+# When specifying a datadir, make sure the path of the datadir exists
+  :datadir:
