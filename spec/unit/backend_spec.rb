@@ -127,6 +127,10 @@ class Hiera
         Backend.parse_string(input, {"rspec" => :undefined}, {"rspec" => "test"}).should == "test_test_test"
       end
 
+      it "should match data in puppet ${::fact} style" do
+        input = "test_%{::rspec}_test"
+        Backend.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
+      end
     end
 
     describe "#parse_answer" do
