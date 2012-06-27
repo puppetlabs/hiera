@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'hiera/util'
 
 class Hiera
   describe Backend do
@@ -9,24 +10,10 @@ class Hiera
         Backend.datadir(:rspec, {})
       end
 
-      it "should default to /var/lib/hiera" do
+      it "should use a default var directory" do
         Config.load({})
-        Backend.expects(:parse_string).with("/var/lib/hiera", {})
+        Backend.expects(:parse_string).with(Hiera::Util.var_dir, {})
         Backend.datadir(:rspec, {})
-      end
-    end
-
-    describe "#empty_anwer" do
-      it "should return [] for array searches" do
-        Backend.empty_answer(:array).should == []
-      end
-
-      it "should return {} for hash searches" do
-        Backend.empty_answer(:hash).should == {}
-      end
-
-      it "should return nil otherwise" do
-        Backend.empty_answer(:meh).should == nil
       end
     end
 
@@ -140,6 +127,10 @@ class Hiera
         Backend.parse_string(input, {"rspec" => :undefined}, {"rspec" => "test"}).should == "test_test_test"
       end
 
+      it "should match data in puppet ${::fact} style" do
+        input = "test_%{::rspec}_test"
+        Backend.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
+      end
     end
 
     describe "#parse_answer" do
@@ -238,10 +229,68 @@ class Hiera
         Config.load({})
         Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
         Backend.instance_variable_set("@backends", {"rspec" => backend})
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
+        #Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "answer"
+      end
+
+      it "should call to all backends till an answer is found when doing array lookups" do
+        backend = mock
+        backend.expects(:lookup).returns(["answer"])
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
+        Backend.instance_variable_set("@backends", {"rspec" => backend})
+        Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
+
+        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :array).should == ["answer"]
+      end
+
+      it "should call to all backends till an answer is found when doing hash lookups" do
+        thehash = {:answer => "value"}
+        backend = mock
+        backend.expects(:lookup).returns(thehash)
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["yaml", "rspec"]})
+        Backend.instance_variable_set("@backends", {"rspec" => backend})
+        Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
+
+        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash).should == thehash
+      end
+
+      it "should build a merged hash from all backends for hash searches" do
+        backend1 = mock :lookup => {"a" => "answer"}
+        backend2 = mock :lookup => {"b" => "bnswer"}
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :hash).should == {"a" => "answer", "b" => "bnswer"}
+      end
+
+      it "should build an array from all backends for array searches" do
+        backend1 = mock :lookup => ["a", "b"]
+        backend2 = mock :lookup => ["c", "d"]
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :array).should == ["a", "b", "c", "d"]
+      end
+
+      it "should use the earliest backend result for priority searches" do
+        backend1 = mock
+        backend1.stubs(:lookup).returns(["a", "b"])
+        backend2 = mock
+        backend2.stubs(:lookup).returns(["c", "d"])
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["first", "second"]})
+        Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
+        Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
+
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
       end
 
       it "should parse the answers based on resolution_type" do

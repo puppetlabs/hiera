@@ -28,7 +28,7 @@ correct answer easily:
                                   \                  /
                            /------------- COMMON -------------\
                           | ntpserver: 1.pool.ntp.org          |
-                          | sysadmin: sysadmin@%{domain}       |
+                          | sysadmin: "sysadmin@%{domain}"     |
                           | classes: users::common             |
                            \----------------------------------/
 </pre>
@@ -111,13 +111,16 @@ A sample configuration file can be seen here:
 
 <pre>
 ---
-:backends: - yaml
-           - puppet
+:backends:
+  - yaml
+  - puppet
 
 :logger: console
 
-:hierarchy: - %{location}
-            - common
+:hierarchy:
+  - "%{location}"
+  - common
+
 :yaml:
    :datadir: /etc/puppet/hieradata
 
@@ -144,7 +147,7 @@ ntpserver: ntp1.dc2.example.com
 _/etc/puppet/hieradata/common.yaml_:
 <pre>
 ---
-sysadmin: sysadmin@%{domain}
+sysadmin: "sysadmin@%{domain}"
 ntpserver: 1.pool.ntp.org
 </pre>
 
@@ -230,7 +233,12 @@ When used in Puppet you'd expect Hiera to log using the Puppet infrastructure, t
 plugin includes a Puppet Logger plugin for Hiera that uses the normal Puppet logging
 methods for all logging.
 
-Contact?
-========
+License
+-------
 
-R.I.Pienaar / rip@devco.net / @ripienaar / www.devco.net
+See LICENSE file.
+
+Support
+-------
+Please log tickets and issues at our [Projects site](http://projects.puppetlabs.com)
+

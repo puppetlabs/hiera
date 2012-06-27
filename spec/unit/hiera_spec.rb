@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'hiera/util'
 
 describe "Hiera" do
   describe "#logger=" do
@@ -30,8 +31,9 @@ describe "Hiera" do
   end
 
   describe "#initialize" do
-    it "should default to /etc/hiera.yaml for config" do
-      Hiera::Config.expects(:load).with("/etc/hiera.yaml")
+    it "should use a default config" do
+      config_file = File.join(Hiera::Util.config_dir, 'hiera.yaml')
+      Hiera::Config.expects(:load).with(config_file)
       Hiera::Config.stubs(:load_backends)
       Hiera.new
     end
