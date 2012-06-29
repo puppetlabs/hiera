@@ -4,12 +4,12 @@
 %global confdir ext/redhat
 %global initrddir /etc/rc.d/init.d
 # VERSION is subbed out during rake srpm process
-# %global realversion <%= version %>
-# %global rpmversion <%= rpmversion %>
+# %global realversion <%= @version %>
+# %global rpmversion <%= @rpmversion %>
 
 Name:           hiera
 Version:        %{rpmversion}
-Release:        <%= release -%>%{?dist}
+Release:        <%= @release -%>%{?dist}
 Summary:        A simple pluggable Hierarchical Database.
 
 Group:          System Environment/Base
@@ -58,8 +58,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* <%= spec_date %> Puppet Labs Release <info@puppetlabs.com> -  <%= rpmversion %>-<%= release %>
-- Build for <%= version %>
+* <%= Time.now.strftime("%a %b %d %Y") %> Puppet Labs Release <info@puppetlabs.com> -  <%= @rpmversion %>-<%= @release %>
+- Build for <%= @version %>
 
 * Mon May 14 2012 Matthaus Litteken <matthaus@puppetlabs.com> - 1.0.0-0.1rc2
 - 1.0.0rc2 release
