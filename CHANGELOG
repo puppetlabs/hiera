@@ -1,3 +1,20 @@
+1.0.0rc4
+===
+6887137 (maint) Add Getting Started tutorial
+091fea3 Overhaul Hiera packaging
+7947dd6 Consolidate changelog, update erb templates
+4698cf1 (#15105) Update README YAML examples
+fcd3d2c (maint) Hiera now has a LICENSE file
+ca47463 Remove datadir value in hiera.yaml
+92a148f (maint) Fix failing Hiera::Util specs
+07366d8 Use File::ALT_SEPARATOR to test platform
+1b7f787 Add specs for Hiera::Util
+cdd7364 (#14867) Add windows support
+16c3dd3 (#12122) Merge arrays and hashes across backends
+480d86c (#12122) Correctly fall through backends during loop
+d0fcc57 Add default config to hiera
+3ec4165 match data in puppet ${::fact} style to get rid of puppet deprecation warnings
+
 1.0.0rc3
 ===
 a1a885a Adding package task liberally copied from puppet-dashboard.
