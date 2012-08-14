@@ -31,6 +31,13 @@ class Hiera
           next if ! @data[yamlfile]
           next if @data[yamlfile].empty?
           next unless @data[yamlfile].include?(key)
+
+          # Extra logging that we found the key. This can be outputted
+          # multiple times if the resolution type is array or hash but that
+          # should be expected as the logging will then tell the user ALL the
+          # places where the key is found.
+          Hiera.debug("Found #{key} in #{source}")
+
           # for array resolution we just append to the array whatever
           # we find, we then goes onto the next file and keep adding to
           # the array
