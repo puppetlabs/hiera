@@ -1,0 +1,15 @@
+---
+project: 'hiera'
+author: 'Puppet Labs'
+email: 'info@puppetlabs.com'
+homepage: 'https://github.com/puppetlabs/hiera'
+summary: 'Light weight hierarchical data store'
+description: 'A pluggable data store for hierarcical data'
+version_file: 'lib/hiera.rb'
+# files and gem_files are space separated lists
+files: '[A-Z]* ext lib bin spec acceptance_tests'
+gem_files: '{bin,lib}/**/* CHANGELOG COPYING README.md LICENSE'
+gem_require_path: 'lib'
+gem_test_files: 'spec/**/*'
+gem_executables: 'hiera'
+gem_default_executables: 'hiera'
