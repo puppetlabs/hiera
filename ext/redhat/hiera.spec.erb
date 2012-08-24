@@ -1,8 +1,11 @@
-%{!?ruby_sitelibdir: %define ruby_sitelibdir %(ruby -rrbconfig -e 'puts Object.const_get(defined?(RbConfig) ? :RbConfig : :Config)::CONFIG["sitelibdir"]')}
+# Fedora 17 ships with ruby 1.9, which uses vendorlibdir instead
+# of sitelibdir
+%if 0%{?fedora} >= 17
+%global hiera_libdir   %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["vendorlibdir"]')
+%else
+%global hiera_libdir   %(ruby -rrbconfig -e 'puts Object.const_get(defined?(RbConfig) ? :RbConfig : :Config)::CONFIG["sitelibdir"]')
+%endif
 
-%global _ver 1.0.0
-%global confdir ext/redhat
-%global initrddir /etc/rc.d/init.d
 # VERSION is subbed out during rake srpm process
 # %global realversion <%= @version %>
 # %global rpmversion <%= @rpmversion %>
@@ -11,7 +14,7 @@ Name:           hiera
 Version:        %{rpmversion}
 Release:        <%= @release -%>%{?dist}
 Summary:        A simple pluggable Hierarchical Database.
-
+Vendor:         %{?_host_vendor}
 Group:          System Environment/Base
 License:        Apache 2.0
 URL:            http://projects.puppetlabs.com/projects/%{name}/
@@ -34,12 +37,12 @@ A simple pluggable Hierarchical Database.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{ruby_sitelibdir}
+mkdir -p $RPM_BUILD_ROOT/%{hiera_libdir}
 mkdir -p $RPM_BUILD_ROOT/%{_bindir}
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/hiera
-cp -pr lib/hiera $RPM_BUILD_ROOT/%{ruby_sitelibdir}
-cp -pr lib/hiera.rb $RPM_BUILD_ROOT/%{ruby_sitelibdir}
+cp -pr lib/hiera $RPM_BUILD_ROOT/%{hiera_libdir}
+cp -pr lib/hiera.rb $RPM_BUILD_ROOT/%{hiera_libdir}
 install -p -m0755 bin/hiera $RPM_BUILD_ROOT/%{_bindir}
 install -p -m0644 ext/hiera.yaml $RPM_BUILD_ROOT/%{_sysconfdir}
 
@@ -50,8 +53,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_bindir}/hiera
-%{ruby_sitelibdir}/hiera.rb
-%{ruby_sitelibdir}/hiera
+%{hiera_libdir}/hiera.rb
+%{hiera_libdir}/hiera
 %{_sysconfdir}/hiera.yaml
 %{_sharedstatedir}/hiera
 %doc CHANGELOG COPYING README.md
