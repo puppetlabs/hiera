@@ -12,7 +12,7 @@
 
 Name:           hiera
 Version:        %{rpmversion}
-Release:        <%= @release -%>%{?dist}
+Release:        <%= @rpmrelease -%>%{?dist}
 Summary:        A simple pluggable Hierarchical Database.
 Vendor:         %{?_host_vendor}
 Group:          System Environment/Base
@@ -61,7 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* <%= Time.now.strftime("%a %b %d %Y") %> Puppet Labs Release <info@puppetlabs.com> -  <%= @rpmversion %>-<%= @release %>
+* <%= Time.now.strftime("%a %b %d %Y") %> Puppet Labs Release <info@puppetlabs.com> -  <%= @rpmversion %>-<%= @rpmrelease %>
 - Build for <%= @version %>
 
 * Mon May 14 2012 Matthaus Litteken <matthaus@puppetlabs.com> - 1.0.0-0.1rc2
