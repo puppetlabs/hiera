@@ -1,5 +1,18 @@
-1.0.0rc4
+1.0.0
 ===
+fba40d1 Fix yum repo path in yaml file
+451fd0c fix redhat spec release template variable
+f21f908 Replace sed with real vars in preflight.erb
+28cef87 Use read-only packaging repo for public access
+cfd0925 Additional logging when finding keys in the YAML backend
+1084d13 Add apple packaging file_mapping file
+6f2da41 Change debhelper depends to 7
+7b6766a Fixup redhat spec erb for F17
+c5ff482 Rework packaging to use packaging repo
+e1922ca Change debhelper depends to 7
+ba34a74 (#15291) Add Vendor tag to Hiera spec file
+22f1775 Update Debian packaging rake task to correctly create the orig.tar.gz
+4332f46 Fix debian package task to create correct orig.tar.gz and use debversion in directory creation.
 6887137 (maint) Add Getting Started tutorial
 091fea3 Overhaul Hiera packaging
 7947dd6 Consolidate changelog, update erb templates
@@ -14,9 +27,6 @@ cdd7364 (#14867) Add windows support
 480d86c (#12122) Correctly fall through backends during loop
 d0fcc57 Add default config to hiera
 3ec4165 match data in puppet ${::fact} style to get rid of puppet deprecation warnings
-
-1.0.0rc3
-===
 a1a885a Adding package task liberally copied from puppet-dashboard.
 3527443 Updating apple pkg task to refer to ext directory.
 445a6f2 ext is more appropriate than conf for a dirname.
@@ -31,9 +41,6 @@ b6218b9 (maint) Hiera should raise an error when config is missing
 9808a64 (#14514) Use default config when hiera.yaml is missing
 fd644b6 Add require hiera/backend to test
 fe3d509 Remove empty Puppet class definition
-
-1.0.0rc2
-===
 fa3081c Updating hiera.spec, CHANGELOG for Hiera 1.0.0rc1
 6de3d4c Moving CHANGES.txt to CHANGELOG. Updating CHANGELOG with git log from initial commit to v0.3.0 tag.
 dbf9fe3 Update README to reference deb and rpm packages
