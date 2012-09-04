@@ -1,8 +1,5 @@
-require 'tmpdir'
-require 'hiera/backend/yaml_backend'
-require 'hiera/backend'
-require 'fileutils'
 require 'spec_helper'
+require 'hiera/backend/yaml_backend'
 
 class Hiera
   module Backend
