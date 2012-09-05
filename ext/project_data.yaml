@@ -12,4 +12,6 @@ gem_files: '{bin,lib}/**/* CHANGELOG COPYING README.md LICENSE'
 gem_require_path: 'lib'
 gem_test_files: 'spec/**/*'
 gem_executables: 'hiera'
+gem_runtime_dependencies:
+  json:
 gem_default_executables: 'hiera'
