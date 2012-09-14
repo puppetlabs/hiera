@@ -107,6 +107,8 @@ def load_scope(source, type=:yaml)
 end
 
 OptionParser.new do |opts|
+  opts.banner = "Usage: hiera [options] key [default value] [variable='text'...]\n\nThe default value will be used if no value is found for the key. Scope variables\nwill be interpolated into %{variable} placeholders in the hierarchy and in\nreturned values.\n\n"
+
   opts.on("--version", "-V", "Version information") do
     puts Hiera.version
     exit
