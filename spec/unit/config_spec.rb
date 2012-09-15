@@ -12,14 +12,14 @@ class Hiera
       end
 
       it "should treat string sources as a filename" do
-        expect { Config.load("/nonexisting") }.should raise_error
+        expect { Config.load("/nonexisting") }.to raise_error
       end
 
       it "should raise an error for missing config files" do
         File.expects(:exist?).with("/nonexisting").returns(false)
         YAML.expects(:load_file).with("/nonexisting").never
 
-        expect { Config.load("/nonexisting") }.should raise_error "Config file /nonexisting not found"
+        expect { Config.load("/nonexisting") }.to raise_error "Config file /nonexisting not found"
       end
 
       it "should attempt to YAML load config files" do
