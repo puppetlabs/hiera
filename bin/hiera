@@ -107,6 +107,8 @@ def load_scope(source, type=:yaml)
 end
 
 OptionParser.new do |opts|
+  opts.banner = "Usage: hiera [options] key [default value] [variable='text'...]\n\nThe default value will be used if no value is found for the key. Scope variables\nwill be interpolated into %{variable} placeholders in the hierarchy and in\nreturned values.\n\n"
+
   opts.on("--version", "-V", "Version information") do
     puts Hiera.version
     exit
@@ -116,11 +118,11 @@ OptionParser.new do |opts|
     options[:verbose] = true
   end
 
-  opts.on("--array", "-a", "Array search") do
+  opts.on("--array", "-a", "Return all values as an array") do
     options[:resolution_type] = :array
   end
 
-  opts.on("--hash", "-h", "Hash search") do
+  opts.on("--hash", "-h", "Return all values as a hash") do
     options[:resolution_type] = :hash
   end
 
@@ -151,7 +153,7 @@ OptionParser.new do |opts|
     end
   end
 
-  opts.on("--mcollective IDENTITY", "-m", "Retrieve facts from a node via mcollective as scope") do |v|
+  opts.on("--mcollective IDENTITY", "-m", "Use facts from a node (via mcollective) as scope") do |v|
     begin
       options[:scope] = load_scope(v, :mcollective)
     rescue Exception => e
@@ -160,7 +162,7 @@ OptionParser.new do |opts|
     end
   end
 
-  opts.on("--inventory_service IDENTITY", "-i", "Retrieve facts for a node via Puppet's inventory service as scope") do |v|
+  opts.on("--inventory_service IDENTITY", "-i", "Use facts from a node (via Puppet's inventory service) as scope") do |v|
     begin
       options[:scope] = load_scope(v, :inventory_service)
     rescue Exception => e
