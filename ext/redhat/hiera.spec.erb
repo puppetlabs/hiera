@@ -6,17 +6,21 @@
 %global hiera_libdir   %(ruby -rrbconfig -e 'puts Object.const_get(defined?(RbConfig) ? :RbConfig : :Config)::CONFIG["sitelibdir"]')
 %endif
 
+%if 0%{?rhel} == 5
+%global _sharedstatedir %{_prefix}/lib
+%endif
+
 # VERSION is subbed out during rake srpm process
-# %global realversion <%= @version %>
-# %global rpmversion <%= @rpmversion %>
+%global realversion <%= @version %>
+%global rpmversion <%= @rpmversion %>
 
 Name:           hiera
 Version:        %{rpmversion}
 Release:        <%= @rpmrelease -%>%{?dist}
-Summary:        A simple pluggable Hierarchical Database.
+Summary:        A simple pluggable Hierarchical Database
 Vendor:         %{?_host_vendor}
 Group:          System Environment/Base
-License:        Apache 2.0
+License:        ASL 2.0
 URL:            http://projects.puppetlabs.com/projects/%{name}/
 Source0:        http://downloads.puppetlabs.com/%{name}/%{name}-%{realversion}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -56,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/hiera
 %{hiera_libdir}/hiera.rb
 %{hiera_libdir}/hiera
-%{_sysconfdir}/hiera.yaml
+%config(noreplace) %{_sysconfdir}/hiera.yaml
 %{_sharedstatedir}/hiera
 %doc CHANGELOG COPYING README.md
 
