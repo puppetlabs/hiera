@@ -13,21 +13,22 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 
 BUILD_ROOT=$(DESTDIR)/$(CURDIR)/debian/$(cdbs_curpkg)
-LIBDIR=$(shell /usr/bin/ruby -rrbconfig -e 'puts Config::CONFIG["rubylibdir"]')
+LIBDIR=$(shell /usr/bin/ruby -rrbconfig -e 'puts RbConfig::CONFIG["vendordir"]')
+BIN_DIR=$(shell /usr/bin/ruby -rrbconfig -e 'puts RbConfig::CONFIG["bindir"]')
 RUBYLIB=$(BUILD_ROOT)/$(LIBDIR)
-BIN_DIR=$(BUILD_ROOT)/usr/bin
+RUBYBIN=$(BUILD_ROOT)/$(BIN_DIR)
 DOC_DIR=$(BUILD_ROOT)/usr/share/doc/hiera/
 DATA_DIR=$(BUILD_ROOT)/var/lib/hiera
 
 install/hiera::
 	mkdir -p $(RUBYLIB)
-	mkdir -p $(BIN_DIR)
+	mkdir -p $(RUBYBIN)
 	mkdir -p $(DOC_DIR)
 	mkdir -p $(DATA_DIR)
 	mkdir -p $(BUILD_ROOT)/etc
 	cp -pr  lib/hiera $(RUBYLIB)
 	cp -p lib/hiera.rb $(RUBYLIB)
-	cp -p  bin/* $(BIN_DIR)
+	cp -p  bin/* $(RUBYBIN)
 	cp -pr ext/hiera.yaml $(BUILD_ROOT)/etc
 	cp -p CHANGELOG COPYING README.md $(DOC_DIR)
 
