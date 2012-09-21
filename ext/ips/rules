@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+LIBDIR=$(shell /usr/bin/ruby18 -rrbconfig -e 'puts RbConfig::CONFIG["rubylibdir"]')
+DESTDIR=$(CURDIR)/pkg/ips/proto
+
+install/hiera::
+	mkdir -p $(DESTDIR)/$(LIBDIR)
+	mkdir -p $(DESTDIR)/usr/bin
+	mkdir -p $(DESTDIR)/usr/share/doc/hiera
+	mkdir -p $(DESTDIR)/var/lib/hiera
+	mkdir -p $(DESTDIR)/etc
+	cp -pr lib/hiera $(DESTDIR)/$(LIBDIR)
+	cp -p lib/hiera.rb $(DESTDIR)/$(LIBDIR)
+	cp -p bin/* $(DESTDIR)/usr/bin
+	cp -pr ext/hiera.yaml $(DESTDIR)/etc
+	cp -p CHANGELOG COPYING README.md $(DESTDIR)/usr/share/doc/hiera
+
