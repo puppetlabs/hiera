@@ -30,6 +30,6 @@ install/hiera::
 	cp -p lib/hiera.rb $(RUBYLIB)
 	cp -p  bin/* $(RUBYBIN)
 	cp -pr ext/hiera.yaml $(BUILD_ROOT)/etc
-	cp -p CHANGELOG COPYING README.md $(DOC_DIR)
+	cp -p COPYING README.md $(DOC_DIR)
 
 clean::
