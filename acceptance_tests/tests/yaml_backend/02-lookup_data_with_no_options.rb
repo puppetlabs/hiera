@@ -10,12 +10,8 @@ file { '/etc/puppet/hieradata/global.yaml':
     users:
       pete:
         uid: 2000
-        gid: 2000
-        shell: '/bin/bash'
       tom:
         uid: 2001
-        gid: 2001
-        shell: '/bin/bash'
   "
 }
 PP
@@ -36,9 +32,8 @@ end
 
 step "Try to lookup hash data"
 on master, hiera("users"), :acceptable_exit_codes => [0] do
-  assert_output <<-OUTPUT
-    {"tom"=>{"gid"=>2001, "uid"=>2001, "shell"=>"/bin/bash"}, "pete"=>{"gid"=>2000, "uid"=>2000, "shell"=>"/bin/bash"}}
-  OUTPUT
+  assert_match /tom[^}]+"uid"=>2001}/, result.output
+  assert_match /pete[^}]+"uid"=>2000}/, result.output
 end
 
 ensure step "Teardown"

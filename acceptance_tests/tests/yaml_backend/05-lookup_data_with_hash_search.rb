@@ -7,9 +7,7 @@ file { '/etc/puppet/hieradata/production.yaml':
   content => "---
     users:
       joe:
-        gid: 1000
         uid: 1000
-        home: '/home/joe'
   "
 }
 
@@ -18,9 +16,7 @@ file { '/etc/puppet/hieradata/global.yaml':
   content => "---
     users:
       pete:
-        gid: 1001
         uid: 1001
-        home: '/home/pete'
   "
 }
 
@@ -35,9 +31,8 @@ PP
 step "Try to lookup data using hash search"
 on master, hiera('users', '--yaml', '/etc/puppet/scope.yaml', '--hash'),
   :acceptable_exit_codes => [0] do
-  assert_output <<-OUTPUT
-    STDOUT> {"joe"=>{"gid"=>1000, "uid"=>1000, "home"=>"/home/joe"}, "pete"=>{"gid"=>1001, "uid"=>1001, "home\"=>"/home/pete"}}
-  OUTPUT
+  assert_match /joe[^}]+"uid"=>1000}/, result.output
+  assert_match /pete[^}]+"uid"=>1001}/, result.output
 end
 
 ensure step "Teardown"
