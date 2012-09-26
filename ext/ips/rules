@@ -13,5 +13,5 @@ install/hiera::
 	cp -p lib/hiera.rb $(DESTDIR)/$(LIBDIR)
 	cp -p bin/* $(DESTDIR)/usr/bin
 	cp -pr ext/hiera.yaml $(DESTDIR)/etc
-	cp -p CHANGELOG COPYING README.md $(DESTDIR)/usr/share/doc/hiera
+	cp -p COPYING README.md $(DESTDIR)/usr/share/doc/hiera
 
