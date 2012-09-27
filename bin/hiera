@@ -11,9 +11,11 @@
 #
 # $ hiera release 'rel/%{location}' location=dc2 --yaml some.node.yaml
 
-begin
-  require 'rubygems'
-rescue LoadError
+unless defined? Bundler::Setup
+  begin
+    require 'rubygems'
+  rescue LoadError
+  end
 end
 require 'hiera'
 require 'hiera/util'
