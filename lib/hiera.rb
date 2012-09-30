@@ -7,12 +7,13 @@ require 'yaml'
 class Hiera
   VERSION = "1.1.0-rc1"
 
-  autoload :Config,         "hiera/config"
-  autoload :Util,           "hiera/util"
   autoload :Backend,        "hiera/backend"
+  autoload :Config,         "hiera/config"
   autoload :Console_logger, "hiera/console_logger"
-  autoload :Puppet_logger,  "hiera/puppet_logger"
+  autoload :Filecache,      "hiera/filecache"
   autoload :Noop_logger,    "hiera/noop_logger"
+  autoload :Puppet_logger,  "hiera/puppet_logger"
+  autoload :Util,           "hiera/util"
 
   class << self
     attr_reader :logger
