@@ -8,7 +8,8 @@ class Hiera
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
         Hiera::Backend.stubs(:empty_answer).returns(nil)
-        @backend = Json_backend.new
+        @cache = mock
+        @backend = Json_backend.new(@cache)
       end
 
       describe "#initialize" do
@@ -30,13 +31,9 @@ class Hiera
         it "should retain the data types found in data files" do
           Backend.expects(:datasources).yields("one").times(3)
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns("/nonexisting/one.json").times(3)
-          File.expects(:read).with("/nonexisting/one.json").returns('{"stringval":"string",
-                                                                      "boolval":true,
-                                                                      "numericval":1}').times(3)
+          File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
 
-          Backend.stubs(:parse_answer).with('string', {}).returns('string')
-          Backend.stubs(:parse_answer).with(true, {}).returns(true)
-          Backend.stubs(:parse_answer).with(1, {}).returns(1)
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
 
           @backend.lookup("stringval", {}, nil, :priority).should == "string"
           @backend.lookup("boolval", {}, nil, :priority).should == true
@@ -45,13 +42,12 @@ class Hiera
 
         it "should pick data earliest source that has it for priority searches" do
           scope = {"rspec" => "test"}
-          Backend.stubs(:parse_answer).with('answer', scope).returns("answer")
-          Backend.stubs(:parse_answer).with('test_%{rspec}', scope).returns("test_test")
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
           Backend.expects(:datafile).with(:json, scope, "one", "json").returns("/nonexisting/one.json")
-          Backend.expects(:datafile).with(:json, scope, "two", "json").returns(nil).never
-          File.expects(:read).with("/nonexisting/one.json").returns("one.json")
-          JSON.expects(:parse).with("one.json").returns({"key" => "test_%{rspec}"})
+          Backend.expects(:datafile).with(:json, scope, "two", "json").never
+
+          File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
 
           @backend.lookup("key", scope, nil, :priority).should == "test_test"
         end
@@ -64,11 +60,11 @@ class Hiera
 
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
 
-          File.expects(:read).with("/nonexisting/one.json").returns("one.json")
-          File.expects(:read).with("/nonexisting/two.json").returns("two.json")
+          File.expects(:exist?).with("/nonexisting/one.json").returns(true)
+          File.expects(:exist?).with("/nonexisting/two.json").returns(true)
 
-          JSON.expects(:parse).with("one.json").returns({"key" => "answer"})
-          JSON.expects(:parse).with("two.json").returns({"key" => "answer"})
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "answer"})
+          @cache.expects(:read).with("/nonexisting/two.json", Hash, {}).returns({"key" => "answer"})
 
           @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
         end
@@ -78,8 +74,8 @@ class Hiera
           Backend.expects(:datasources).yields("one")
           Backend.expects(:datafile).with(:json, {"rspec" => "test"}, "one", "json").returns("/nonexisting/one.json")
 
-          File.expects(:read).with("/nonexisting/one.json").returns("one.json")
-          JSON.expects(:parse).with("one.json").returns({"key" => "test_%{rspec}"})
+          File.expects(:exist?).with("/nonexisting/one.json").returns(true)
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
 
           @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
         end
