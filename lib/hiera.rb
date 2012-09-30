@@ -10,6 +10,7 @@ class Hiera
   require "hiera/puppet_logger"
   require "hiera/noop_logger"
   require "hiera/fallback_logger"
+  require "hiera/filecache"
 
   class << self
     attr_reader :logger
