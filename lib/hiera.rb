@@ -5,7 +5,7 @@ end
 require 'yaml'
 
 class Hiera
-  VERSION = "1.1.0-rc1"
+  VERSION = "1.1.0"
 
   autoload :Config,         "hiera/config"
   autoload :Util,           "hiera/util"
