@@ -1,7 +1,3 @@
-begin
-  require 'rubygems'
-rescue LoadError
-end
 require 'yaml'
 
 class Hiera
