@@ -7,7 +7,8 @@ class Hiera::Config
     # 'common' hierarchy and console logger
     def load(source)
       @config = {:backends => "yaml",
-                 :hierarchy => "common"}
+                 :hierarchy => "common",
+                 :merge_behavior => :native }
 
       if source.is_a?(String)
         if File.exist?(source)

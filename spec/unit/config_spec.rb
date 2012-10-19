@@ -7,7 +7,8 @@ class Hiera
         {
           :backends  => ["yaml"],
           :hierarchy => "common",
-          :logger    => "console"
+          :logger    => "console",
+          :merge_behavior=>:native
         }
       end
 
@@ -43,11 +44,11 @@ class Hiera
 
       it "should merge defaults with the loaded or supplied config" do
         config = Config.load({})
-        config.should == {:backends => ["yaml"], :hierarchy => "common", :logger => "console"}
+        config.should == {:backends => ["yaml"], :hierarchy => "common", :logger => "console", :merge_behavior=>:native}
       end
 
       it "should force :backends to be a flattened array" do
-        Config.load({:backends => [["foo", ["bar"]]]}).should == {:backends => ["foo", "bar"], :hierarchy => "common", :logger => "console"}
+        Config.load({:backends => [["foo", ["bar"]]]}).should == {:backends => ["foo", "bar"], :hierarchy => "common", :logger => "console", :merge_behavior=>:native}
       end
 
       it "should load the supplied logger" do
