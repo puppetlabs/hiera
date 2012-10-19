@@ -333,5 +333,30 @@ class Hiera
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
     end
+    describe '#merge_answer' do
+      before do
+        Hiera.stubs(:debug)
+        Hiera.stubs(:warn)
+      end
+
+      it "should use Hash.merge when configured with :merge_behavior => :native" do
+        Config.load({:merge_behavior => :native})
+        Hash.any_instance.expects(:merge).with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
+        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+      end
+      
+      it "should use deep_merge! when configured with :merge_behavior => :deeper" do
+        Config.load({:merge_behavior => :deeper})
+        Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
+        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+      end
+
+      it "should use deep_merge when configured with :merge_behavior => :deep" do
+        Config.load({:merge_behavior => :deep})
+        Hash.any_instance.expects('deep_merge').with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
+        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+      end
+            
+    end
   end
 end
