@@ -58,7 +58,7 @@ a few enhancements over the base Extlookup approach thanks to this.
 
 If you have a YAML and Puppet backend loaded and your users provide module defaults in the
 Puppet backend you can use your YAML data to override the Puppet data.  If the YAML doesnt
-provide an answer the Puppet backend will get an oppertunity to provide an answer.
+provide an answer the Puppet backend will get an opportunity to provide an answer.
 
 ### More scope based variable expansion
 
