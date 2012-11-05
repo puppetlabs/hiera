@@ -1,17 +1,30 @@
 class Hiera::Config
   class << self
-    # Takes a string or hash as input, strings are treated as filenames
+    ##
+    # load takes a string or hash as input, strings are treated as filenames
     # hashes are stored as data that would have been in the config file
     #
     # Unless specified it will only use YAML as backend with a single
     # 'common' hierarchy and console logger
+    #
+    # @return [Hash] representing the configuration.  e.g.
+    #   {:backends => "yaml", :hierarchy => "common"}
     def load(source)
       @config = {:backends => "yaml",
                  :hierarchy => "common"}
 
       if source.is_a?(String)
         if File.exist?(source)
-          config = YAML.load_file(source)
+          config = begin
+                     yaml_load_file(source)
+                   rescue TypeError => detail
+                     case detail.message
+                     when /no implicit conversion from nil to integer/
+                       false
+                     else
+                       raise detail
+                     end
+                   end
           @config.merge! config if config
         else
           raise "Config file #{source} not found"
@@ -31,6 +44,16 @@ class Hiera::Config
 
       @config
     end
+
+    ##
+    # yaml_load_file directly delegates to YAML.load_file and is intended to be
+    # a private, internal method suitable for stubbing and mocking.
+    #
+    # @return [Object] return value of {YAML.load_file}
+    def yaml_load_file(source)
+      YAML.load_file(source)
+    end
+    private :yaml_load_file
 
     def load_backends
       @config[:backends].each do |backend|

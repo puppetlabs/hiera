@@ -59,6 +59,18 @@ class Hiera
         Hiera.expects(:logger=).with("console")
         Config.load({})
       end
+
+      context "loading '/dev/null' as spec tests do" do
+        before :each do
+          # Simulate the behavior of YAML.load_file('/dev/null') in MRI 1.9.3p194
+          Config.stubs(:yaml_load_file).
+            raises(TypeError, "no implicit conversion from nil to integer")
+        end
+
+        it "is not exceptional behavior" do
+          expect { Config.load('/dev/null') }.to_not raise_error
+        end
+      end
     end
 
     describe "#load_backends" do
