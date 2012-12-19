@@ -1,5 +1,5 @@
 ---
-:backend:
+:backends:
   - yaml
 :hierarchy:
   - defaults
