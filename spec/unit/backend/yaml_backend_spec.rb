@@ -85,6 +85,17 @@ class Hiera
           @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer", "b" => "answer"}
         end
 
+        it "should merge hashes recursively for hash searches" do
+          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
+          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
+
+          YAML.expects(:load_file).with("/nonexisting/one.yaml").returns(YAML.load("---\nkey:\n a:\n  a1: one\n  a3: from1"))
+          YAML.expects(:load_file).with("/nonexisting/two.yaml").returns(YAML.load("---\nkey:\n a:\n  a2: two\n  a3: not2"))
+
+          @backend.lookup("key", {}, nil, :hash).should == {"a" => { "a1" => "one", "a2" => "two", "a3" => "from1" }}
+        end
+
         it "should fail when trying to << a Hash" do
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")

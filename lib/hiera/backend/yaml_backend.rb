@@ -8,6 +8,21 @@ class Hiera
         @cache = Hash.new
       end
 
+      def merge_recursively(a, b)
+          out = {}
+          a.each { |k,v|
+              out[k] = v
+          }
+          b.each { |k,v|
+              if v.kind_of?(Hash) and out[k].kind_of?(Hash)
+                 out[k] = merge_recursively(out[k],v)
+              else
+                  out[k] = v
+              end
+          }
+          out
+      end
+
       def lookup(key, scope, order_override, resolution_type)
         answer = nil
 
@@ -52,7 +67,7 @@ class Hiera
           when :hash
             raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
             answer ||= {}
-            answer = new_answer.merge answer
+            answer = merge_recursively(new_answer, answer)
           else
             answer = new_answer
             break
