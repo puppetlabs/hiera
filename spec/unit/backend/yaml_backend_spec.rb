@@ -5,6 +5,7 @@ class Hiera
   module Backend
     describe Yaml_backend do
       before do
+        Config.load({})
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
         @backend = Yaml_backend.new
