@@ -1,4 +1,8 @@
 require 'hiera/util'
+begin
+  require 'deep_merge'
+rescue LoadError
+end
 
 class Hiera
   module Backend
@@ -136,6 +140,26 @@ class Hiera
         end
       end
 
+      # Merges two hashes answers with the configured merge behavior.
+      #         :merge_behavior: {:native|:deep|:deeper}
+      #
+      # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/peritor/deep_merge)
+      #
+      #  :native => Native Hash.merge
+      #  :deep   => Use Hash.deep_merge  
+      #  :deeper => Use Hash.deep_merge!
+      #
+      def merge_answer(left,right)
+        case Config[:merge_behavior]
+        when :deeper,'deeper'
+          left.deep_merge!(right)
+        when :deep,'deep'
+          left.deep_merge(right)
+        else # Native and undefined
+          left.merge(right)
+        end
+      end
+
       # Calls out to all configured backends in the order they
       # were specified.  The first one to answer will win.
       #
@@ -167,7 +191,7 @@ class Hiera
               when :hash
                 raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
                 answer ||= {}
-                answer = new_answer.merge answer
+                answer = merge_answer(new_answer,answer)
               else
                 answer = new_answer
                 break
