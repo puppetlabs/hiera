@@ -13,5 +13,5 @@ gem_require_path: 'lib'
 gem_test_files: 'spec/**/*'
 gem_executables: 'hiera'
 gem_runtime_dependencies:
-  json:
+  json_pure:
 gem_default_executables: 'hiera'
