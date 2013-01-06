@@ -44,6 +44,7 @@ if defined?(RSpec::Core::RakeTask)
   RSpec::Core::RakeTask.new(:spec) do |t|
     t.pattern = 'spec/**/*_spec.rb'
   end
+  task :test => :spec
 end
 
 task :test => :spec

@@ -1,6 +1,6 @@
 pkg
 test.rb
 ext/packaging
-Gemfile.lock
 .bundle/
 vendor/
+Gemfile.lock
