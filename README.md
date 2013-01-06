@@ -1,5 +1,7 @@
 # Hiera
 
+[![Build Status](https://travis-ci.org/puppetlabs/hiera.png?branch=master)](https://travis-ci.org/puppetlabs/hiera)
+
 A simple pluggable Hierarchical Database.
 
 -
