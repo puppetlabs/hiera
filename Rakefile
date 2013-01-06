@@ -41,8 +41,9 @@ end
 
 if defined?(RSpec::Core::RakeTask)
   desc "Run all specs"
-  RSpec::Core::RakeTask.new(:test) do |t|
+  RSpec::Core::RakeTask.new(:spec) do |t|
     t.pattern = 'spec/**/*_spec.rb'
   end
+  task :test => :spec
 end
 
