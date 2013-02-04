@@ -89,8 +89,9 @@ class Hiera
               # Puppet can return :undefined for unknown scope vars,
               # If it does then we still need to evaluate extra_data
               # before returning an empty string.
-              if scope[var] && scope[var] != :undefined
-                  val = scope[var]
+              scope_val = scope[var]
+              if !scope_val.nil? && scope_val != :undefined
+                  val = scope_val
               elsif extra_data[var]
                   val = extra_data[var]
               end
