@@ -95,7 +95,7 @@ class Hiera
                 val = extra_data[var]
             end
 
-            tdata.gsub!(/%\{#{var}\}/, val)
+            tdata.gsub!(/%\{#{Regexp.escape(var)}\}/, val)
           end
         end
 
