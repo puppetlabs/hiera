@@ -81,23 +81,21 @@ class Hiera
 
         if tdata.is_a?(String)
           while tdata =~ /%\{(.+?)\}/
-            begin
-              var = $1
+            var = $1
 
-              val = ""
+            val = ""
 
-              # Puppet can return :undefined for unknown scope vars,
-              # If it does then we still need to evaluate extra_data
-              # before returning an empty string.
-              scope_val = scope[var]
-              if !scope_val.nil? && scope_val != :undefined
-                  val = scope_val
-              elsif extra_data[var]
-                  val = extra_data[var]
-              end
-            end until val != "" || var !~ /::(.+)/
+            # Puppet can return :undefined for unknown scope vars,
+            # If it does then we still need to evaluate extra_data
+            # before returning an empty string.
+            scope_val = scope[var]
+            if !scope_val.nil? && scope_val != :undefined
+                val = scope_val
+            elsif extra_data[var]
+                val = extra_data[var]
+            end
 
-            tdata.gsub!(/%\{(::)?#{var}\}/, val)
+            tdata.gsub!(/%\{#{var}\}/, val)
           end
         end
 
