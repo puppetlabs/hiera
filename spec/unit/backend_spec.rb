@@ -86,47 +86,58 @@ class Hiera
     end
 
     describe "#parse_string" do
-      it "should not try to parse invalid data" do
+      it "passes nil through untouched" do
         Backend.parse_string(nil, {}).should == nil
       end
 
-      it "should clone the supplied data" do
-        data = ""
-        data.expects(:clone).returns("")
-        Backend.parse_string(data, {})
+      it "does not modify the input data" do
+        data = "%{value}"
+        Backend.parse_string(data, { "value" => "replacement" })
+
+        data.should == "%{value}"
       end
 
-      it "should only parse string data" do
-        data = ""
-        data.expects(:is_a?).with(String)
-        Backend.parse_string(data, {})
+      it "passes non-string data through untouched" do
+        input = { "not a" => "string" }
+
+        Backend.parse_string(input, {}).should == input
       end
 
-      it "should match data from scope" do
+      it "replaces interpolations with data looked up in the scope" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {"rspec" => "test"}).should == "test_test_test"
+
+        Backend.parse_string(input, {"rspec" => "scope"}).should == "test_scope_test"
       end
 
-      it "should match data from extra_data" do
+      it "replaces interpolations with data looked up in extra_data when scope does not contain the value" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {}, {"rspec" => "test"}).should == "test_test_test"
+        Backend.parse_string(input, {}, {"rspec" => "extra"}).should == "test_extra_test"
       end
 
-      it "should prefer scope over extra_data" do
+      it "prefers data from scope over data from extra_data" do
         input = "test_%{rspec}_test"
         Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
       end
 
-      it "should treat :undefined in scope as empty" do
+      it "interprets nil in scope as a non-value" do
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, {"rspec" => nil}).should == "test__test"
+      end
+
+      it "interprets nil in extra_data as a non-value" do
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, {}, {"rspec" => nil}).should == "test__test"
+      end
+
+      it "interprets :undefined in scope as a non-value" do
         input = "test_%{rspec}_test"
         Backend.parse_string(input, {"rspec" => :undefined}).should == "test__test"
       end
 
-      it "should match data from extra_data when scope contains :undefined" do
+      it "uses the value from extra_data when scope is :undefined" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {"rspec" => :undefined}, {"rspec" => "test"}).should == "test_test_test"
+        Backend.parse_string(input, {"rspec" => :undefined}, { "rspec" => "extra" }).should == "test_extra_test"
       end
-
     end
 
     describe "#parse_answer" do
