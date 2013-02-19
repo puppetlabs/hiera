@@ -138,6 +138,21 @@ class Hiera
         input = "test_%{rspec}_test"
         Backend.parse_string(input, {"rspec" => :undefined}, { "rspec" => "extra" }).should == "test_extra_test"
       end
+
+      it "looks up the interpolated value exactly as it appears in the input" do
+        input = "test_%{::rspec::data}_test"
+        Backend.parse_string(input, {"::rspec::data" => "value"}).should == "test_value_test"
+      end
+
+      it "does not try removing leading :: when a full lookup fails (#17434)" do
+        input = "test_%{::rspec::data}_test"
+        Backend.parse_string(input, {"rspec::data" => "value"}).should == "test__test"
+      end
+
+      it "does not try removing leading sections separated by :: when a full lookup fails (#17434)" do
+        input = "test_%{::rspec::data}_test"
+        Backend.parse_string(input, {"data" => "value"}).should == "test__test"
+      end
     end
 
     describe "#parse_answer" do
