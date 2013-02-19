@@ -81,32 +81,24 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
-        return nil unless data
-
-        tdata = data.clone
-
-        if tdata.is_a?(String)
-          while tdata =~ /%\{(.+?)\}/
-            var = $1
-
-            val = ""
-
-            # Puppet can return :undefined for unknown scope vars,
-            # If it does then we still need to evaluate extra_data
-            # before returning an empty string.
-            scope_val = scope[var]
-            if !scope_val.nil? && scope_val != :undefined
-                val = scope_val
-            elsif extra_data[var]
-                val = extra_data[var]
-            end
-
-            tdata.gsub!(/%\{#{var}\}/, val)
+        if data.is_a?(String)
+          data.gsub(/%{([^}]*)}/) do
+            lookup_value($1, scope, extra_data)
           end
+        else
+          data
         end
-
-        return tdata
       end
+
+      def lookup_value(name, scope, extra_data)
+        scope_val = scope[name]
+        if !scope_val.nil? && scope_val != :undefined
+          scope_val
+        elsif extra_data[name]
+          extra_data[name]
+        end
+      end
+      private :lookup_value
 
       # Parses a answer received from data files
       #

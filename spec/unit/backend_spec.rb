@@ -104,9 +104,10 @@ class Hiera
       end
 
       it "replaces interpolations with data looked up in the scope" do
-        input = "test_%{rspec}_test"
+        input = "replace %{part1} and %{part2}"
+        scope = {"part1" => "value of part1", "part2" => "value of part2"}
 
-        Backend.parse_string(input, {"rspec" => "scope"}).should == "test_scope_test"
+        Backend.parse_string(input, scope).should == "replace value of part1 and value of part2"
       end
 
       it "replaces interpolations with data looked up in extra_data when scope does not contain the value" do
