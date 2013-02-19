@@ -65,15 +65,21 @@ class Hiera
         end
       end
 
-      # Parse a string like '%{foo}' against a supplied
+      # Parse a string like <code>'%{foo}'</code> against a supplied
       # scope and additional scope.  If either scope or
-      # extra_scope includes the varaible 'foo' it will
+      # extra_scope includes the variable 'foo', then it will
       # be replaced else an empty string will be placed.
       #
-      # If both scope and extra_data has "foo" scope
-      # will win.  See hiera-puppet for an example of
-      # this to make hiera aware of additional non scope
-      # variables
+      # If both scope and extra_data has "foo", then the value in scope
+      # will be used.
+      #
+      # @param data [String] The string to perform substitutions on.
+      #   This will not be modified, instead a new string will be returned.
+      # @param scope [#[]] The primary source of data for substitutions.
+      # @param extra_data [#[]] The secondary source of data for substitutions.
+      # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
+      #
+      # @api public
       def parse_string(data, scope, extra_data={})
         return nil unless data
 
