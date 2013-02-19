@@ -125,6 +125,16 @@ class Hiera
         Backend.parse_string(input, {"rspec" => nil}).should == "test__test"
       end
 
+      it "interprets false in scope as a real value" do
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, {"rspec" => false}).should == "test_false_test"
+      end
+
+      it "interprets false in extra_data as a real value" do
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, {}, {"rspec" => false}).should == "test_false_test"
+      end
+
       it "interprets nil in extra_data as a non-value" do
         input = "test_%{rspec}_test"
         Backend.parse_string(input, {}, {"rspec" => nil}).should == "test__test"

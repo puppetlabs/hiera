@@ -92,10 +92,10 @@ class Hiera
 
       def lookup_value(name, scope, extra_data)
         scope_val = scope[name]
-        if !scope_val.nil? && scope_val != :undefined
-          scope_val
-        elsif extra_data[name]
+        if scope_val.nil? || scope_val == :undefined
           extra_data[name]
+        else
+          scope_val
         end
       end
       private :lookup_value
