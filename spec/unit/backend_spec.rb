@@ -4,13 +4,13 @@ require 'hiera/util'
 class Hiera
   describe Backend do
     describe "#datadir" do
-      it "should use the backend configured dir" do
+      it "interpolates any values in the configured value" do
         Config.load({:rspec => {:datadir => "/tmp"}})
         Backend.expects(:parse_string).with("/tmp", {})
         Backend.datadir(:rspec, {})
       end
 
-      it "should use a default var directory" do
+      it "defaults to a directory in var" do
         Config.load({})
         Backend.expects(:parse_string).with(Hiera::Util.var_dir, {})
         Backend.datadir(:rspec, {})
@@ -18,13 +18,13 @@ class Hiera
     end
 
     describe "#datafile" do
-      it "should check if the file exist and return nil if not" do
+      it "translates a non-existant datafile into nil" do
         Hiera.expects(:debug).with("Cannot find datafile /nonexisting/test.yaml, skipping")
         Backend.expects(:datadir).returns("/nonexisting")
         Backend.datafile(:yaml, {}, "test", "yaml").should == nil
       end
 
-      it "should return the correct file name" do
+      it "concatenates the datadir and datafile and format to produce the full datafile filename" do
         Backend.expects(:datadir).returns("/nonexisting")
         File.expects(:exist?).with("/nonexisting/test.yaml").returns(true)
         Backend.datafile(:yaml, {}, "test", "yaml").should == "/nonexisting/test.yaml"
@@ -32,7 +32,7 @@ class Hiera
     end
 
     describe "#datasources" do
-      it "should use the supplied hierarchy" do
+      it "iterates over the datasources in the order of the given hierarchy" do
         expected = ["one", "two"]
         Backend.datasources({}, nil, ["one", "two"]) do |backend|
           backend.should == expected.delete_at(0)
@@ -41,7 +41,7 @@ class Hiera
         expected.empty?.should == true
       end
 
-      it "should use the configured hierarchy if none is supplied" do
+      it "uses the configured hierarchy no specific hierarchy is given" do
         Config.load(:hierarchy => "test")
 
         Backend.datasources({}) do |backend|
@@ -49,7 +49,7 @@ class Hiera
         end
       end
 
-      it "should default to common if not configured or supplied" do
+      it "defaults to a hierarchy of only 'common' if not configured or given" do
         Config.load({})
 
         Backend.datasources({}) do |backend|
@@ -57,7 +57,7 @@ class Hiera
         end
       end
 
-      it "should insert the override if provided" do
+      it "prefixes the hierarchy with the override if an override is provided" do
         Config.load({})
 
         expected = ["override", "common"]
@@ -68,12 +68,12 @@ class Hiera
         expected.empty?.should == true
       end
 
-      it "should parse the sources based on scope" do
+      it "parses the names of the hierarchy levels using the given scope" do
         Backend.expects(:parse_string).with("common", {:rspec => :tests})
         Backend.datasources({:rspec => :tests}) { }
       end
 
-      it "should not return empty sources" do
+      it "defaults to 'common' if the hierarchy contains no hierarchies with non-empty names" do
         Config.load({})
 
         expected = ["common"]
@@ -161,53 +161,53 @@ class Hiera
     end
 
     describe "#parse_answer" do
-      it "should parse strings correctly" do
+      it "interpolates values in strings" do
         input = "test_%{rspec}_test"
         Backend.parse_answer(input, {"rspec" => "test"}).should == "test_test_test"
       end
 
-      it "should parse each string in an array" do
+      it "interpolates each string in an array" do
         input = ["test_%{rspec}_test", "test_%{rspec}_test", ["test_%{rspec}_test"]]
         Backend.parse_answer(input, {"rspec" => "test"}).should == ["test_test_test", "test_test_test", ["test_test_test"]]
       end
 
-      it "should parse each string in a hash" do
+      it "interpolates each string in a hash" do
         input = {"foo" => "test_%{rspec}_test", "bar" => "test_%{rspec}_test"}
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
       end
 
-      it "should parse mixed arrays and hashes" do
+      it "interpolates strings in a mixed structure of arrays and hashes" do
         input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
       end
 
-      it "should parse integers correctly" do
+      it "passes integers unchanged" do
         input = 1
         Backend.parse_answer(input, {"rspec" => "test"}).should == 1
       end
 
-      it "should parse floats correctly" do
+      it "passes floats unchanged" do
         input = 0.233
         Backend.parse_answer(input, {"rspec" => "test"}).should == 0.233
       end
 
-      it "should parse true boolean values correctly" do
+      it "passes the boolean true unchanged" do
         input = true
         Backend.parse_answer(input, {"rspec" => "test"}).should == true
       end
 
-      it "should parse false boolean values correctly" do
+      it "passes the boolean false unchanged" do
         input = false
         Backend.parse_answer(input, {"rspec" => "test"}).should == false
       end
     end
 
     describe "#resolve_answer" do
-      it "should correctly parse array data" do
+      it "flattens and removes duplicate values from arrays during an array lookup" do
         Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array).should == ["foo", "bar"]
       end
 
-      it "should just return the answer for non array data" do
+      it "returns the data unchanged during a priority lookup" do
         Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :priority).should == ["foo", ["foo", "foo"], "bar"]
       end
     end
@@ -218,7 +218,7 @@ class Hiera
         Hiera.stubs(:warn)
       end
 
-      it "should cache backends" do
+      it "caches loaded backends" do
         Hiera.expects(:debug).with(regexp_matches(/Hiera YAML backend starting/)).once
 
         Config.load({:yaml => {:datadir => "/tmp"}})
@@ -228,7 +228,7 @@ class Hiera
         Backend.lookup("key", "default", {}, nil, nil)
       end
 
-      it "should return the answer from the backend" do
+      it "returns the answer from the backend" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
@@ -237,7 +237,7 @@ class Hiera
         Backend.lookup("key", "default", {}, nil, nil).should == "answer"
       end
 
-      it "should retain the datatypes as returned by the backend" do
+      it "retains the datatypes as returned by the backend" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
@@ -250,7 +250,7 @@ class Hiera
         Backend.lookup("numericval", "default", {}, nil, nil).should == 1
       end
 
-      it "should call to all backends till an answer is found" do
+      it "calls to all backends till an answer is found" do
         backend = mock
         backend.expects(:lookup).returns("answer")
         Config.load({})
@@ -262,7 +262,7 @@ class Hiera
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "answer"
       end
 
-      it "should call to all backends till an answer is found when doing array lookups" do
+      it "calls to all backends till an answer is found when doing array lookups" do
         backend = mock
         backend.expects(:lookup).returns(["answer"])
         Config.load({})
@@ -273,7 +273,7 @@ class Hiera
         Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :array).should == ["answer"]
       end
 
-      it "should call to all backends till an answer is found when doing hash lookups" do
+      it "calls to all backends till an answer is found when doing hash lookups" do
         thehash = {:answer => "value"}
         backend = mock
         backend.expects(:lookup).returns(thehash)
@@ -285,7 +285,7 @@ class Hiera
         Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash).should == thehash
       end
 
-      it "should build a merged hash from all backends for hash searches" do
+      it "builds a merged hash from all backends for hash searches" do
         backend1 = mock :lookup => {"a" => "answer"}
         backend2 = mock :lookup => {"b" => "bnswer"}
         Config.load({})
@@ -296,7 +296,7 @@ class Hiera
         Backend.lookup("key", {}, {"rspec" => "test"}, nil, :hash).should == {"a" => "answer", "b" => "bnswer"}
       end
 
-      it "should build an array from all backends for array searches" do
+      it "builds an array from all backends for array searches" do
         backend1 = mock :lookup => ["a", "b"]
         backend2 = mock :lookup => ["c", "d"]
         Config.load({})
@@ -307,7 +307,7 @@ class Hiera
         Backend.lookup("key", {}, {"rspec" => "test"}, nil, :array).should == ["a", "b", "c", "d"]
       end
 
-      it "should use the earliest backend result for priority searches" do
+      it "uses the earliest backend result for priority searches" do
         backend1 = mock
         backend1.stubs(:lookup).returns(["a", "b"])
         backend2 = mock
@@ -320,7 +320,7 @@ class Hiera
         Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
       end
 
-      it "should parse the answers based on resolution_type" do
+      it "parses the answers based on resolution_type" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
@@ -330,7 +330,7 @@ class Hiera
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority).should == "parsed"
       end
 
-      it "should return the default with variables parsed if nothing is found" do
+      it "returns the default with variables parsed if nothing is found" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
@@ -339,51 +339,51 @@ class Hiera
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
       end
 
-      it "should correctly handle string default data" do
+      it "keeps string default data as a string" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil)
         Backend.lookup("key", "test", {}, nil, nil).should == "test"
       end
 
-      it "should correctly handle array default data" do
+      it "keeps array default data as an array" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array)
         Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
       end
 
-      it "should correctly handle hash default data" do
+      it "keeps hash default data as a hash" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash)
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
     end
+
     describe '#merge_answer' do
       before do
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
       end
 
-      it "should use Hash.merge when configured with :merge_behavior => :native" do
+      it "uses Hash.merge when configured with :merge_behavior => :native" do
         Config.load({:merge_behavior => :native})
         Hash.any_instance.expects(:merge).with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
         Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
       end
-      
-      it "should use deep_merge! when configured with :merge_behavior => :deeper" do
+
+      it "uses deep_merge! when configured with :merge_behavior => :deeper" do
         Config.load({:merge_behavior => :deeper})
         Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
         Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
       end
 
-      it "should use deep_merge when configured with :merge_behavior => :deep" do
+      it "uses deep_merge when configured with :merge_behavior => :deep" do
         Config.load({:merge_behavior => :deep})
         Hash.any_instance.expects('deep_merge').with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
         Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
       end
-            
     end
   end
 end
