@@ -144,6 +144,11 @@ class Hiera
         Backend.parse_string(input, {"::rspec::data" => "value"}).should == "test_value_test"
       end
 
+      it "does not remove any surrounding whitespace when parsing the key to lookup" do
+        input = "test_%{\trspec::data }_test"
+        Backend.parse_string(input, {"\trspec::data " => "value"}).should == "test_value_test"
+      end
+
       it "does not try removing leading :: when a full lookup fails (#17434)" do
         input = "test_%{::rspec::data}_test"
         Backend.parse_string(input, {"rspec::data" => "value"}).should == "test__test"
