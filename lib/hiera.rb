@@ -3,12 +3,12 @@ require 'yaml'
 class Hiera
   VERSION = "1.1.2"
 
-  autoload :Config,         "hiera/config"
-  autoload :Util,           "hiera/util"
-  autoload :Backend,        "hiera/backend"
-  autoload :Console_logger, "hiera/console_logger"
-  autoload :Puppet_logger,  "hiera/puppet_logger"
-  autoload :Noop_logger,    "hiera/noop_logger"
+  require "hiera/config"
+  require "hiera/util"
+  require "hiera/backend"
+  require "hiera/console_logger"
+  require "hiera/puppet_logger"
+  require "hiera/noop_logger"
 
   class << self
     attr_reader :logger
@@ -23,13 +23,11 @@ class Hiera
     # See hiera-puppet for an example that uses the Puppet
     # loging system instead of our own
     def logger=(logger)
-      loggerclass = "#{logger.capitalize}_logger"
+      require "hiera/#{logger}_logger"
 
-      require "hiera/#{logger}_logger" unless constants.include?(loggerclass)
-
-      @logger = const_get(loggerclass)
+      @logger = Hiera.const_get("#{logger.capitalize}_logger")
     rescue Exception => e
-      @logger = Console_logger
+      @logger = Hiera::Console_logger
       warn("Failed to load #{logger} logger: #{e.class}: #{e}")
     end
 
