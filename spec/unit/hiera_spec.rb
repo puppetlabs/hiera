@@ -13,10 +13,19 @@ describe "Hiera" do
       Hiera.logger = "foo"
     end
 
-    it "falls back to the Console logger on failure" do
+    it "falls back to the Console logger when the logger could not be loaded" do
       Hiera.expects(:warn)
 
       Hiera.logger = "no_such_logger"
+
+      Hiera.logger.should be Hiera::Console_logger
+    end
+
+    it "falls back to the Console logger when the logger class could not be found" do
+      Hiera.expects(:warn)
+      Hiera.expects(:require).with("hiera/no_constant_logger")
+
+      Hiera.logger = "no_constant"
 
       Hiera.logger.should be Hiera::Console_logger
     end

@@ -9,6 +9,7 @@ class Hiera
   require "hiera/console_logger"
   require "hiera/puppet_logger"
   require "hiera/noop_logger"
+  require "hiera/fallback_logger"
 
   class << self
     attr_reader :logger
@@ -25,7 +26,9 @@ class Hiera
     def logger=(logger)
       require "hiera/#{logger}_logger"
 
-      @logger = Hiera.const_get("#{logger.capitalize}_logger")
+      @logger = Hiera::FallbackLogger.new(
+        Hiera.const_get("#{logger.capitalize}_logger"),
+        Hiera::Console_logger)
     rescue Exception => e
       @logger = Hiera::Console_logger
       warn("Failed to load #{logger} logger: #{e.class}: #{e}")
