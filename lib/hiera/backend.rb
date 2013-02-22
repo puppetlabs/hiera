@@ -67,7 +67,7 @@ class Hiera
 
       # Parse a string like '%{foo}' against a supplied
       # scope and additional scope.  If either scope or
-      # extra_scope includes the varaible 'foo' it will
+      # extra_scope includes the variable 'foo' it will
       # be replaced else an empty string will be placed.
       #
       # If both scope and extra_data has "foo" scope
