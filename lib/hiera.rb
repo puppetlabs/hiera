@@ -1,7 +1,7 @@
 require 'yaml'
 
 class Hiera
-  VERSION = "1.1.2"
+  VERSION = "1.2.0-rc1"
 
   autoload :Config,         "hiera/config"
   autoload :Util,           "hiera/util"
