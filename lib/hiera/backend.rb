@@ -114,7 +114,8 @@ class Hiera
         elsif data.is_a?(Hash)
           answer = {}
           data.each_pair do |key, val|
-            answer[key] = parse_answer(val, scope, extra_data)
+            interpolated_key = parse_string(key, scope, extra_data)
+            answer[interpolated_key] = parse_answer(val, scope, extra_data)
           end
 
           return answer
