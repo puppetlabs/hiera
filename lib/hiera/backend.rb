@@ -6,6 +6,8 @@ end
 
 class Hiera
   module Backend
+    INTERPOLATION = /%\{([^\}]*)\}/
+
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
       # supplies a datadir in the config it will be used and
@@ -82,8 +84,8 @@ class Hiera
       # @api public
       def parse_string(data, scope, extra_data={})
         if data.is_a?(String)
-          data.gsub(/%{([^}]*)}/) do
-            lookup_value($1, scope, extra_data)
+          data.gsub(INTERPOLATION) do
+            parse_string(lookup_value($1, scope, extra_data), scope, extra_data)
           end
         else
           data

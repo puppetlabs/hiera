@@ -169,6 +169,12 @@ class Hiera
         input = "test_%{::rspec::data}_test"
         Backend.parse_string(input, {"data" => "value"}).should == "test__test"
       end
+
+      it "looks up recursively" do
+        scope = {"rspec" => "%{first}", "first" => "%{last}", "last" => "final"}
+        input = "test_%{rspec}_test"
+        Backend.parse_string(input, scope).should == "test_final_test"
+      end
     end
 
     describe "#parse_answer" do
