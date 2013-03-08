@@ -175,6 +175,14 @@ class Hiera
         input = "test_%{rspec}_test"
         Backend.parse_string(input, scope).should == "test_final_test"
       end
+
+      it "raises an error if the recursive lookup results in an infinite loop" do
+        scope = {"first" => "%{second}", "second" => "%{first}"}
+        input = "test_%{first}_test"
+        expect do
+          Backend.parse_string(input, scope)
+        end.to raise_error Exception, "Interpolation loop detected in [first, second]"
+      end
     end
 
     describe "#parse_answer" do

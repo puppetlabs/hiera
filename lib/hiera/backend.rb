@@ -1,4 +1,6 @@
 require 'hiera/util'
+require 'hiera/recursive_lookup'
+
 begin
   require 'deep_merge'
 rescue LoadError
@@ -83,24 +85,22 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
+        interpolate(data, Hiera::RecursiveLookup.new(scope, extra_data))
+      end
+
+      def interpolate(data, values)
         if data.is_a?(String)
           data.gsub(INTERPOLATION) do
-            parse_string(lookup_value($1, scope, extra_data), scope, extra_data)
+            name = $1
+            values.lookup(name) do |value|
+              interpolate(value, values)
+            end
           end
         else
           data
         end
       end
-
-      def lookup_value(name, scope, extra_data)
-        scope_val = scope[name]
-        if scope_val.nil? || scope_val == :undefined
-          extra_data[name]
-        else
-          scope_val
-        end
-      end
-      private :lookup_value
+      private :interpolate
 
       # Parses a answer received from data files
       #
