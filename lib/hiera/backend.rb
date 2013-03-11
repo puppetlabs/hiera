@@ -60,8 +60,11 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope)
-          yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
+          if sources = parse_string(source, scope)
+            sources.each do |source|
+              yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
+            end
+          end
         end
       end
 
@@ -80,7 +83,7 @@ class Hiera
         tdata = data.clone
 
         if tdata.is_a?(String)
-          while tdata =~ /%\{(.+?)\}/
+          while Array(tdata).join('|') =~ /%\{([^|]+?)\}/
             begin
               var = $1
 
@@ -97,7 +100,13 @@ class Hiera
               end
             end until val != "" || var !~ /::(.+)/
 
-            tdata.gsub!(/%\{(::)?#{var}\}/, val)
+            if tdata.is_a?(Array)
+              tdata = tdata.map { |elem| parse_string(elem, scope, extra_data) }.flatten
+            elsif val.is_a?(Array)
+              tdata = val.map { |elem| tdata.gsub(/%\{(::)?#{var}\}/, elem) }
+            else
+              tdata.gsub!(/%\{(::)?#{var}\}/, val)
+            end
           end
         end
 
