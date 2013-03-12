@@ -1,4 +1,6 @@
 require 'hiera/util'
+require 'hiera/recursive_lookup'
+
 begin
   require 'deep_merge'
 rescue LoadError
@@ -6,6 +8,8 @@ end
 
 class Hiera
   module Backend
+    INTERPOLATION = /%\{([^\}]*)\}/
+
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
       # supplies a datadir in the config it will be used and
@@ -65,44 +69,38 @@ class Hiera
         end
       end
 
-      # Parse a string like '%{foo}' against a supplied
+      # Parse a string like <code>'%{foo}'</code> against a supplied
       # scope and additional scope.  If either scope or
-      # extra_scope includes the variable 'foo' it will
+      # extra_scope includes the variable 'foo', then it will
       # be replaced else an empty string will be placed.
       #
-      # If both scope and extra_data has "foo" scope
-      # will win.  See hiera-puppet for an example of
-      # this to make hiera aware of additional non scope
-      # variables
+      # If both scope and extra_data has "foo", then the value in scope
+      # will be used.
+      #
+      # @param data [String] The string to perform substitutions on.
+      #   This will not be modified, instead a new string will be returned.
+      # @param scope [#[]] The primary source of data for substitutions.
+      # @param extra_data [#[]] The secondary source of data for substitutions.
+      # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
+      #
+      # @api public
       def parse_string(data, scope, extra_data={})
-        return nil unless data
-
-        tdata = data.clone
-
-        if tdata.is_a?(String)
-          while tdata =~ /%\{(.+?)\}/
-            begin
-              var = $1
-
-              val = ""
-
-              # Puppet can return :undefined for unknown scope vars,
-              # If it does then we still need to evaluate extra_data
-              # before returning an empty string.
-              scope_val = scope[var]
-              if !scope_val.nil? && scope_val != :undefined
-                  val = scope_val
-              elsif extra_data[var]
-                  val = extra_data[var]
-              end
-            end until val != "" || var !~ /::(.+)/
-
-            tdata.gsub!(/%\{(::)?#{var}\}/, val)
-          end
-        end
-
-        return tdata
+        interpolate(data, Hiera::RecursiveLookup.new(scope, extra_data))
       end
+
+      def interpolate(data, values)
+        if data.is_a?(String)
+          data.gsub(INTERPOLATION) do
+            name = $1
+            values.lookup(name) do |value|
+              interpolate(value, values)
+            end
+          end
+        else
+          data
+        end
+      end
+      private :interpolate
 
       # Parses a answer received from data files
       #
