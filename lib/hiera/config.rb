@@ -42,8 +42,23 @@ class Hiera::Config
         @config[:logger] = "console"
         Hiera.logger = "console"
       end
+    
+      self.validate!
 
       @config
+    end
+
+    def validate!
+      case @config[:merge_behavior]
+      when :deep,'deep',:deeper,'deeper'
+        begin
+          require "deep_merge"
+        rescue LoadError
+          Hiera.warn "Ignoring configured merge_behavior"
+          Hiera.warn "Must have 'deep_merge' gem installed."
+          @config[:merge_behavior] = :native
+        end
+      end
     end
 
     ##
