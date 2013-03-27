@@ -390,6 +390,7 @@ class Hiera
       before do
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
+        Config.stubs(:validate!)
       end
 
       it "uses Hash.merge when configured with :merge_behavior => :native" do
