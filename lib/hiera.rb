@@ -1,7 +1,7 @@
 require 'yaml'
 
 class Hiera
-  VERSION = "1.2.0-rc3"
+  VERSION = "1.2.0"
 
   require "hiera/config"
   require "hiera/util"
