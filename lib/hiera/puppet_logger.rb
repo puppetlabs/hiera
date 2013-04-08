@@ -2,7 +2,7 @@ class Hiera
   module Puppet_logger
     class << self
       def suitable?
-        Kernel.const_defined?(:Puppet)
+        defined?(::Puppet) == "constant"
       end
 
       def warn(msg)
