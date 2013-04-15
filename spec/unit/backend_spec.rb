@@ -201,6 +201,16 @@ class Hiera
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
       end
 
+      it "interpolates string in hash keys" do
+        input = {"%{rspec}" => "test"}
+        Backend.parse_answer(input, {"rspec" => "foo"}).should == {"foo"=>"test"}
+      end
+
+      it "interpolates strings in nested hash keys" do
+        input = {"topkey" => {"%{rspec}" => "test"}}
+        Backend.parse_answer(input, {"rspec" => "foo"}).should == {"topkey"=>{"foo" => "test"}}
+      end
+
       it "interpolates strings in a mixed structure of arrays and hashes" do
         input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
