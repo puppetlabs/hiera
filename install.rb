@@ -144,6 +144,7 @@ def prepare_installation
     configdir = InstallOptions.configdir
   elsif is_windows?
     begin
+      require 'rubygems'
       require 'win32/dir'
     rescue LoadError => e
       puts "Cannot run on Microsoft Windows without the sys-admin, win32-process, win32-dir & win32-service gems: #{e}"
