@@ -33,8 +33,6 @@ require 'optparse'
 require 'ostruct'
 include FileUtils
 
-PREREQS = %w{json}
-
 InstallOptions = OpenStruct.new
 
 # Returns true if OS is windows (copied from facter/util/config.rb)
@@ -87,18 +85,6 @@ def do_man(man, strip = 'man/')
     gzip.chomp!
     %x{#{gzip} -f #{omf}}
   end
-end
-
-# Verify that all of the prereqs are installed
-def check_prereqs
-  PREREQS.each { |pre|
-    begin
-      require pre
-    rescue LoadError
-      puts "Could not load #{pre}; cannot install"
-      exit(-1)
-    end
-  }
 end
 
 ##
@@ -292,7 +278,6 @@ cd File.dirname(__FILE__) do
   man   = glob(%w{man/man[0-9]/*})
   libs  = glob(%w{lib/**/*.rb})
 
-  check_prereqs
   prepare_installation
 
   do_configs(configs, InstallOptions.config_dir) if InstallOptions.configs
