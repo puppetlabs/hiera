@@ -1,8 +1,7 @@
 require 'yaml'
 
 class Hiera
-  VERSION = "1.2.1"
-
+  require "hiera/version"
   require "hiera/config"
   require "hiera/util"
   require "hiera/backend"
@@ -14,10 +13,6 @@ class Hiera
 
   class << self
     attr_reader :logger
-
-    def version
-      VERSION
-    end
 
     # Loggers are pluggable, just provide a class called
     # Hiera::Foo_logger and respond to :warn and :debug
