@@ -18,7 +18,7 @@ class Hiera
         backend = backend.to_sym
         default = Hiera::Util.var_dir
 
-        if Config.include?(backend)
+        if Config.include?(backend) && !Config[backend].nil?
           parse_string(Config[backend][:datadir] || default, scope)
         else
           parse_string(default, scope)
