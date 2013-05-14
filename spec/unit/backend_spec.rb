@@ -11,8 +11,10 @@ class Hiera
       end
 
       it "defaults to a directory in var" do
+        Backend.expects(:parse_string).with(Hiera::Util.var_dir, {}).times(2)
         Config.load({})
-        Backend.expects(:parse_string).with(Hiera::Util.var_dir, {})
+        Backend.datadir(:rspec, {})
+        Config.load({:rspec => nil})
         Backend.datadir(:rspec, {})
       end
     end
