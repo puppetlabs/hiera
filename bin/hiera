@@ -24,6 +24,7 @@ end
 require 'hiera'
 require 'hiera/util'
 require 'optparse'
+require 'pp'
 
 options = {
   :default => nil,
@@ -222,5 +223,5 @@ ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, optio
 if ans.is_a?(String)
   puts ans
 else
-  p ans
+  pp ans
 end
