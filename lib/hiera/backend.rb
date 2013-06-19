@@ -1,5 +1,5 @@
 require 'hiera/util'
-require 'hiera/recursive_lookup'
+require 'hiera/recursive_guard'
 
 begin
   require 'deep_merge'
@@ -8,7 +8,9 @@ end
 
 class Hiera
   module Backend
-    INTERPOLATION = /%\{([^\}]*)\}/
+    INTERPOLATION = /([%\^]\{[^\}]*\})/
+    SCOPE_INTERPOLATION = /%\{([^\}]*)\}/
+    HIERA_INTERPOLATION = /\^\{([^\}]*)\}/
 
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
@@ -85,22 +87,49 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
-        interpolate(data, Hiera::RecursiveLookup.new(scope, extra_data))
+        interpolate(data, Hiera::RecursiveGuard.new, scope, extra_data)
       end
 
-      def interpolate(data, values)
-        if data.is_a?(String)
-          data.gsub(INTERPOLATION) do
-            name = $1
-            values.lookup(name) do |value|
-              interpolate(value, values)
-            end
+      def interpolate(data, recurse_guard, scope, extra_data)
+        if data =~ INTERPOLATION
+          interpolation_variable = $1
+          recurse_guard.check(interpolation_variable) do
+            interpolate_method = get_interpolation_method(interpolation_variable)
+            interpolated_data = send(interpolate_method, data, scope, extra_data)
+            interpolate(interpolated_data, recurse_guard, scope, extra_data)
           end
         else
           data
         end
       end
       private :interpolate
+
+      def get_interpolation_method(interpolation_variable)
+        case interpolation_variable[0,1]
+        when '^' then :hiera_interpolate
+        when '%' then :scope_interpolate
+        end
+      end
+
+      def scope_interpolate(data, scope, extra_data)
+        data.sub(SCOPE_INTERPOLATION) do
+          value = $1
+          scope_val = scope[value]
+          if scope_val.nil? || scope_val == :undefined
+            scope_val = extra_data[value]
+          end
+          scope_val
+        end
+      end
+      private :scope_interpolate
+
+      def hiera_interpolate(data, scope, extra_data)
+        data.sub(HIERA_INTERPOLATION) do
+          value = $1
+          lookup(value, nil, scope, nil, :priority)
+        end
+      end
+      private :hiera_interpolate
 
       # Parses a answer received from data files
       #
@@ -146,7 +175,7 @@ class Hiera
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/peritor/deep_merge)
       #
       #  :native => Native Hash.merge
-      #  :deep   => Use Hash.deep_merge  
+      #  :deep   => Use Hash.deep_merge
       #  :deeper => Use Hash.deep_merge!
       #
       def merge_answer(left,right)
