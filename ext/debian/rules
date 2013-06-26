@@ -10,7 +10,6 @@
 #export DH_VERBOSE=1
 
 include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 
 BUILD_ROOT=$(DESTDIR)/$(CURDIR)/debian/$(cdbs_curpkg)
 LIBDIR=$(shell /usr/bin/ruby -rrbconfig -e 'puts RbConfig::CONFIG["vendordir"]')
