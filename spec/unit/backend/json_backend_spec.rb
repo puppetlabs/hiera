@@ -47,7 +47,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, scope, "two", "json").never
 
           File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{scope('rspec')}"})
 
           @backend.lookup("key", scope, nil, :priority).should == "test_test"
         end
@@ -70,12 +70,12 @@ class Hiera
         end
 
         it "should parse the answer for scope variables" do
-          Backend.stubs(:parse_answer).with('test_%{rspec}', {'rspec' => 'test'}).returns("test_test")
+          Backend.stubs(:parse_answer).with("test_%{scope('rspec')}", {'rspec' => 'test'}).returns("test_test")
           Backend.expects(:datasources).yields("one")
           Backend.expects(:datafile).with(:json, {"rspec" => "test"}, "one", "json").returns("/nonexisting/one.json")
 
           File.expects(:exist?).with("/nonexisting/one.json").returns(true)
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
+          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{scope('rspec')}"})
 
           @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
         end

@@ -125,7 +125,7 @@ class Hiera
           Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>"test_%{rspec}"})
+          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>"test_%{scope('rspec')}"})
 
           @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
         end

@@ -8,9 +8,10 @@ end
 
 class Hiera
   module Backend
-    INTERPOLATION = /([%\^]\{[^\}]*\})/
-    SCOPE_INTERPOLATION = /%\{([^\}]*)\}/
-    HIERA_INTERPOLATION = /\^\{([^\}]*)\}/
+    INTERPOLATION = /%\{([^\}]*)\}/
+    SCOPE_INTERPOLATION = /%\{scope\(['"]([^\}]*)["']\)\}/
+    HIERA_INTERPOLATION = /%\{hiera\(['"]([^\}]*)["']\)\}/
+    INTERPOLATION_TYPE = /^([^\(]+)\(/
 
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
@@ -105,9 +106,9 @@ class Hiera
       private :interpolate
 
       def get_interpolation_method(interpolation_variable)
-        case interpolation_variable[0,1]
-        when '^' then :hiera_interpolate
-        when '%' then :scope_interpolate
+        case interpolation_variable.match(INTERPOLATION_TYPE)[1]
+        when 'hiera' then :hiera_interpolate
+        when 'scope' then :scope_interpolate
         end
       end
 

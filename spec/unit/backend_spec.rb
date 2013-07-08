@@ -79,7 +79,7 @@ class Hiera
         Config.load({})
 
         expected = ["common"]
-        Backend.datasources({}, "%{rspec}") do |backend|
+        Backend.datasources({}, "%{scope('rspec')}") do |backend|
           backend.should == expected.delete_at(0)
         end
 
@@ -93,10 +93,10 @@ class Hiera
       end
 
       it "does not modify the input data" do
-        data = "%{value}"
+        data = "%{scope('value')}"
         Backend.parse_string(data, { "value" => "replacement" })
 
-        data.should == "%{value}"
+        data.should == "%{scope('value')}"
       end
 
       it "passes non-string data through untouched" do
@@ -106,88 +106,88 @@ class Hiera
       end
 
       it "replaces interpolations with data looked up in the scope" do
-        input = "replace %{part1} and %{part2}"
+        input = "replace %{scope('part1')} and %{scope('part2')}"
         scope = {"part1" => "value of part1", "part2" => "value of part2"}
 
         Backend.parse_string(input, scope).should == "replace value of part1 and value of part2"
       end
 
       it "replaces interpolations with data looked up in extra_data when scope does not contain the value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {}, {"rspec" => "extra"}).should == "test_extra_test"
       end
 
       it "prefers data from scope over data from extra_data" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
       end
 
       it "interprets nil in scope as a non-value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {"rspec" => nil}).should == "test__test"
       end
 
       it "interprets false in scope as a real value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {"rspec" => false}).should == "test_false_test"
       end
 
       it "interprets false in extra_data as a real value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {}, {"rspec" => false}).should == "test_false_test"
       end
 
       it "interprets nil in extra_data as a non-value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {}, {"rspec" => nil}).should == "test__test"
       end
 
       it "interprets :undefined in scope as a non-value" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {"rspec" => :undefined}).should == "test__test"
       end
 
       it "uses the value from extra_data when scope is :undefined" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, {"rspec" => :undefined}, { "rspec" => "extra" }).should == "test_extra_test"
       end
 
       it "looks up the interpolated value exactly as it appears in the input" do
-        input = "test_%{::rspec::data}_test"
+        input = "test_%{scope('::rspec::data')}_test"
         Backend.parse_string(input, {"::rspec::data" => "value"}).should == "test_value_test"
       end
 
       it "does not remove any surrounding whitespace when parsing the key to lookup" do
-        input = "test_%{\trspec::data }_test"
+        input = "test_%{scope('\trspec::data ')}_test"
         Backend.parse_string(input, {"\trspec::data " => "value"}).should == "test_value_test"
       end
 
       it "does not try removing leading :: when a full lookup fails (#17434)" do
-        input = "test_%{::rspec::data}_test"
+        input = "test_%{scope('::rspec::data')}_test"
         Backend.parse_string(input, {"rspec::data" => "value"}).should == "test__test"
       end
 
       it "does not try removing leading sections separated by :: when a full lookup fails (#17434)" do
-        input = "test_%{::rspec::data}_test"
+        input = "test_%{scope('::rspec::data')}_test"
         Backend.parse_string(input, {"data" => "value"}).should == "test__test"
       end
 
       it "looks up recursively" do
-        scope = {"rspec" => "%{first}", "first" => "%{last}", "last" => "final"}
-        input = "test_%{rspec}_test"
+        scope = {"rspec" => "%{scope('first')}", "first" => "%{scope('last')}", "last" => "final"}
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_string(input, scope).should == "test_final_test"
       end
 
       it "raises an error if the recursive lookup results in an infinite loop" do
-        scope = {"first" => "%{second}", "second" => "%{first}"}
-        input = "test_%{first}_test"
+        scope = {"first" => "%{scope('second')}", "second" => "%{scope('first')}"}
+        input = "test_%{scope('first')}_test"
         expect do
           Backend.parse_string(input, scope)
-        end.to raise_error Exception, "Interpolation loop detected in [%{first}, %{second}]"
+        end.to raise_error Exception, "Interpolation loop detected in [scope('first'), scope('second')]"
       end
 
       it "replaces hiera interpolations with data looked up in hiera" do
-        input = "^{key1}"
+        input = "%{hiera('key1')}"
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -199,37 +199,37 @@ class Hiera
 
     describe "#parse_answer" do
       it "interpolates values in strings" do
-        input = "test_%{rspec}_test"
+        input = "test_%{scope('rspec')}_test"
         Backend.parse_answer(input, {"rspec" => "test"}).should == "test_test_test"
       end
 
       it "interpolates each string in an array" do
-        input = ["test_%{rspec}_test", "test_%{rspec}_test", ["test_%{rspec}_test"]]
+        input = ["test_%{scope('rspec')}_test", "test_%{scope('rspec')}_test", ["test_%{scope('rspec')}_test"]]
         Backend.parse_answer(input, {"rspec" => "test"}).should == ["test_test_test", "test_test_test", ["test_test_test"]]
       end
 
       it "interpolates each string in a hash" do
-        input = {"foo" => "test_%{rspec}_test", "bar" => "test_%{rspec}_test"}
+        input = {"foo" => "test_%{scope('rspec')}_test", "bar" => "test_%{scope('rspec')}_test"}
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
       end
 
       it "interpolates string in hash keys" do
-        input = {"%{rspec}" => "test"}
+        input = {"%{scope('rspec')}" => "test"}
         Backend.parse_answer(input, {"rspec" => "foo"}).should == {"foo"=>"test"}
       end
 
       it "interpolates strings in nested hash keys" do
-        input = {"topkey" => {"%{rspec}" => "test"}}
+        input = {"topkey" => {"%{scope('rspec')}" => "test"}}
         Backend.parse_answer(input, {"rspec" => "foo"}).should == {"topkey"=>{"foo" => "test"}}
       end
 
       it "interpolates strings in a mixed structure of arrays and hashes" do
-        input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
+        input = {"foo" => "test_%{scope('rspec')}_test", "bar" => ["test_%{scope('rspec')}_test", "test_%{scope('rspec')}_test"]}
         Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
       end
 
       it "interpolates hiera lookups values in strings" do
-        input = "test_^{rspec}_test"
+        input = "test_%{hiera('rspec')}_test"
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -238,7 +238,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups in each string in an array" do
-        input = ["test_^{rspec}_test", "test_^{rspec}_test", ["test_^{rspec}_test"]]
+        input = ["test_%{hiera('rspec')}_test", "test_%{hiera('rspec')}_test", ["test_%{hiera('rspec')}_test"]]
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -247,7 +247,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups in each string in a hash" do
-        input = {"foo" => "test_^{rspec}_test", "bar" => "test_^{rspec}_test"}
+        input = {"foo" => "test_%{hiera('rspec')}_test", "bar" => "test_%{hiera('rspec')}_test"}
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -256,7 +256,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups in string in hash keys" do
-        input = {"^{rspec}" => "test"}
+        input = {"%{hiera('rspec')}" => "test"}
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -265,7 +265,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups in strings in nested hash keys" do
-        input = {"topkey" => {"^{rspec}" => "test"}}
+        input = {"topkey" => {"%{hiera('rspec')}" => "test"}}
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -274,7 +274,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups in strings in a mixed structure of arrays and hashes" do
-        input = {"foo" => "test_^{rspec}_test", "bar" => ["test_^{rspec}_test", "test_^{rspec}_test"]}
+        input = {"foo" => "test_%{hiera('rspec')}_test", "bar" => ["test_%{hiera('rspec')}_test", "test_%{hiera('rspec')}_test"]}
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -283,7 +283,7 @@ class Hiera
       end
 
       it "interpolates hiera lookups and scope lookups in the same string" do
-        input = {"foo" => "test_^{rspec}_test", "bar" => "test_%{rspec2}_test"}
+        input = {"foo" => "test_%{hiera('rspec')}_test", "bar" => "test_%{scope('rspec2')}_test"}
         scope = {"rspec2" => "scope_rspec"}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -292,7 +292,7 @@ class Hiera
       end
 
       it "interpolates hiera and scope lookups with the same lookup query in a single string" do
-        input =  "test_^{rspec}_test_%{rspec}"
+        input =  "test_%{hiera('rspec')}_test_%{scope('rspec')}"
         scope = {"rspec" => "scope_rspec"}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
@@ -318,6 +318,12 @@ class Hiera
       it "passes the boolean false unchanged" do
         input = false
         Backend.parse_answer(input, {"rspec" => "test"}).should == false
+      end
+
+      it "interpolates lookups using single or double quotes" do
+        input =  "test_%{scope(\"rspec\")}_test_%{scope('rspec')}"
+        scope = {"rspec" => "scope_rspec"}
+        Backend.parse_answer(input, scope).should == "test_scope_rspec_test_scope_rspec"
       end
     end
 
@@ -379,7 +385,7 @@ class Hiera
         #Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "answer"
+        Backend.lookup("key", "test_%{scope('rspec')}", {"rspec" => "test"}, nil, nil).should == "answer"
       end
 
       it "calls to all backends till an answer is found when doing array lookups" do
@@ -447,7 +453,7 @@ class Hiera
         Backend.expects(:resolve_answer).with("test_test", :priority).returns("parsed")
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, :priority).returns("test_test")
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority).should == "parsed"
+        Backend.lookup("key", "test_%{scope('rspec')}", {"rspec" => "test"}, nil, :priority).should == "parsed"
       end
 
       it "returns the default with variables parsed if nothing is found" do
@@ -456,7 +462,7 @@ class Hiera
 
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
+        Backend.lookup("key", "test_%{scope('rspec')}", {"rspec" => "test"}, nil, nil).should == "test_test"
       end
 
       it "keeps string default data as a string" do
