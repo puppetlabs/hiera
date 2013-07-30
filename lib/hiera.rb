@@ -55,8 +55,45 @@ class Hiera
   #
   # The order-override will insert as first in the hierarchy a data source
   # of your choice.
-  def lookup(key, default, scope, order_override=nil, resolution_type=:priority)
-    Backend.lookup(key, default, scope, order_override, resolution_type)
+  def lookup(key, default, scope, precedence=nil, order_override=nil, resolution_type=:priority)
+    answer=nil
+
+    # Allow cli to overwrite config file; this causes weirdness
+    # so we have to overwrite backward when not set
+    if !@config.nil?
+      if !precedence.nil?
+        @config[:precedence] = precedence
+      else
+        precedence = @config[:precedence]
+      end
+    end
+
+    case precedence
+    when :hierarchy
+      # We have to deconstruct this a little and copy/paste this code (from hiera/backend.rb).
+      Backend.datasources(scope, order_override) do |source|
+        new_answer = Backend.lookup(key, default, scope, source, resolution_type)
+        if not new_answer.nil?
+          case resolution_type
+          when :array
+            raise Exception, "Hiera type mismatch: expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
+            answer ||= []
+            answer << new_answer
+          when :hash
+            raise Exception, "Hiera type mismatch: expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
+            answer ||= {}
+            answer = Backend.merge_answer(new_answer,answer)
+          else
+            answer = new_answer
+            break
+          end
+        end
+      end
+    else
+      answer = Backend.lookup(key, default, scope, order_override, resolution_type)
+    end
+
+    answer
   end
 end
 
