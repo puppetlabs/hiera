@@ -18,6 +18,17 @@ class Hiera
 
         Config.load({:rspec => nil})
         Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+
+        Config.load({:rspec => {}})
+        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+      end
+
+      it "fails when the datadir is an array" do
+        Config.load({:rspec => {:datadir => []}})
+
+        expect do
+          Backend.datadir(:rspec, {})
+        end.to raise_error(Hiera::InvalidConfigurationError, /datadir for rspec cannot be an array/)
       end
     end
 
