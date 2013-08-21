@@ -1,6 +1,7 @@
 require 'yaml'
 
 class Hiera
+  require "hiera/error"
   require "hiera/version"
   require "hiera/config"
   require "hiera/util"

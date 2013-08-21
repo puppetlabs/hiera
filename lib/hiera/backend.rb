@@ -16,13 +16,19 @@ class Hiera
       # subject to variable expansion based on scope
       def datadir(backend, scope)
         backend = backend.to_sym
-        default = Hiera::Util.var_dir
 
-        if Config.include?(backend) && !Config[backend].nil?
-          parse_string(Config[backend][:datadir] || default, scope)
+        if Config[backend] && Config[backend][:datadir]
+          dir = Config[backend][:datadir]
         else
-          parse_string(default, scope)
+          dir = Hiera::Util.var_dir
         end
+
+        if !dir.is_a?(String)
+          raise(Hiera::InvalidConfigurationError,
+                "datadir for #{backend} cannot be an array")
+        end
+
+        parse_string(dir, scope)
       end
 
       # Finds the path to a datafile based on the Backend#datadir
