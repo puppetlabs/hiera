@@ -172,6 +172,11 @@ class Hiera
         Backend.parse_string(input, {"data" => "value"}).should == "test__test"
       end
 
+      it "does not try removing unknown, preceeding characters when looking up values" do
+        input = "test_%{$var}_test"
+        Backend.parse_string(input, {"$var" => "value"}).should == "test_value_test"
+      end
+
       it "looks up recursively" do
         scope = {"rspec" => "%{first}", "first" => "%{last}", "last" => "final"}
         input = "test_%{rspec}_test"
