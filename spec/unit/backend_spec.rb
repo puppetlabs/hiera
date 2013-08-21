@@ -5,17 +5,19 @@ class Hiera
   describe Backend do
     describe "#datadir" do
       it "interpolates any values in the configured value" do
-        Config.load({:rspec => {:datadir => "/tmp"}})
-        Backend.expects(:parse_string).with("/tmp", {})
-        Backend.datadir(:rspec, {})
+        Config.load({:rspec => {:datadir => "/tmp/%{interpolate}"}})
+
+        dir = Backend.datadir(:rspec, { "interpolate" => "my_data" })
+
+        dir.should == "/tmp/my_data"
       end
 
       it "defaults to a directory in var" do
-        Backend.expects(:parse_string).with(Hiera::Util.var_dir, {}).times(2)
         Config.load({})
-        Backend.datadir(:rspec, {})
+        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+
         Config.load({:rspec => nil})
-        Backend.datadir(:rspec, {})
+        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
       end
     end
 
