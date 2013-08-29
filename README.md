@@ -130,14 +130,14 @@ A sample configuration file can be seen here:
 This configuration will require YAML files in  _/etc/puppet/hieradata_ these need to contain
 Hash data, sample files matching the hierarchy described in the _Why?_ section are below:
 
-_/etc/puppet/hieradata/dc1.yaml_:
+_/etc/puppet/hieradata/sites/dc1.yaml_:
 <pre>
 ---
 ntpserver: ntp1.dc1.example.com
 sysadmin: dc1noc@example.com
 </pre>
 
-_/etc/puppet/hieradata/dc2.yaml_:
+_/etc/puppet/hieradata/sites/dc2.yaml_:
 <pre>
 ---
 ntpserver: ntp1.dc2.example.com
