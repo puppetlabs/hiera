@@ -117,7 +117,7 @@ A sample configuration file can be seen here:
 :logger: console
 
 :hierarchy:
-  - "%{location}"
+  - "sites/%{location}"
   - common
 
 :yaml:
