@@ -27,12 +27,13 @@ require 'optparse'
 require 'pp'
 
 options = {
-  :default => nil,
-  :config  => File.join(Hiera::Util.config_dir, 'hiera.yaml'),
-  :scope   => {},
-  :key     => nil,
-  :verbose => false,
-  :resolution_type => :priority
+  :default         => nil,
+  :config          => File.join(Hiera::Util.config_dir, 'hiera.yaml'),
+  :scope           => {},
+  :key             => nil,
+  :verbose         => false,
+  :resolution_type => :priority,
+  :precedence      => nil,
 }
 
 # Loads the scope from YAML or JSON files
@@ -133,6 +134,18 @@ OptionParser.new do |opts|
     options[:resolution_type] = :hash
   end
 
+  # Most likely the user didn't enter a symbol; convert to a symbol
+  opts.on("--precedence PRECEDENCE", "-p", "Specify precedence") do |v|
+    if v =~ /^:?[hH]/
+      options[:precedence] = :hierarchy
+    elsif v =~ /^:?[bB]/i
+      options[:precedence] = :backend
+    else
+      STDERR.puts "Precedence can only be one of either hierarchy or backend"
+      exit
+    end
+  end
+
   opts.on("--config CONFIG", "-c", "Configuration file") do |v|
     if File.exist?(v)
       options[:config] = v
@@ -218,7 +231,7 @@ unless options[:verbose]
   Hiera.logger = "noop"
 end
 
-ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
+ans = hiera.lookup(options[:key], options[:default], options[:scope], options[:precedence], nil, options[:resolution_type])
 
 if ans.is_a?(String)
   puts ans

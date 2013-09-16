@@ -75,7 +75,7 @@ describe "Hiera" do
       Hiera::Config.stubs(:load)
       Hiera::Config.stubs(:load_backends)
       Hiera::Backend.expects(:lookup).with(:key, :default, :scope, :order_override, :resolution_type)
-      Hiera.new.lookup(:key, :default, :scope, :order_override, :resolution_type)
+      Hiera.new.lookup(:key, :default, :scope, :precedence, :order_override, :resolution_type)
     end
   end
 end

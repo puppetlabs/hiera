@@ -68,6 +68,7 @@ class Hiera
         end
 
         hierarchy.insert(0, override) if override
+        hierarchy = [hierarchy.at(0)] if override and Config[:precedence].equal? :hierarchy
 
         hierarchy.flatten.map do |source|
           source = parse_string(source, scope)

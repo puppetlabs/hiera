@@ -12,7 +12,8 @@ class Hiera::Config
     def load(source)
       @config = {:backends => "yaml",
                  :hierarchy => "common",
-                 :merge_behavior => :native }
+                 :merge_behavior => :native,
+                 :precedence => :backend }
 
       if source.is_a?(String)
         if File.exist?(source)
@@ -32,6 +33,14 @@ class Hiera::Config
         end
       elsif source.is_a?(Hash)
         @config.merge! source
+      end
+
+      # Be friendly: Do a little message to allow strings instead of symbols
+      case @config[:precedence]
+        when 'hierarchy'
+          @config[:precedence] = :hierarchy
+        when 'backend'
+          @config[:precedence] = :backend
       end
 
       @config[:backends] = [ @config[:backends] ].flatten

@@ -84,6 +84,49 @@ Hiera can search through all the tiers in a hierarchy and merge the result into 
 array.  This is used in the hiera-puppet project to replace External Node Classifiers by
 creating a Hiera compatible include function.
 
+### Precedence
+
+By default Hiera searches through the hierarchy for one entire hierarchy at a time
+before moving on to the next one. This precedence is called "backend". There is
+also a precedence called "hierarchy", where hiera will search through all backends
+in order for each tier of the hierarchy.
+
+<pre>
+For example, let's say in your hiera.yaml you have:
+---
+:backends:
+  - yaml
+  - json
+:hierarchy:
+  - tier/%{clientcert}
+  - common
+:precedence: hierarchy
+
+with files:
+tier/a.json
+{
+    "somefact": "value"
+}
+
+and common.yaml
+---
+somefact: this
+
+If you're looking for somefact with this set up, hiera will look for the following files:
+tier/a.yaml
+tier/a.json
+common.yaml
+common.json
+</pre>
+
+So the value of "somefact" would be "value" for clientcert a, but "this" for everyone else,
+even though yaml gets searched first. Using the traditional "backend" precedence, the value
+of "somefact" for node a would be "this" because yaml would get searched all the way down
+the hierarchy before json ever got touched.
+
+Be careful: not all backends work well with this option. Some development may be required
+in order to make sure a backend respects the hierarchy.
+
 ## Future Enhancements
 
  * More backends should be created
@@ -113,6 +156,8 @@ A sample configuration file can be seen here:
 :backends:
   - yaml
   - puppet
+
+:precedence: backend
 
 :logger: console
 
