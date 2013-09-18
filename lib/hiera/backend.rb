@@ -1,5 +1,5 @@
 require 'hiera/util'
-require 'hiera/recursive_lookup'
+require 'hiera/recursive_guard'
 
 begin
   require 'deep_merge'
@@ -9,6 +9,9 @@ end
 class Hiera
   module Backend
     INTERPOLATION = /%\{([^\}]*)\}/
+    SCOPE_INTERPOLATION = /%\{scope\(['"]([^\}]*)["']\)\}/
+    HIERA_INTERPOLATION = /%\{hiera\(['"]([^\}]*)["']\)\}/
+    INTERPOLATION_TYPE = /^([^\(]+)\(/
 
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
@@ -85,22 +88,63 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
-        interpolate(data, Hiera::RecursiveLookup.new(scope, extra_data))
+        interpolate(data, Hiera::RecursiveGuard.new, scope, extra_data)
       end
 
-      def interpolate(data, values)
-        if data.is_a?(String)
-          data.gsub(INTERPOLATION) do
-            name = $1
-            values.lookup(name) do |value|
-              interpolate(value, values)
-            end
+      def interpolate(data, recurse_guard, scope, extra_data)
+        if data =~ INTERPOLATION
+          interpolation_variable = $1
+          recurse_guard.check(interpolation_variable) do
+            interpolate_method = get_interpolation_method(interpolation_variable)
+            interpolated_data = send(interpolate_method, data, scope, extra_data)
+            interpolate(interpolated_data, recurse_guard, scope, extra_data)
           end
         else
           data
         end
       end
       private :interpolate
+
+      def get_interpolation_method(interpolation_variable)
+        interpolation_type = interpolation_variable.match(INTERPOLATION_TYPE)
+        if interpolation_type
+          case interpolation_type[1]
+          when 'hiera' then :hiera_interpolate
+          when 'scope' then :scope_interpolate
+          end
+        else
+          :scope_interpolate
+        end
+      end
+
+      def get_scope_value(data)
+        if data =~ SCOPE_INTERPOLATION
+          data.match(SCOPE_INTERPOLATION)[1]
+        elsif data =~ INTERPOLATION
+          data.match(INTERPOLATION)[1]
+        end
+      end
+      private :get_scope_value
+
+      def scope_interpolate(data, scope, extra_data)
+        data.sub(INTERPOLATION) do
+          value = get_scope_value(data)
+          scope_val = scope[value]
+          if scope_val.nil? || scope_val == :undefined
+            scope_val = extra_data[value]
+          end
+          scope_val
+        end
+      end
+      private :scope_interpolate
+
+      def hiera_interpolate(data, scope, extra_data)
+        data.sub(HIERA_INTERPOLATION) do
+          value = $1
+          lookup(value, nil, scope, nil, :priority)
+        end
+      end
+      private :hiera_interpolate
 
       # Parses a answer received from data files
       #
