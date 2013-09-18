@@ -146,7 +146,7 @@ class Hiera
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/peritor/deep_merge)
       #
       #  :native => Native Hash.merge
-      #  :deep   => Use Hash.deep_merge  
+      #  :deep   => Use Hash.deep_merge
       #  :deeper => Use Hash.deep_merge!
       #
       def merge_answer(left,right)
