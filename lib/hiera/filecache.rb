@@ -32,8 +32,13 @@ class Hiera
           begin
             @cache[path][:data] = yield(File.read(path))
           rescue => e
-            Hiera.debug("Reading data from %s failed: %s: %S" % [path, e.class, e.to_s])
-            @cache[path][:data] = default
+            error = "Reading data from %s failed: %s: %s" % [path, e.class, e.to_s]
+            if default.nil?
+              raise e.class, error, e.backtrace
+            else
+              Hiera.debug(error)
+              @cache[path][:data] = default
+            end
           end
         else
           @cache[path][:data] = File.read(path)
