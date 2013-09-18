@@ -256,6 +256,7 @@ class Hiera
       end
 
       it "caches loaded backends" do
+        Backend.instance_variable_set(:@backends,nil)
         Hiera.expects(:debug).with(regexp_matches(/Hiera YAML backend starting/)).once
 
         Config.load({:yaml => {:datadir => "/tmp"}})
