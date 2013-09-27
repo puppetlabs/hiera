@@ -113,6 +113,7 @@ class Hiera
           [:scope_interpolate, match[1]]
         end
       end
+      private :get_interpolation_method_and_key
 
       def scope_interpolate(data, key, scope, extra_data)
         value = scope[key]
