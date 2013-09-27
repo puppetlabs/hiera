@@ -232,7 +232,7 @@ class Hiera
         input = "test_%{first}_test"
         expect do
           Backend.parse_string(input, scope)
-        end.to raise_error Exception, "Interpolation loop detected in [first, second]"
+        end.to raise_error Hiera::InterpolationLoop, "Detected in [first, second]"
       end
 
       it "replaces hiera interpolations with data looked up in hiera" do
