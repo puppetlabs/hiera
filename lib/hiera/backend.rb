@@ -9,9 +9,7 @@ end
 class Hiera
   module Backend
     INTERPOLATION = /%\{([^\}]*)\}/
-    SCOPE_INTERPOLATION = /%\{scope\(['"]([^\}]*)["']\)\}/
-    HIERA_INTERPOLATION = /%\{hiera\(['"]([^\}]*)["']\)\}/
-    INTERPOLATION_TYPE = /^([^\(]+)\(/
+    METHOD_INTERPOLATION = /%\{(scope|hiera)\(['"]([^"']*)["']\)\}/
 
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
@@ -92,11 +90,11 @@ class Hiera
       end
 
       def interpolate(data, recurse_guard, scope, extra_data)
-        if data =~ INTERPOLATION
-          interpolation_variable = $1
+        if data.is_a?(String) && (match = data.match(INTERPOLATION))
+          interpolation_variable = match[1]
           recurse_guard.check(interpolation_variable) do
-            interpolate_method = get_interpolation_method(interpolation_variable)
-            interpolated_data = send(interpolate_method, data, scope, extra_data)
+            interpolate_method, key = get_interpolation_method_and_key(data)
+            interpolated_data = send(interpolate_method, data, key, scope, extra_data)
             interpolate(interpolated_data, recurse_guard, scope, extra_data)
           end
         else
@@ -105,44 +103,29 @@ class Hiera
       end
       private :interpolate
 
-      def get_interpolation_method(interpolation_variable)
-        interpolation_type = interpolation_variable.match(INTERPOLATION_TYPE)
-        if interpolation_type
-          case interpolation_type[1]
-          when 'hiera' then :hiera_interpolate
-          when 'scope' then :scope_interpolate
+      def get_interpolation_method_and_key(data)
+        if (match = data.match(METHOD_INTERPOLATION))
+          case match[1]
+          when 'hiera' then [:hiera_interpolate, match[2]]
+          when 'scope' then [:scope_interpolate, match[2]]
           end
-        else
-          :scope_interpolate
+        elsif (match = data.match(INTERPOLATION))
+          [:scope_interpolate, match[1]]
         end
       end
 
-      def get_scope_value(data)
-        if data =~ SCOPE_INTERPOLATION
-          data.match(SCOPE_INTERPOLATION)[1]
-        elsif data =~ INTERPOLATION
-          data.match(INTERPOLATION)[1]
+      def scope_interpolate(data, key, scope, extra_data)
+        value = scope[key]
+        if value.nil? || value == :undefined
+          value = extra_data[key]
         end
-      end
-      private :get_scope_value
-
-      def scope_interpolate(data, scope, extra_data)
-        data.sub(INTERPOLATION) do
-          value = get_scope_value(data)
-          scope_val = scope[value]
-          if scope_val.nil? || scope_val == :undefined
-            scope_val = extra_data[value]
-          end
-          scope_val
-        end
+        data.sub(INTERPOLATION, value.to_s)
       end
       private :scope_interpolate
 
-      def hiera_interpolate(data, scope, extra_data)
-        data.sub(HIERA_INTERPOLATION) do
-          value = $1
-          lookup(value, nil, scope, nil, :priority)
-        end
+      def hiera_interpolate(data, key, scope, extra_data)
+        value = lookup(key, nil, scope, nil, :priority)
+        data.sub(METHOD_INTERPOLATION, value)
       end
       private :hiera_interpolate
 
