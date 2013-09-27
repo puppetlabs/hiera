@@ -141,12 +141,12 @@ class Hiera
         end
       end
 
-      @intreprets_false_in_scope_tests = {
+      @interprets_false_in_scope_tests = {
         "test_%{rspec}_test" => "test_false_test",
         "test_%{scope('rspec')}_test" => "test_false_test"
       }
 
-      @intreprets_false_in_scope_tests.each do |input, expected|
+      @interprets_false_in_scope_tests.each do |input, expected|
         it "interprets false in scope as a real value" do
           input = "test_%{scope('rspec')}_test"
           Backend.parse_string(input, {"rspec" => false}).should == expected
