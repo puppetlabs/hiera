@@ -233,6 +233,10 @@ class Hiera
         return default if answer.nil?
         return answer
       end
+
+      def clear!
+        @backends = {}
+      end
     end
   end
 end
