@@ -1,62 +1,141 @@
 require 'spec_helper'
+require 'tmpdir'
 
 class Hiera
   describe Filecache do
     before do
-      File.stubs(:exist?).returns(true)
       @cache = Filecache.new
     end
 
+    def write_file(file, contents)
+      File.open(file, 'w') do |f|
+        f.write(contents)
+      end
+    end
+
     describe "#read" do
-      it "should cache and read data" do
-        File.expects(:read).with("/nonexisting").returns("text")
-        @cache.expects(:path_metadata).returns(File.stat(__FILE__)).once
-        @cache.expects(:stale?).once.returns(false)
+      it "reads data from a file" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
 
-        @cache.read("/nonexisting").should == "text"
-        @cache.read("/nonexisting").should == "text"
-      end
-
-      it "should support validating return types and setting defaults" do
-        File.expects(:read).with("/nonexisting").returns('{"rspec":1}')
-
-        @cache.expects(:path_metadata).returns(File.stat(__FILE__))
-
-        Hiera.expects(:debug).with(regexp_matches(/is not a Hash, setting defaults/))
-
-        # return bogus data on purpose, triggers setting defaults
-        data = @cache.read("/nonexisting", Hash, {"rspec" => 1}) do |data|
-          nil
+          @cache.read(file).should == "my data"
         end
+      end
 
-        data.should == {"rspec" => 1}
+      it "rereads data when the file changes" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+          @cache.read(file).should == "my data"
+
+          write_file(file, "changed data")
+          @cache.read(file).should == "changed data"
+        end
+      end
+
+      it "uses the provided default when the type does not match the expected type" do
+        Hiera.expects(:debug).with(regexp_matches(/String.*not.*Hash, setting defaults/))
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+          data = @cache.read(file, Hash, { :testing => "hash" }) do |data|
+            "a string"
+          end
+
+          data.should == { :testing => "hash" }
+        end
+      end
+
+      it "traps any errors from the block and uses the default value" do
+        Hiera.expects(:debug).with(regexp_matches(/Reading data.*failed:.*testing error/))
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+          data = @cache.read(file, Hash, { :testing => "hash" }) do |data|
+            raise ArgumentError, "testing error"
+          end
+
+          data.should == { :testing => "hash" }
+        end
+      end
+
+      it "raises an error when there is no default given and there is a problem" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+
+          expect do
+            @cache.read(file, Hash) do |data|
+              raise ArgumentError, "testing error"
+            end
+          end.to raise_error(ArgumentError, "testing error")
+        end
       end
     end
 
-    describe "#stale?" do
-      it "should return false when the file has not changed" do
-        stat = File.stat(__FILE__)
+    describe "#read_file" do
+      it "reads data from a file" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
 
-        @cache.stubs(:path_metadata).returns(stat)
-        @cache.stale?("/nonexisting").should == true
-        @cache.stale?("/nonexisting").should == false
+          @cache.read_file(file).should == "my data"
+        end
       end
 
-      it "should update and return true when the file changed" do
-        @cache.expects(:path_metadata).returns({:inode => 1, :mtime => Time.now, :size => 1})
-        @cache.stale?("/nonexisting").should == true
-        @cache.expects(:path_metadata).returns({:inode => 2, :mtime => Time.now, :size => 1})
-        @cache.stale?("/nonexisting").should == true
+      it "rereads data when the file changes" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+          @cache.read_file(file).should == "my data"
+
+          write_file(file, "changed data")
+          @cache.read_file(file).should == "changed data"
+        end
       end
-    end
 
-    describe "#path_metadata" do
-      it "should return the right data" do
-        stat = File.stat(__FILE__)
+      it "errors when the type does not match the expected type" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
 
-        File.expects(:stat).with("/nonexisting").returns(stat)
+          expect do
+            @cache.read_file(file, Hash) do |data|
+              "a string"
+            end
+          end.to raise_error(TypeError)
+        end
+      end
 
-        @cache.path_metadata("/nonexisting").should == {:inode => stat.ino, :mtime => stat.mtime, :size => stat.size}
+      it "converts the read data using the block" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+
+          @cache.read_file(file, Hash) do |data|
+            { :data => data }
+          end.should == { :data => "my data" }
+        end
+      end
+
+      it "errors when the file does not exist" do
+        expect do
+          @cache.read_file("/notexist")
+        end.to raise_error(Errno::ENOENT)
+      end
+
+      it "propogates any errors from the block" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+
+          expect do
+            @cache.read_file(file) do |data|
+              raise ArgumentError, "testing error"
+            end
+          end.to raise_error(ArgumentError, "testing error")
+        end
       end
     end
   end

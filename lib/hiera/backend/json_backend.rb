@@ -21,7 +21,7 @@ class Hiera
 
           next unless File.exist?(jsonfile)
 
-          data = @cache.read(jsonfile, Hash, {}) do |data|
+          data = @cache.read_file(jsonfile, Hash) do |data|
             JSON.parse(data)
           end
 
