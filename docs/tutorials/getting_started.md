@@ -100,7 +100,7 @@ Now that we have our configuration setup and some data, lets lookup the
     $ /var/lib/gems/1.8/bin/hiera driftfile
     /etc/ntp/drift
 
-We get extacaly what we expected, '/etc/ntp/drift'.
+We get exactly what we expected, '/etc/ntp/drift'.
 
 Running the lookup command with the `--debug` flag, we can see the details
 of how Hiera lookups data:
