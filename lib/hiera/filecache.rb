@@ -24,31 +24,43 @@ class Hiera
     # reading/parsing fails it will return {} instead
     #
     # Prior to calling this method you should be sure the file exist
-    def read(path, expected_type=nil, default=nil)
-      @cache[path] ||= {:data => nil, :meta => path_metadata(path)}
-
-      if File.exist?(path) && !@cache[path][:data] || stale?(path)
-        if block_given?
-          begin
-            @cache[path][:data] = yield(File.read(path))
-          rescue => e
-            Hiera.debug("Reading data from %s failed: %s: %s" % [path, e.class, e.to_s])
-            @cache[path][:data] = default
-          end
-        else
-          @cache[path][:data] = File.read(path)
-        end
+    def read(path, expected_type = Object, default=nil, &block)
+      read_file(path, expected_type, &block)
+    rescue TypeError => detail
+      Hiera.debug("#{detail.message}, setting defaults")
+      @cache[path][:data] = default
+    rescue => detail
+      error = "Reading data from #{path} failed: #{detail.class}: #{detail}"
+      if default.nil?
+        raise detail
+      else
+        Hiera.debug(error)
+        @cache[path][:data] = default
       end
+    end
 
-      if block_given? && !expected_type.nil?
-        unless @cache[path][:data].is_a?(expected_type)
-          Hiera.debug("Data retrieved from %s is not a %s, setting defaults" % [path, expected_type])
-          @cache[path][:data] = default
+    # Read a file when it changes. If a file is re-read and has not changed since the last time
+    # then the last, processed, contents will be returned.
+    #
+    # The processed data can also be checked against an expected type. If the
+    # type does not match a TypeError is raised.
+    #
+    # No error handling is done inside this method. Any failed reads or errors
+    # in processing will be propagated to the caller
+    def read_file(path, expected_type = Object)
+      if stale?(path)
+        data = File.read(path)
+        @cache[path][:data] = block_given? ? yield(data) : data
+
+        if !@cache[path][:data].is_a?(expected_type)
+          raise TypeError, "Data retrieved from #{path} is #{data.class} not #{expected_type}"
         end
       end
 
       @cache[path][:data]
     end
+
+    private
 
     def stale?(path)
       meta = path_metadata(path)
