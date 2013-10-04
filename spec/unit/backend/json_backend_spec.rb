@@ -33,7 +33,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns("/nonexisting/one.json").times(3)
           File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
+          @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
 
           @backend.lookup("stringval", {}, nil, :priority).should == "string"
           @backend.lookup("boolval", {}, nil, :priority).should == true
@@ -47,7 +47,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, scope, "two", "json").never
 
           File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
+          @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
           @backend.lookup("key", scope, nil, :priority).should == "test_test"
         end
@@ -63,8 +63,8 @@ class Hiera
           File.expects(:exist?).with("/nonexisting/one.json").returns(true)
           File.expects(:exist?).with("/nonexisting/two.json").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "answer"})
-          @cache.expects(:read).with("/nonexisting/two.json", Hash, {}).returns({"key" => "answer"})
+          @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "answer"})
+          @cache.expects(:read_file).with("/nonexisting/two.json", Hash).returns({"key" => "answer"})
 
           @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
         end
@@ -75,7 +75,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, {"rspec" => "test"}, "one", "json").returns("/nonexisting/one.json")
 
           File.expects(:exist?).with("/nonexisting/one.json").returns(true)
-          @cache.expects(:read).with("/nonexisting/one.json", Hash, {}).returns({"key" => "test_%{rspec}"})
+          @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
           @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
         end

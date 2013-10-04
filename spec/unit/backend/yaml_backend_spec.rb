@@ -32,7 +32,7 @@ class Hiera
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
           Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil).never
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>"answer"})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"answer"})
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
 
           @backend.lookup("key", {}, nil, :priority).should == "answer"
@@ -50,7 +50,7 @@ class Hiera
           Backend.expects(:datasources).multiple_yields(["one"])
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({})
 
           @backend.lookup("key", {}, nil, :priority).should be_nil
         end
@@ -62,8 +62,8 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
           File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>"answer"})
-          @cache.expects(:read).with("/nonexisting/two.yaml", Hash, {}).returns({"key"=>"answer"})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"answer"})
+          @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>"answer"})
 
           @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
         end
@@ -75,8 +75,8 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
           File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({})
-          @cache.expects(:read).with("/nonexisting/two.yaml", Hash, {}).returns({"key"=>{"a"=>"answer"}})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({})
+          @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
 
           @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer"}
         end
@@ -88,8 +88,8 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
           File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>{"a"=>"answer"}})
-          @cache.expects(:read).with("/nonexisting/two.yaml", Hash, {}).returns({"key"=>{"b"=>"answer", "a"=>"wrong"}})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
+          @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"b"=>"answer", "a"=>"wrong"}})
 
           @backend.lookup("key", {}, nil, :hash).should == {"a" => "answer", "b" => "answer"}
         end
@@ -101,8 +101,8 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
           File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>["a", "answer"]})
-          @cache.expects(:read).with("/nonexisting/two.yaml", Hash, {}).returns({"key"=>{"a"=>"answer"}})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>["a", "answer"]})
+          @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
 
           expect {@backend.lookup("key", {}, nil, :array)}.to raise_error(Exception, "Hiera type mismatch: expected Array and got Hash")
         end
@@ -114,8 +114,8 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
           File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>{"a"=>"answer"}})
-          @cache.expects(:read).with("/nonexisting/two.yaml", Hash, {}).returns({"key"=>["a", "wrong"]})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
+          @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>["a", "wrong"]})
 
           expect { @backend.lookup("key", {}, nil, :hash) }.to raise_error(Exception, "Hiera type mismatch: expected Hash and got Array")
         end
@@ -125,7 +125,7 @@ class Hiera
           Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).returns({"key"=>"test_%{rspec}"})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"test_%{rspec}"})
 
           @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
         end
@@ -137,7 +137,7 @@ class Hiera
 
           yaml = "---\nstringval: 'string'\nboolval: true\nnumericval: 1"
 
-          @cache.expects(:read).with("/nonexisting/one.yaml", Hash, {}).times(3).returns({"boolval"=>true, "numericval"=>1, "stringval"=>"string"})
+          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).times(3).returns({"boolval"=>true, "numericval"=>1, "stringval"=>"string"})
 
           @backend.lookup("stringval", {}, nil, :priority).should == "string"
           @backend.lookup("boolval", {}, nil, :priority).should == true
