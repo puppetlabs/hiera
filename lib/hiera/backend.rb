@@ -1,5 +1,6 @@
 require 'hiera/util'
-require 'hiera/recursive_lookup'
+require 'hiera/recursive_guard'
+require 'hiera/interpolate'
 
 begin
   require 'deep_merge'
@@ -8,8 +9,6 @@ end
 
 class Hiera
   module Backend
-    INTERPOLATION = /%\{([^\}]*)\}/
-
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
       # supplies a datadir in the config it will be used and
@@ -91,22 +90,8 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
-        interpolate(data, Hiera::RecursiveLookup.new(scope, extra_data))
+        Hiera::Interpolate.interpolate(data, Hiera::RecursiveGuard.new, scope, extra_data)
       end
-
-      def interpolate(data, values)
-        if data.is_a?(String)
-          data.gsub(INTERPOLATION) do
-            name = $1
-            values.lookup(name) do |value|
-              interpolate(value, values)
-            end
-          end
-        else
-          data
-        end
-      end
-      private :interpolate
 
       # Parses a answer received from data files
       #
@@ -152,7 +137,7 @@ class Hiera
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/peritor/deep_merge)
       #
       #  :native => Native Hash.merge
-      #  :deep   => Use Hash.deep_merge  
+      #  :deep   => Use Hash.deep_merge
       #  :deeper => Use Hash.deep_merge!
       #
       def merge_answer(left,right)
@@ -211,6 +196,10 @@ class Hiera
 
         return default if answer.nil?
         return answer
+      end
+
+      def clear!
+        @backends = {}
       end
     end
   end
