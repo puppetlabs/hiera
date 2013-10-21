@@ -10,6 +10,8 @@
 %global _sharedstatedir %{_prefix}/lib
 %endif
 
+%define ruby            %{_bindir}/ruby
+
 # VERSION is subbed out during rake srpm process
 %global realversion <%= @version %>
 %global rpmversion <%= @rpmversion %>
@@ -41,14 +43,13 @@ A simple pluggable Hierarchical Database.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{hiera_libdir}
-mkdir -p $RPM_BUILD_ROOT/%{_bindir}
-mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/hiera
-cp -pr lib/hiera $RPM_BUILD_ROOT/%{hiera_libdir}
-cp -pr lib/hiera.rb $RPM_BUILD_ROOT/%{hiera_libdir}
-install -p -m0755 bin/hiera $RPM_BUILD_ROOT/%{_bindir}
-install -p -m0644 ext/hiera.yaml $RPM_BUILD_ROOT/%{_sysconfdir}
+%{ruby} install.rb \
+  --destdir=$RPM_BUILD_ROOT \
+  --sitelibdir=%{hiera_libdir} \
+  --bindir=%{_bindir} \
+  --configdir=%{_sysconfdir} \
+  --configs
 
 %clean
 rm -rf $RPM_BUILD_ROOT
