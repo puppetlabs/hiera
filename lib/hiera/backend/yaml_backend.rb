@@ -8,6 +8,18 @@ class Hiera
         @cache = cache || Filecache.new
       end
 
+      def datafile(datadir, source, extension)
+        file = File.join([datadir, "#{source}.#{extension}"])
+
+        unless File.exist?(file)
+          Hiera.debug("Cannot find datafile #{file}, skipping")
+
+          return nil
+        end
+
+        return file
+      end
+
       # recursive lookup for key/values inside data. This allows
       # foo::bar, foo::bar::buzz, or even foo::bar::buzz::blam
       def sub_lookup(data, classname, key, delimiter)
@@ -37,9 +49,11 @@ class Hiera
 
         Hiera.debug("Looking up #{key} in YAML backend")
 
+        datadir = Backend.datadir(:yaml, scope)
+
         Backend.datasources(scope, order_override) do |source|
           Hiera.debug("Looking for data source #{source}")
-          yamlfile = Backend.datafile(:yaml, scope, source, "yaml") || next
+          yamlfile = datafile(datadir, source, "yaml") || next
 
           next unless File.exist?(yamlfile)
 
