@@ -4,3 +4,4 @@ ext/packaging
 .bundle/
 vendor/
 Gemfile.lock
+/.project

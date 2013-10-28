@@ -1,30 +1,33 @@
 #!/bin/bash
 #
 # Make sure that old hiera cruft is removed
-# This also allows us to downgrade facter as
+# This also allows us to downgrade hiera as
 # it's more likely that installing old versions
 # over new will cause issues.
 #
 # ${3} is the destination volume so that this works correctly
 # when being installed to volumes other than the current OS.
 
-<% begin %>
-<%  require 'rubygems' %>
-<% rescue LoadError %>
-<% end %>
-<% require 'rake' %>
+<%- ["@apple_libdir", "@apple_sbindir", "@apple_bindir", "@apple_docdir", "@package_name"].each do |i| -%>
+  <%- val = instance_variable_get(i) -%>
+  <%- raise "Critical variable #{i} is unset!" if val.nil? or val.empty? -%>
+<%- end -%>
 
-# remove libdir
-<% Dir.chdir("lib") %>
-<% FileList["**/*"].select {|i| File.file?(i)}.each do |file| %>
-/bin/rm -Rf "${3}<%= @apple_libdir %>/<%=file%>"
-<% end %>
+# remove ruby library files
+<%- Dir.chdir("lib") do -%>
+  <%- [@apple_old_libdir, @apple_libdir].compact.each do |libdir| -%>
+    <%- Dir["**/*"].select{ |i| File.file?(i) }.each do |file| -%>
+/bin/rm -f "${3}<%= libdir %>/<%= file %>"
+    <%- end -%>
+  <%- end -%>
+<%- end -%>
+
 # remove bin files
-<% Dir.chdir("../bin") %>
-<% FileList["**/*"].select {|i| File.file?(i)}.each do |file| %>
-/bin/rm -Rf "${3}<%= @apple_bindir %>/<%=file%>"
-<% end %>
-<% Dir.chdir("..") %>
+<%- Dir.chdir("bin") do -%>
+    <%- Dir["**/*"].select{ |i| File.file?(i) }.each do |file| -%>
+/bin/rm -f "${3}<%= @apple_bindir %>/<%= file %>"
+  <%- end -%>
+<%- end -%>
 
 # remove old doc files
-/bin/rm -Rf "${3}<%= @apple_docdir %>/<%=@package_name%>"
+/bin/rm -Rf "${3}<%= @apple_docdir %>/<%= @package_name %>"
