@@ -8,7 +8,7 @@ group :development, :test do
   gem 'rake'
   gem 'rspec', "~> 2.11.0", :require => false
   gem 'mocha', "~> 0.10.5", :require => false
-  gem 'json', "~> 1.7", :require => false
+  gem 'json', "~> 1.7", :require => false, :platforms => :ruby
 end
 
 platform :mswin, :mingw do
