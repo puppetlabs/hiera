@@ -20,7 +20,7 @@ class Hiera
           next unless File.exist?(yamlfile)
 
           data = @cache.read_file(yamlfile, Hash) do |data|
-            YAML.load(data)
+            YAML.load(data) || {}
           end
 
           next if data.empty?
