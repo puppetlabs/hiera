@@ -1,4 +1,8 @@
-source "https://rubygems.org"
+if gem_source = ENV['GEM_SOURCE']
+    source gem_source
+else
+    source "https://rubygems.org"
+end
 
 gem "hiera", :path => File.dirname(__FILE__), :require => false
 
