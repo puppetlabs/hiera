@@ -17,7 +17,7 @@ class Hiera
           Hiera.debug("Looking for data source #{source}")
           yamlfile = Backend.datafile(:yaml, scope, source, "yaml") || next
 
-          next unless File.exist?(yamlfile)
+          next unless file_exists?(yamlfile)
 
           data = @cache.read_file(yamlfile, Hash) do |data|
             YAML.load(data) || {}
@@ -54,6 +54,12 @@ class Hiera
         end
 
         return answer
+      end
+
+      private
+
+      def file_exists?(path)
+        File.exist? path
       end
     end
   end
