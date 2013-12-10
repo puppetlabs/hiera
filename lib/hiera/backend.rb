@@ -35,15 +35,19 @@ class Hiera
       #
       # If the file is not found nil is returned
       def datafile(backend, scope, source, extension)
-        file = File.join([datadir(backend, scope), "#{source}.#{extension}"])
+        datafile_in(datadir(backend, scope), source, extension)
+      end
 
-        unless File.exist?(file)
+      # @api private
+      def datafile_in(datadir, source, extension)
+        file = File.join(datadir, "#{source}.#{extension}")
+
+        if File.exist?(file)
+          file
+        else
           Hiera.debug("Cannot find datafile #{file}, skipping")
-
-          return nil
+          nil
         end
-
-        return file
       end
 
       # Constructs a list of data sources to search
@@ -71,6 +75,35 @@ class Hiera
         hierarchy.flatten.map do |source|
           source = parse_string(source, scope)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
+        end
+      end
+
+      # Constructs a list of data files to search
+      #
+      # If you give it a specific hierarchy it will just use that
+      # else it will use the global configured one, failing that
+      # it will just look in the 'common' data source.
+      #
+      # An override can be supplied that will be pre-pended to the
+      # hierarchy.
+      #
+      # The source names will be subject to variable expansion based
+      # on scope
+      #
+      # Only files that exist will be returned. If the file is missing, then
+      # the block will not receive the file.
+      #
+      # @yield [String, String] the source string and the name of the resulting file
+      # @api public
+      def datasourcefiles(backend, scope, extension, override=nil, hierarchy=nil)
+        datadir = Backend.datadir(backend, scope)
+        Backend.datasources(scope, override, hierarchy) do |source|
+          Hiera.debug("Looking for data source #{source}")
+          file = datafile_in(datadir, source, extension)
+
+          if file
+            yield source, file
+          end
         end
       end
 

@@ -8,31 +8,12 @@ class Hiera
         @cache = cache || Filecache.new
       end
 
-      def datafile(datadir, source, extension)
-        file = File.join([datadir, "#{source}.#{extension}"])
-
-        unless File.exist?(file)
-          Hiera.debug("Cannot find datafile #{file}, skipping")
-
-          return nil
-        end
-
-        return file
-      end
-
       def lookup(key, scope, order_override, resolution_type)
         answer = nil
 
         Hiera.debug("Looking up #{key} in YAML backend")
 
-        datadir = Backend.datadir(:yaml, scope)
-
-        Backend.datasources(scope, order_override) do |source|
-          Hiera.debug("Looking for data source #{source}")
-          yamlfile = datafile(datadir, source, "yaml") || next
-
-          next unless file_exists?(yamlfile)
-
+        Backend.datasourcefiles(:yaml, scope, "yaml", order_override) do |source, yamlfile|
           data = @cache.read_file(yamlfile, Hash) do |data|
             YAML.load(data) || {}
           end
