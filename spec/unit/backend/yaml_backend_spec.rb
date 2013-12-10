@@ -3,12 +3,29 @@ require 'hiera/backend/yaml_backend'
 
 class Hiera
   module Backend
+    class FakeCache
+      attr_accessor :value
+      def read(path, expected_type, default, &block)
+        read_file(path, expected_type, &block)
+      rescue => e
+        default
+      end
+
+      def read_file(path, expected_type, &block)
+        output = block.call(@value)
+        if !output.is_a? expected_type
+          raise TypeError
+        end
+        output
+      end
+    end
+
     describe Yaml_backend do
       before do
         Config.load({})
         Hiera.stubs(:debug)
         Hiera.stubs(:warn)
-        @cache = mock
+        @cache = FakeCache.new
         @backend = Yaml_backend.new(@cache)
       end
 
@@ -32,8 +49,9 @@ class Hiera
           Backend.expects(:datasources).multiple_yields(["one"], ["two"])
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
           Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil).never
-          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"answer"})
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
+
+          @backend.stubs(:file_exists?).with("/nonexisting/one.yaml").returns(true)
+          @cache.value = "---\nkey: answer"
 
           @backend.lookup("key", {}, nil, :priority).should == "answer"
         end
@@ -46,13 +64,27 @@ class Hiera
           @backend.lookup("key", {}, nil, :priority)
         end
 
-        it "should return nil for empty data files" do
-          Backend.expects(:datasources).multiple_yields(["one"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({})
+        describe "handling unexpected YAML values" do
+          before do
+            Backend.expects(:datasources).multiple_yields(["one"])
+            Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
+            @backend.stubs(:file_exists?).with("/nonexisting/one.yaml").returns(true)
+          end
 
-          @backend.lookup("key", {}, nil, :priority).should be_nil
+          it "returns nil when the YAML value is nil" do
+            @cache.value = "---\n"
+            @backend.lookup("key", {}, nil, :priority).should be_nil
+          end
+
+          it "returns nil when the YAML file is false" do
+            @cache.value = ""
+            @backend.lookup("key", {}, nil, :priority).should be_nil
+          end
+
+          it "raises a TypeError when the YAML value is not a hash" do
+            @cache.value = "---\n[one, two, three]"
+            expect { @backend.lookup("key", {}, nil, :priority) }.to raise_error(TypeError)
+          end
         end
 
         it "should build an array of all data sources for array searches" do
@@ -135,9 +167,8 @@ class Hiera
           Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml").times(3)
           File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
 
-          yaml = "---\nstringval: 'string'\nboolval: true\nnumericval: 1"
 
-          @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).times(3).returns({"boolval"=>true, "numericval"=>1, "stringval"=>"string"})
+          @cache.value = "---\nstringval: 'string'\nboolval: true\nnumericval: 1"
 
           @backend.lookup("stringval", {}, nil, :priority).should == "string"
           @backend.lookup("boolval", {}, nil, :priority).should == true
