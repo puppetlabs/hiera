@@ -6,3 +6,7 @@ vendor/
 Gemfile.lock
 Gemfile.local
 /.project
+
+acceptance_tests/.bundle
+acceptance_tests/junit
+acceptance_tests/log
