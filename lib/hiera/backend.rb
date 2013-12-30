@@ -42,11 +42,14 @@ class Hiera
       def datafile_in(datadir, source, extension)
         file = File.join(datadir, "#{source}.#{extension}")
 
-        if File.exist?(file)
-          file
-        else
+        # Expand wildcards
+        files = Dir.glob(file)
+
+        if files.empty?
           Hiera.debug("Cannot find datafile #{file}, skipping")
           nil
+        else
+          files
         end
       end
 
@@ -99,9 +102,11 @@ class Hiera
         datadir = Backend.datadir(backend, scope)
         Backend.datasources(scope, override, hierarchy) do |source|
           Hiera.debug("Looking for data source #{source}")
-          file = datafile_in(datadir, source, extension)
+          files = datafile_in(datadir, source, extension)
 
-          if file
+	  next if files.nil?	
+
+          files.each do |file|
             yield source, file
           end
         end
