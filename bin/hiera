@@ -204,6 +204,7 @@ OptionParser.new do |opts|
       STDERR.puts "Unknown output format: #{v}"
       exit 1
     end
+  end
 end.parse!
 
 # arguments can be:
