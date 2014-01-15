@@ -196,7 +196,7 @@ OptionParser.new do |opts|
     end
   end
 
-  opts.on("--format TYPE", "-f", "Output the result in a specific format; default is 'ruby' (Ruby-printed)") do |v|
+  opts.on("--format TYPE", "-f", "Output the result in a specific format (ruby or json); default is 'ruby'") do |v|
     options[:format] = case v
     when 'json', 'ruby'
       v.to_sym
