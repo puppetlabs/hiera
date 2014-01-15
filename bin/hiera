@@ -32,7 +32,8 @@ options = {
   :scope   => {},
   :key     => nil,
   :verbose => false,
-  :resolution_type => :priority
+  :resolution_type => :priority,
+  :format => :ruby
 }
 
 # Loads the scope from YAML or JSON files
@@ -113,6 +114,23 @@ def load_scope(source, type=:yaml)
   scope
 end
 
+def output_answer(ans, format)
+  case format
+  when :json
+    require 'json'
+    puts JSON.dump(ans)
+  when :ruby
+    if ans.is_a?(String)
+      puts ans
+    else
+      pp ans
+    end
+  else
+    STDERR.puts "Unknown output format: #{v}"
+    exit 1
+  end
+end
+
 OptionParser.new do |opts|
   opts.banner = "Usage: hiera [options] key [default value] [variable='text'...]\n\nThe default value will be used if no value is found for the key. Scope variables\nwill be interpolated into %{variable} placeholders in the hierarchy and in\nreturned values.\n\n"
 
@@ -177,6 +195,16 @@ OptionParser.new do |opts|
       exit 1
     end
   end
+
+  opts.on("--format TYPE", "-f", "Output the result in a specific format (ruby or json); default is 'ruby'") do |v|
+    options[:format] = case v
+    when 'json', 'ruby'
+      v.to_sym
+    else
+      STDERR.puts "Unknown output format: #{v}"
+      exit 1
+    end
+  end
 end.parse!
 
 # arguments can be:
@@ -220,8 +248,4 @@ end
 
 ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
 
-if ans.is_a?(String)
-  puts ans
-else
-  pp ans
-end
+output_answer(ans, options[:format])
