@@ -8,6 +8,13 @@ require 'tmpdir'
 
 RSpec.configure do |config|
   config.mock_with :mocha
+
+  if Hiera::Util.microsoft_windows?
+    require 'win32console'
+    config.output_stream = $stdout
+    config.error_stream = $stderr
+    config.formatters.each { |f| f.instance_variable_set(:@output, $stdout) }
+  end
 end
 
 # In ruby 1.8.5 Dir does not have mktmpdir defined, so this monkey patches
