@@ -23,6 +23,7 @@ install/hiera::
 		--sitelibdir=$(LIBDIR) \
 		--bindir=$(BINDIR) \
 		--configdir=/etc \
-		--configs
+		--configs \
+		--ruby=/usr/bin/ruby
 
 clean::
