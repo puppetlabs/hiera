@@ -8,6 +8,17 @@ require 'tmpdir'
 
 RSpec.configure do |config|
   config.mock_with :mocha
+
+  config.after :suite do
+    # Log the spec order to a file, but only if the LOG_SPEC_ORDER environment variable is
+    #  set.  This should be enabled on Jenkins runs, as it can be used with Nick L.'s bisect
+    #  script to help identify and debug order-dependent spec failures.
+    if ENV['LOG_SPEC_ORDER']
+      File.open("./spec_order.txt", "w") do |logfile|
+        config.instance_variable_get(:@files_to_run).each { |f| logfile.puts f }
+      end
+    end
+  end
 end
 
 # In ruby 1.8.5 Dir does not have mktmpdir defined, so this monkey patches
