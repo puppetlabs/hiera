@@ -4,7 +4,7 @@ require 'hiera/recursive_guard'
 class Hiera::Interpolate
   class << self
     INTERPOLATION = /%\{([^\}]*)\}/
-    METHOD_INTERPOLATION = /%\{(scope|hiera)\(['"]([^"']*)["']\)\}/
+    METHOD_INTERPOLATION = /%\{(scope|hiera|literal)\(['"]([^"']*)["']\)\}/
 
     def interpolate(data, scope, extra_data)
       if data.is_a?(String)
@@ -24,6 +24,10 @@ class Hiera::Interpolate
         recurse_guard.check(interpolation_variable) do
           interpolate_method, key = get_interpolation_method_and_key(data)
           interpolated_data = send(interpolate_method, data, key, scope, extra_data)
+
+          # Halt recursion if we encounter a literal.
+          return interpolated_data if interpolate_method == :literal_interpolate
+
           do_interpolation(interpolated_data, recurse_guard, scope, extra_data)
         end
       else
@@ -37,6 +41,7 @@ class Hiera::Interpolate
         case match[1]
         when 'hiera' then [:hiera_interpolate, match[2]]
         when 'scope' then [:scope_interpolate, match[2]]
+        when 'literal' then [:literal_interpolate, match[2]]
         end
       elsif (match = data.match(INTERPOLATION))
         [:scope_interpolate, match[1]]
@@ -58,5 +63,10 @@ class Hiera::Interpolate
       Hiera::Backend.lookup(key, nil, scope, nil, :priority)
     end
     private :hiera_interpolate
+
+    def literal_interpolate(data, key, scope, extra_data)
+      key
+    end
+    private :literal_interpolate
   end
 end
