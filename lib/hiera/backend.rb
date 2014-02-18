@@ -1,5 +1,4 @@
 require 'hiera/util'
-require 'hiera/recursive_guard'
 require 'hiera/interpolate'
 
 begin
@@ -90,7 +89,7 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={})
-        Hiera::Interpolate.interpolate(data, Hiera::RecursiveGuard.new, scope, extra_data)
+        Hiera::Interpolate.interpolate(data, scope, extra_data)
       end
 
       # Parses a answer received from data files
