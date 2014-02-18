@@ -49,13 +49,13 @@ class Hiera::Interpolate
       if value.nil? || value == :undefined
         value = extra_data[key]
       end
-      data.sub(INTERPOLATION, value.to_s)
+
+      value
     end
     private :scope_interpolate
 
     def hiera_interpolate(data, key, scope, extra_data)
-      value = Hiera::Backend.lookup(key, nil, scope, nil, :priority)
-      data.sub(METHOD_INTERPOLATION, value)
+      Hiera::Backend.lookup(key, nil, scope, nil, :priority)
     end
     private :hiera_interpolate
   end
