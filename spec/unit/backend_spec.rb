@@ -253,6 +253,12 @@ class Hiera
         end.to raise_error Hiera::InterpolationLoop, "Detected in [first, second]"
       end
 
+      it "replaces repeated occurances of the same lookup" do
+        scope = {"rspec" => "value"}
+        input = "it replaces %{rspec} and %{rspec}"
+        Backend.parse_string(input, scope).should == "it replaces value and value"
+      end
+
       it "replaces hiera interpolations with data looked up in hiera" do
         input = "%{hiera('key1')}"
         scope = {}
