@@ -175,9 +175,9 @@ class Hiera
       def merge_answer(left,right)
         case Config[:merge_behavior]
         when :deeper,'deeper'
-          left.deep_merge!(right)
+          left.deep_merge!(right, Config[:deep_merge_options] || {})
         when :deep,'deep'
-          left.deep_merge(right)
+          left.deep_merge(right, Config[:deep_merge_options] || {})
         else # Native and undefined
           left.merge(right)
         end
