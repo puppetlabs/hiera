@@ -5,11 +5,25 @@ class Hiera
   describe Backend do
     describe "#datadir" do
       it "interpolates any values in the configured value" do
-        Config.load({:rspec => {:datadir => "/tmp/%{interpolate}"}})
+        interpolation_tests = {
+          :test1 => '%{interpolate}',
+          :test2 => '%%{interpolate}',
+          :test3 => '%%%{interpolate}',
+          :test4 => '%%%%{interpolate}',
+        }
 
-        dir = Backend.datadir(:rspec, { "interpolate" => "my_data" })
+        results = {}
+        interpolation_tests.each do |test,value|
+          puts "testing #{test} #{value}"
+          Config.load({:rspec => {:datadir => "/tmp/#{value}"}})
+          results[test] = Backend.datadir(:rspec, { "interpolate" => "variable" })
+        end
 
-        dir.should == "/tmp/my_data"
+        puts "Results: #{results}"
+        results[:test1].should == "/tmp/variable"
+        results[:test2].should == "/tmp/%{interpolate}"
+        results[:test3].should == "/tmp/%variable"
+        results[:test4].should == "/tmp/%%{interpolate}"
       end
 
       it "defaults to a directory in var" do
