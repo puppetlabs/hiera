@@ -3,7 +3,7 @@ require 'hiera/recursive_guard'
 
 class Hiera::Interpolate
   class << self
-    INTERPOLATION = /%\{([^\}]*)\}/
+    INTERPOLATION = /%+\{([^\}]*)\}/
     METHOD_INTERPOLATION = /%\{(scope|hiera)\(['"]([^"']*)["']\)\}/
 
     def interpolate(data, scope, extra_data)
@@ -11,7 +11,26 @@ class Hiera::Interpolate
         # Wrapping do_interpolation in a gsub block ensures we process
         # each interpolation site in isolation using separate recursion guards.
         data.gsub(INTERPOLATION) do |match|
-          do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data)
+          #Allow escaping of %{} to support litteral %{some_text} in hiera data.
+          #Should support escaping of escapes so full list of scenarios looks like:
+          #    %{var}      : 'value of var'
+          #   %%{literal}  : '%{literal}'
+          #  %%%{var}      : '%value of var'
+          # %%%%{literal}  : '%%{literal}'
+
+          percents = match.match(/^(%+)/)[1]
+          if percents.length.even?
+            match.gsub(/%%/,'%')
+          else
+            #Remove a % that represents the interpolation from percents
+            #Of the remaining %'s sub each '%%' for '%' ('%%' is an escaped '%')
+            #Remove all but one % from the match to feed into do_intepolation
+            #add the percents (the escaped % signs back on so %%%{var} becomes %value
+            percents.chop!
+            percents.gsub!(/%%/,'%')
+            match.sub!(/^%+/,'%')
+            percents + do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data).to_s
+          end
         end
       else
         data
