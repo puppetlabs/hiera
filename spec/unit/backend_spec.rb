@@ -268,6 +268,12 @@ class Hiera
 
         Backend.parse_string(input, scope).should == "answer"
       end
+
+      it "replaces literal interpolations with their argument" do
+        scope = {}
+        input = "%{literal('%')}{rspec::data}"
+        Backend.parse_string(input, scope).should == "%{rspec::data}"
+      end
     end
 
     describe "#parse_answer" do
