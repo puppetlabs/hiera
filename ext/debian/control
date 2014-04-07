@@ -9,5 +9,8 @@ Homepage: http://projects.puppetlabs.com/projects/hiera
 Package: hiera
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, libjson-ruby | ruby-json
+Conflicts: ruby-hiera
+Provides: ruby-hiera
+Replaces: ruby-hiera
 Description: A simple pluggable Hierarchical Database.
 	Hiera is a simple pluggable Hierarchical Database.
