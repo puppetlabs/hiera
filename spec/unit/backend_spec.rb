@@ -274,6 +274,23 @@ class Hiera
         input = "%{literal('%')}{rspec::data}"
         Backend.parse_string(input, scope).should == "%{rspec::data}"
       end
+
+      it "replaces interpolation values with arrays" do
+        to_test = ['foo','bar']
+        scope = { "rspec" => to_test }
+        input = "%{rspec}"
+
+        Backend.parse_string(input,scope).should == to_test
+      end
+
+      it "replaces interpolation values with hashes" do
+        to_test = {:foo => 'foo',:bar => 'bar'}
+        scope = { "rspec" => to_test }
+        input = "%{rspec}"
+
+        Backend.parse_string(input,scope).should == to_test
+      end
+
     end
 
     describe "#parse_answer" do
