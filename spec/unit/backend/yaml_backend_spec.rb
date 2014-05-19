@@ -37,38 +37,16 @@ class Hiera
       end
 
       describe "#lookup" do
-        it "should look for data in all sources" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns(nil)
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil)
-
-          @backend.lookup("key", {}, nil, :priority)
-        end
-
         it "should pick data earliest source that has it for priority searches" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns(nil).never
-
-          @backend.stubs(:file_exists?).with("/nonexisting/one.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).yields(["one", "/nonexisting/one.yaml"])
           @cache.value = "---\nkey: answer"
 
           @backend.lookup("key", {}, nil, :priority).should == "answer"
         end
 
-        it "should not look up missing data files" do
-          Backend.expects(:datasources).multiple_yields(["one"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns(nil)
-          YAML.expects(:load_file).never
-
-          @backend.lookup("key", {}, nil, :priority)
-        end
-
         describe "handling unexpected YAML values" do
           before do
-            Backend.expects(:datasources).multiple_yields(["one"])
-            Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-            @backend.stubs(:file_exists?).with("/nonexisting/one.yaml").returns(true)
+            Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).yields(["one", "/nonexisting/one.yaml"])
           end
 
           it "returns nil when the YAML value is nil" do
@@ -88,12 +66,7 @@ class Hiera
         end
 
         it "should build an array of all data sources for array searches" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
-
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"], ["two", "/nonexisting/two.yaml"])
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"answer"})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>"answer"})
 
@@ -101,11 +74,7 @@ class Hiera
         end
 
         it "should ignore empty hash of data sources for hash searches" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"], ["two", "/nonexisting/two.yaml"])
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
@@ -114,11 +83,7 @@ class Hiera
         end
 
         it "should build a merged hash of data sources for hash searches" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"], ["two", "/nonexisting/two.yaml"])
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"b"=>"answer", "a"=>"wrong"}})
@@ -127,11 +92,7 @@ class Hiera
         end
 
         it "should fail when trying to << a Hash" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"], ["two", "/nonexisting/two.yaml"])
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>["a", "answer"]})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
@@ -140,11 +101,7 @@ class Hiera
         end
 
         it "should fail when trying to merge an Array" do
-          Backend.expects(:datasources).multiple_yields(["one"], ["two"])
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml")
-          Backend.expects(:datafile).with(:yaml, {}, "two", "yaml").returns("/nonexisting/two.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
-          File.stubs(:exist?).with("/nonexisting/two.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"], ["two", "/nonexisting/two.yaml"])
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>["a", "wrong"]})
@@ -153,9 +110,7 @@ class Hiera
         end
 
         it "should parse the answer for scope variables" do
-          Backend.expects(:datasources).yields("one")
-          Backend.expects(:datafile).with(:yaml, {"rspec" => "test"}, "one", "yaml").returns("/nonexisting/one.yaml")
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {"rspec" => "test"}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"])
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"test_%{rspec}"})
 
@@ -163,9 +118,7 @@ class Hiera
         end
 
         it "should retain datatypes found in yaml files" do
-          Backend.expects(:datasources).yields("one").times(3)
-          Backend.expects(:datafile).with(:yaml, {}, "one", "yaml").returns("/nonexisting/one.yaml").times(3)
-          File.stubs(:exist?).with("/nonexisting/one.yaml").returns(true)
+          Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).multiple_yields(["one", "/nonexisting/one.yaml"]).times(3)
 
 
           @cache.value = "---\nstringval: 'string'\nboolval: true\nnumericval: 1"

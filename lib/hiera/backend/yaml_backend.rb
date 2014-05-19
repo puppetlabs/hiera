@@ -13,12 +13,7 @@ class Hiera
 
         Hiera.debug("Looking up #{key} in YAML backend")
 
-        Backend.datasources(scope, order_override) do |source|
-          Hiera.debug("Looking for data source #{source}")
-          yamlfile = Backend.datafile(:yaml, scope, source, "yaml") || next
-
-          next unless file_exists?(yamlfile)
-
+        Backend.datasourcefiles(:yaml, scope, "yaml", order_override) do |source, yamlfile|
           data = @cache.read_file(yamlfile, Hash) do |data|
             YAML.load(data) || {}
           end
