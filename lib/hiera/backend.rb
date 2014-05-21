@@ -106,6 +106,35 @@ class Hiera
         end
       end
 
+      # Constructs a list of data files to search
+      #
+      # If you give it a specific hierarchy it will just use that
+      # else it will use the global configured one, failing that
+      # it will just look in the 'common' data source.
+      #
+      # An override can be supplied that will be pre-pended to the
+      # hierarchy.
+      #
+      # The source names will be subject to variable expansion based
+      # on scope
+      #
+      # Only files that exist will be returned. If the file is missing, then
+      # the block will not receive the file.
+      #
+      # @yield [String, String] the source string and the name of the resulting file
+      # @api public
+      def datasourcefiles(backend, scope, extension, override=nil, hierarchy=nil)
+        datadir = Backend.datadir(backend, scope)
+        Backend.datasources(scope, override, hierarchy) do |source|
+          Hiera.debug("Looking for data source #{source}")
+          file = datafile_in(datadir, source, extension)
+
+          if file
+            yield source, file
+          end
+        end
+      end
+
       # Parse a string like <code>'%{foo}'</code> against a supplied
       # scope and additional scope.  If either scope or
       # extra_scope includes the variable 'foo', then it will
