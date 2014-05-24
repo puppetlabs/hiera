@@ -6,6 +6,38 @@ class Hiera::Interpolate
     INTERPOLATION = /%\{([^\}]*)\}/
     METHOD_INTERPOLATION = /%\{(scope|hiera|literal)\(['"]([^"']*)["']\)\}/
 
+    def interpolate_hierarchy(data, scope)
+      hierarchy = [data]
+
+      loop do
+        i = 0
+        t_hierarchy = []
+        hierarchy.each do |source|
+          if (match = source.match(INTERPOLATION))
+            interpolated_data = do_interpolation(match[0], Hiera::RecursiveGuard.new, scope, {})
+            unless interpolated_data.nil?
+              if interpolated_data.is_a?(Array)
+                interpolated_data.each do |value|
+                  t_hierarchy << source.gsub(match[0], value)
+                end
+              else
+                t_hierarchy << source.gsub(match[0], interpolated_data)
+              end
+            else
+              t_hierarchy << source.gsub(match[0], '')
+            end
+            i += 1
+          else
+            t_hierarchy << source
+          end
+        end
+        hierarchy = t_hierarchy
+        break unless i > 0
+      end
+
+      hierarchy
+    end
+
     def interpolate(data, scope, extra_data)
       if data.is_a?(String)
         # Wrapping do_interpolation in a gsub block ensures we process
