@@ -15,3 +15,13 @@ gem_executables: 'hiera'
 gem_runtime_dependencies:
   json_pure:
 gem_default_executables: 'hiera'
+gem_platform_dependencies:
+  x86-mingw32:
+    gem_runtime_dependencies:
+      win32-dir: '~> 0.4.8'
+  x64-mingw32:
+    gem_runtime_dependencies:
+      win32-dir: '~> 0.4.8'
+bundle_platforms:
+  x86-mingw32: mingw
+  x64-mingw32: x64_mingw
