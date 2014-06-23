@@ -14,12 +14,11 @@ group :development, :test do
   gem "yarjuf", "~> 1.0"
 end
 
-platform :mswin, :mingw do
-  gem "ffi", "1.9.0", :require => false
-  gem "win32-api", "1.4.8", :require => false
-  gem "win32-dir", "0.4.3", :require => false
-  gem "windows-api", "0.4.2", :require => false
-  gem "windows-pr", "1.2.2", :require => false
+mingw = [:mingw]
+mingw << :x64_mingw if Bundler::Dsl::VALID_PLATFORMS.include?(:x64_mingw)
+
+platform(*mingw) do
+  gem 'win32-dir', '~> 0.4.8', :require => false
 end
 
 if File.exists? "#{__FILE__}.local"
