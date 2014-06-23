@@ -9,7 +9,7 @@ require 'tmpdir'
 RSpec.configure do |config|
   config.mock_with :mocha
 
-  if Hiera::Util.microsoft_windows?
+  if Hiera::Util.microsoft_windows? && RUBY_VERSION =~ /^1\./
     require 'win32console'
     config.output_stream = $stdout
     config.error_stream = $stderr
