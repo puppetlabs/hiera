@@ -11,7 +11,16 @@ class Hiera::Interpolate
         # Wrapping do_interpolation in a gsub block ensures we process
         # each interpolation site in isolation using separate recursion guards.
         data.gsub(INTERPOLATION) do |match|
-          do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data)
+          interp_val = do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data)
+          if not interp_val or interp_val.is_a?(String)
+            interp_val
+          else
+            # Halt recursion if we get something other than a string in the
+            # hierarchy.
+            # This will return *any* data type that happens to be at the end of
+            # this trail.
+            return interp_val
+          end
         end
       else
         data
