@@ -12,6 +12,7 @@ namespace :ci do
           "--xml",
           "--debug",
           "--timeout", "1200",
+          "--add-el-extras",
           "--keyfile", ENV['KEY'] || "#{ENV['HOME']}/.ssh/id_rsa")
     end
   end
