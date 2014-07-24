@@ -129,6 +129,9 @@ def output_answer(ans, format)
     else
       pp ans
     end
+  when :yaml
+    require 'yaml'
+    puts ans.to_yaml
   else
     STDERR.puts "Unknown output format: #{v}"
     exit 1
@@ -200,9 +203,9 @@ OptionParser.new do |opts|
     end
   end
 
-  opts.on("--format TYPE", "-f", "Output the result in a specific format (ruby or json); default is 'ruby'") do |v|
+  opts.on("--format TYPE", "-f", "Output the result in a specific format (ruby, yaml or json); default is 'ruby'") do |v|
     options[:format] = case v
-    when 'json', 'ruby'
+    when 'json', 'ruby', 'yaml'
       v.to_sym
     else
       STDERR.puts "Unknown output format: #{v}"
