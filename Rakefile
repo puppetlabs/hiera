@@ -1,7 +1,7 @@
 begin
-  load File.join(File.dirname(__FILE__), 'ext', 'packaging', 'packaging.rake')
   require 'rubygems'
   require 'rspec/core/rake_task'
+  load File.join(File.dirname(__FILE__), 'ext', 'packaging', 'packaging.rake')
 rescue LoadError
 end
 
