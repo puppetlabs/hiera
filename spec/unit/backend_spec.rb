@@ -316,6 +316,15 @@ class Hiera
         Backend.parse_answer(input, scope).should == "test_test_test"
       end
 
+      it "interpolates alias lookups with non-string types" do
+        input = "%{alias('rspec')}"
+        scope = {}
+        Config.load({:yaml => {:datadir => "/tmp"}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns(['test', 'test'])
+        Backend.parse_answer(input, scope).should == ['test', 'test']
+      end
+
       it "interpolates hiera lookups in each string in an array" do
         input = ["test_%{hiera('rspec')}_test", "test_%{hiera('rspec')}_test", ["test_%{hiera('rspec')}_test"]]
         scope = {}
