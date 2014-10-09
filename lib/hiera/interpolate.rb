@@ -1,17 +1,37 @@
 require 'hiera/backend'
 require 'hiera/recursive_guard'
 
+
+class Hiera::InterpolationInvalidValue < StandardError; end
+
 class Hiera::Interpolate
   class << self
     INTERPOLATION = /%\{([^\}]*)\}/
-    METHOD_INTERPOLATION = /%\{(scope|hiera|literal)\(['"]([^"']*)["']\)\}/
+    METHOD_INTERPOLATION = /%\{(scope|hiera|literal|alias)\(['"]([^"']*)["']\)\}/
 
     def interpolate(data, scope, extra_data)
       if data.is_a?(String)
         # Wrapping do_interpolation in a gsub block ensures we process
         # each interpolation site in isolation using separate recursion guards.
         data.gsub(INTERPOLATION) do |match|
-          do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data)
+          interp_val = do_interpolation(match, Hiera::RecursiveGuard.new, scope, extra_data)
+
+          # Get interp method in case we are aliasing
+          if data.is_a?(String) && (match = data.match(INTERPOLATION))
+            interpolate_method, key = get_interpolation_method_and_key(data)
+          else
+            interpolate_method = nil
+          end
+
+          if ( (interpolate_method == :alias_interpolate) and (!interp_val.is_a?(String)) )
+            if data.match("^#{INTERPOLATION}$")
+              return interp_val
+            else
+              raise Hiera::InterpolationInvalidValue, "Cannot call alias in the string context"
+            end
+          else
+            interp_val
+          end
         end
       else
         data
@@ -42,6 +62,7 @@ class Hiera::Interpolate
         when 'hiera' then [:hiera_interpolate, match[2]]
         when 'scope' then [:scope_interpolate, match[2]]
         when 'literal' then [:literal_interpolate, match[2]]
+        when 'alias' then [:alias_interpolate, match[2]]
         end
       elsif (match = data.match(INTERPOLATION))
         [:scope_interpolate, match[1]]
@@ -68,5 +89,10 @@ class Hiera::Interpolate
       key
     end
     private :literal_interpolate
+
+    def alias_interpolate(data, key, scope, extra_data)
+      Hiera::Backend.lookup(key, nil, scope, nil, :priority)
+    end
+    private :alias_interpolate
   end
 end
