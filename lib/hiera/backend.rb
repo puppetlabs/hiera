@@ -166,7 +166,7 @@ class Hiera
       # Merges two hashes answers with the configured merge behavior.
       #         :merge_behavior: {:native|:deep|:deeper}
       #
-      # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/peritor/deep_merge)
+      # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/danielsdeleo/deep_merge)
       #
       #  :native => Native Hash.merge
       #  :deep   => Use Hash.deep_merge
