@@ -26,7 +26,7 @@ class Hiera
                 "datadir for #{backend} cannot be an array")
         end
 
-        parse_string(dir, scope)
+        parse_string(dir, scope, nil)
       end
 
       # Finds the path to a datafile based on the Backend#datadir
@@ -72,7 +72,7 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope)
+          source = parse_string(source, scope, override)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
         end
       end
@@ -121,31 +121,31 @@ class Hiera
       # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
       #
       # @api public
-      def parse_string(data, scope, extra_data={})
-        Hiera::Interpolate.interpolate(data, scope, extra_data)
+      def parse_string(data, scope, override, extra_data={})
+        Hiera::Interpolate.interpolate(data, scope, override, extra_data)
       end
 
       # Parses a answer received from data files
       #
       # Ultimately it just pass the data through parse_string but
       # it makes some effort to handle arrays of strings as well
-      def parse_answer(data, scope, extra_data={})
+      def parse_answer(data, scope, override, extra_data={})
         if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
           return data
         elsif data.is_a?(String)
-          return parse_string(data, scope, extra_data)
+          return parse_string(data, scope, override, extra_data)
         elsif data.is_a?(Hash)
           answer = {}
           data.each_pair do |key, val|
-            interpolated_key = parse_string(key, scope, extra_data)
-            answer[interpolated_key] = parse_answer(val, scope, extra_data)
+            interpolated_key = parse_string(key, scope, override, extra_data)
+            answer[interpolated_key] = parse_answer(val, scope, override, extra_data)
           end
 
           return answer
         elsif data.is_a?(Array)
           answer = []
           data.each do |item|
-            answer << parse_answer(item, scope, extra_data)
+            answer << parse_answer(item, scope, override, extra_data)
           end
 
           return answer
@@ -224,7 +224,7 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, order_override) if answer.nil? and default.is_a?(String)
 
         return default if answer.nil?
         return answer
