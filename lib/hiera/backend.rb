@@ -83,7 +83,7 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope)
+          source = parse_string(source, scope, {}, :order_override => override)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
         end
       end
@@ -129,34 +129,35 @@ class Hiera
       #   This will not be modified, instead a new string will be returned.
       # @param scope [#[]] The primary source of data for substitutions.
       # @param extra_data [#[]] The secondary source of data for substitutions.
+      # @param context [#[]] Context can include :recurse_guard and :order_override.
       # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
       #
       # @api public
-      def parse_string(data, scope, extra_data={}, recurse_guard = nil)
-        Hiera::Interpolate.interpolate(data, scope, extra_data, recurse_guard)
+      def parse_string(data, scope, extra_data={}, context={:recurse_guard => nil, :order_override => nil})
+        Hiera::Interpolate.interpolate(data, scope, extra_data, context[:recurse_guard], context[:order_override])
       end
 
       # Parses a answer received from data files
       #
       # Ultimately it just pass the data through parse_string but
       # it makes some effort to handle arrays of strings as well
-      def parse_answer(data, scope, extra_data={}, recurse_guard = nil)
+      def parse_answer(data, scope, extra_data={}, context={:recurse_guard => nil, :order_override => nil})
         if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
           return data
         elsif data.is_a?(String)
-          return parse_string(data, scope, extra_data, recurse_guard)
+          return parse_string(data, scope, extra_data, context)
         elsif data.is_a?(Hash)
           answer = {}
           data.each_pair do |key, val|
-            interpolated_key = parse_string(key, scope, extra_data, recurse_guard)
-            answer[interpolated_key] = parse_answer(val, scope, extra_data, recurse_guard)
+            interpolated_key = parse_string(key, scope, extra_data, context)
+            answer[interpolated_key] = parse_answer(val, scope, extra_data, context)
           end
 
           return answer
         elsif data.is_a?(Array)
           answer = []
           data.each do |item|
-            answer << parse_answer(item, scope, extra_data, recurse_guard)
+            answer << parse_answer(item, scope, extra_data, context)
           end
 
           return answer
@@ -251,7 +252,7 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope, recurse_guard) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, {}, {:recurse_guard => recurse_guard, :order_override => order_override}) if answer.nil? and default.is_a?(String)
 
         return default if answer.nil?
         return answer

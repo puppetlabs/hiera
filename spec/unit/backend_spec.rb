@@ -92,7 +92,7 @@ class Hiera
       end
 
       it "parses the names of the hierarchy levels using the given scope" do
-        Backend.expects(:parse_string).with("common", {:rspec => :tests})
+        Backend.expects(:parse_string).with("common", {:rspec => :tests}, {}, {:order_override => nil})
         Backend.datasources({:rspec => :tests}) { }
       end
 
@@ -264,6 +264,11 @@ class Hiera
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("key1", scope, nil, :priority, instance_of(RecursiveGuard)).returns("answer")
 
         Backend.parse_string(input, scope).should == "answer"
+      end
+
+      it "interpolation passes the order_override back into the backend" do
+        Backend.expects(:lookup).with("lookup::key", nil, {}, "order_override_datasource", :priority, instance_of(RecursiveGuard))
+        Backend.parse_string("%{hiera('lookup::key')}", {}, {}, {:order_override => "order_override_datasource"})
       end
 
       it "replaces literal interpolations with their argument" do

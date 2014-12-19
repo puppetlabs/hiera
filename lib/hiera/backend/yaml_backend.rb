@@ -32,7 +32,7 @@ class Hiera
           # the array
           #
           # for priority searches we break after the first found data item
-          new_answer = Backend.parse_answer(data[key], scope, nil, recurse_guard)
+          new_answer = Backend.parse_answer(data[key], scope, {}, {:recurse_guard => recurse_guard, :order_override => order_override})
           case resolution_type
           when :array
             raise Exception, "Hiera type mismatch for key '#{key}': expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
