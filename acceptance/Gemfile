@@ -1,6 +1,6 @@
 source ENV['GEM_SOURCE'] || "https://rubygems.org"
 
-gem "beaker", "~> 1.20.1"
+gem "beaker", "~> 2.2.0"
 gem 'rake', "~> 10.1.0"
 
 if File.exists? "#{__FILE__}.local"
