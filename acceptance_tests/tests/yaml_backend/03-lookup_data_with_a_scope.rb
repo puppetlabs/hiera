@@ -4,7 +4,7 @@ begin test_name "Lookup data with a scope"
 
     teardown do
       apply_manifest_on agent, <<-PP
-      file { '/etc/puppet/hieradata':
+      file { '#{agent['hieradatadir']}':
         ensure  => directory,
         recurse => true,
         purge   => true,
@@ -17,7 +17,7 @@ begin test_name "Lookup data with a scope"
 
     step 'Setup'
       apply_manifest_on agent, <<-PP
-      file { '/etc/puppet/hieradata/global.yaml':
+      file { '#{agent['hieradatadir']}/global.yaml':
         ensure  => present,
         content => "---
           http_port: 8080
@@ -34,7 +34,7 @@ begin test_name "Lookup data with a scope"
         "
       }
 
-      file { '/etc/puppet/hieradata/production.yaml':
+      file { '#{agent['hieradatadir']}/production.yaml':
         ensure  => present,
         content => "---
           http_port: 9090
