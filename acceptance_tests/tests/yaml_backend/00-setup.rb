@@ -1,6 +1,7 @@
 test_name "Hiera setup for YAML backend"
 
-apply_manifest_on master, <<-PP
+agents.each do |agent|
+  apply_manifest_on agent, <<-PP
 file { '/etc/hiera.yaml':
   ensure  => present,
   content => '---
@@ -24,3 +25,4 @@ file { '/etc/puppet/hieradata':
   force   => true,
 }
 PP
+end
