@@ -1,7 +1,8 @@
 test_name "Hiera setup for YAML backend"
 
-apply_manifest_on master, <<-PP
-file { '/etc/hiera.yaml':
+agents.each do |agent|
+  apply_manifest_on agent, <<-PP
+file { '#{agent['hieraconf']}':
   ensure  => present,
   content => '---
     :backends:
@@ -13,14 +14,15 @@ file { '/etc/hiera.yaml':
       - "global"
 
     :yaml:
-      :datadir: "/etc/puppet/hieradata"
+      :datadir: "#{agent['hieradatadir']}"
   '
 }
 
-file { '/etc/puppet/hieradata':
+file { '#{agent['hieradatadir']}':
   ensure  => directory,
   recurse => true,
   purge   => true,
   force   => true,
 }
 PP
+end
