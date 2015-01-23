@@ -2,7 +2,7 @@ test_name "Hiera setup for YAML backend"
 
 agents.each do |agent|
   apply_manifest_on agent, <<-PP
-file { '#{agent['hieraconf']}':
+file { '/etc/hiera.yaml':
   ensure  => present,
   content => '---
     :backends:
