@@ -8,6 +8,17 @@ end
 
 class Hiera
   module Backend
+    class Backend1xWrapper
+      def initialize(wrapped)
+        @wrapped = wrapped
+      end
+
+      def lookup(key, scope, order_override, resolution_type, recurse_guard)
+        Hiera.debug("Using Hiera 1.x backend API to access instance of class #{@wrapped.class.name}. Lookup recursion will not be detected")
+        @wrapped.lookup(key, scope, order_override, resolution_type)
+      end
+    end
+
     class << self
       # Data lives in /var/lib/hiera by default.  If a backend
       # supplies a datadir in the config it will be used and
@@ -121,31 +132,31 @@ class Hiera
       # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
       #
       # @api public
-      def parse_string(data, scope, extra_data={})
-        Hiera::Interpolate.interpolate(data, scope, extra_data)
+      def parse_string(data, scope, extra_data={}, recurse_guard = nil)
+        Hiera::Interpolate.interpolate(data, scope, extra_data, recurse_guard)
       end
 
       # Parses a answer received from data files
       #
       # Ultimately it just pass the data through parse_string but
       # it makes some effort to handle arrays of strings as well
-      def parse_answer(data, scope, extra_data={})
+      def parse_answer(data, scope, extra_data={}, recurse_guard = nil)
         if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
           return data
         elsif data.is_a?(String)
-          return parse_string(data, scope, extra_data)
+          return parse_string(data, scope, extra_data, recurse_guard)
         elsif data.is_a?(Hash)
           answer = {}
           data.each_pair do |key, val|
-            interpolated_key = parse_string(key, scope, extra_data)
-            answer[interpolated_key] = parse_answer(val, scope, extra_data)
+            interpolated_key = parse_string(key, scope, extra_data, recurse_guard)
+            answer[interpolated_key] = parse_answer(val, scope, extra_data, recurse_guard)
           end
 
           return answer
         elsif data.is_a?(Array)
           answer = []
           data.each do |item|
-            answer << parse_answer(item, scope, extra_data)
+            answer << parse_answer(item, scope, extra_data, recurse_guard)
           end
 
           return answer
@@ -203,7 +214,7 @@ class Hiera
       # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
       # @return [Object] The value that corresponds to the given key or nil if no such value cannot be found
       #
-      def lookup(key, default, scope, order_override, resolution_type)
+      def lookup(key, default, scope, order_override, resolution_type, recurse_guard = nil)
         @backends ||= {}
         answer = nil
 
@@ -215,9 +226,10 @@ class Hiera
         end
 
         Config[:backends].each do |backend|
-          if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
-            @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            new_answer = @backends[backend].lookup(segments[0], scope, order_override, resolution_type)
+          backend_constant = "#{backend.capitalize}_backend"
+          if constants.include?(backend_constant) || constants.include?(backend_constant.to_sym)
+            backend = (@backends[backend] ||= find_backend(backend_constant))
+            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, recurse_guard)
             new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
 
             next if new_answer.nil?
@@ -239,7 +251,7 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, recurse_guard) if answer.nil? and default.is_a?(String)
 
         return default if answer.nil?
         return answer
@@ -264,6 +276,12 @@ class Hiera
         end
         value
       end
+
+      def find_backend(backend_constant)
+        backend = Backend.const_get(backend_constant).new
+        return backend.method(:lookup).arity == 4 ? Backend1xWrapper.new(backend) : backend
+      end
+      private :find_backend
     end
   end
 end
