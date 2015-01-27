@@ -595,6 +595,45 @@ class Hiera
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash)
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
+
+      it 'can use qualified key to lookup value in hash' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns({ 'test' => 'value'})
+        Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'value'
+      end
+
+      it 'will fail when qualified key is partially found but not hash' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns(['value 1', 'value 2'])
+        expect do
+          Backend.lookup('key.test', 'dflt', {}, nil, nil)
+        end.to raise_error(Exception, /^Hiera type mismatch:/)
+      end
+
+      it 'will not fail when qualified key is partially not found' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns(nil)
+        Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'dflt'
+      end
+
+      it "can use qualified key in interpolation to lookup value in hash" do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Hiera::Backend.stubs(:datasourcefiles).yields('foo', 'bar')
+        Hiera::Filecache.any_instance.expects(:read_file).at_most(2).returns({'key' => '%{hiera(\'some.subkey\')}', 'some' => { 'subkey' => 'value' }})
+        Backend.lookup('key', 'dflt', {}, nil, nil).should == 'value'
+      end
+
+      it "can use qualified key in interpolated default and scope" do
+        Config.load({:yaml => {:datadir => "/tmp"}})
+        Config.load_backends
+        scope = { "some" => { "test" => "value"}}
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", scope, nil, :hash)
+        Backend.lookup("key.notfound", "%{some.test}", scope, nil, nil).should == "value"
+      end
     end
 
     describe '#merge_answer' do

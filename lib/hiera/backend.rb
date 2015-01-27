@@ -196,14 +196,30 @@ class Hiera
       # Backend instances are cached so if you need to connect to any
       # databases then do so in your constructor, future calls to your
       # backend will not create new instances
+
+      # @param key [String] The key use when doing the lookup
+      # @param scope [#[]] The primary source of data for substitutions.
+      # @param order_override [String] An override that will be pre-pended to the hierarchy definition. Can be nil
+      # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
+      # return The value that corresponds to the given key or nil if no such value cannot be found
+      #
       def lookup(key, default, scope, order_override, resolution_type)
         @backends ||= {}
         answer = nil
 
+        segments = key.split('.')
+        backend_resolution_type = resolution_type
+        subsegments = nil
+        if segments.size > 1
+          backend_resolution_type = :hash
+          subsegments = segments.drop(1)
+        end
+
         Config[:backends].each do |backend|
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            new_answer = @backends[backend].lookup(key, scope, order_override, resolution_type)
+            new_answer = @backends[backend].lookup(segments[0], scope, order_override, backend_resolution_type)
+            new_answer = qualified_lookup(subsegments, new_answer) if subsegments
 
             if not new_answer.nil?
               case resolution_type
@@ -232,6 +248,16 @@ class Hiera
 
       def clear!
         @backends = {}
+      end
+
+      def qualified_lookup(segments, hash)
+        value = hash
+        segments.each do |segment|
+          break if value.nil? || value == :undefined
+          raise Exception, "Hiera type mismatch: can't index #{value.class.name} with '#{segment}'" unless value.kind_of? Hash
+          value = value[segment]
+        end
+        value
       end
     end
   end

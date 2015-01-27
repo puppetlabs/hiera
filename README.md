@@ -84,6 +84,16 @@ Hiera can search through all the tiers in a hierarchy and merge the result into 
 array.  This is used in the hiera-puppet project to replace External Node Classifiers by
 creating a Hiera compatible include function.
 
+### Qualified Key Lookup
+You can use a qualified key to lookup a value that is contained inside a hash:
+
+<pre>
+$ hiera user
+{"name"=>"hiera", "home"=>"/home/hiera"}
+$ hiera user.name
+hiera
+</pre>
+
 ## Future Enhancements
 
  * More backends should be created
