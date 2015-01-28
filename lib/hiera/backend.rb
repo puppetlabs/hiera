@@ -208,18 +208,16 @@ class Hiera
         answer = nil
 
         segments = key.split('.')
-        backend_resolution_type = resolution_type
         subsegments = nil
         if segments.size > 1
-          # Backend should not merge parent lookups
-          backend_resolution_type = nil
+          raise ArgumentError, "Resolution type :#{resolution_type} is illegal when doing segmented key lookups" unless resolution_type.nil? || resolution_type == :priority
           subsegments = segments.drop(1)
         end
 
         Config[:backends].each do |backend|
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
-            new_answer = @backends[backend].lookup(segments[0], scope, order_override, backend_resolution_type)
+            new_answer = @backends[backend].lookup(segments[0], scope, order_override, resolution_type)
             new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
 
             next if new_answer.nil?
@@ -254,7 +252,7 @@ class Hiera
       def qualified_lookup(segments, hash)
         value = hash
         segments.each do |segment|
-          break if value.nil? || value == :undefined
+          break if value.nil?
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
             required_type = Array
@@ -264,7 +262,7 @@ class Hiera
           raise Exception, "Hiera type mismatch: Got #{value.class.name} when #{required_type.name} was expected to enable lookup using key '#{segment}'" unless value.kind_of? required_type
           value = value[segment]
         end
-        value == :undefined ? nil : value
+        value
       end
     end
   end

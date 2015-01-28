@@ -181,17 +181,6 @@ class Hiera
         "test_%{scope('rspec')}_test" => "test__test"
       }
 
-      @interprets_undefined_in_scope_tests.each do |input, expected|
-        it "interprets :undefined in scope as a non-value" do
-          Backend.parse_string(input, {"rspec" => :undefined}).should == expected
-        end
-      end
-
-      it "uses the value from extra_data when scope is :undefined" do
-        input = "test_%{rspec}_test"
-        Backend.parse_string(input, {"rspec" => :undefined}, { "rspec" => "extra" }).should == "test_extra_test"
-      end
-
       @exact_lookup_tests = {
         "test_%{::rspec::data}_test" => "test_value_test",
         "test_%{scope('::rspec::data')}_test" => "test_value_test"
@@ -617,6 +606,25 @@ class Hiera
         expect do
           Backend.lookup('key.test', 'dflt', {}, nil, nil)
         end.to raise_error(Exception, /^Hiera type mismatch:/)
+      end
+
+      it 'will fail when qualified key used with resolution_type :hash' do
+        expect do
+          Backend.lookup('key.test', 'dflt', {}, nil, :hash)
+        end.to raise_error(ArgumentError, /^Resolution type :hash is illegal/)
+      end
+
+      it 'will fail when qualified key used with resolution_type :array' do
+        expect do
+          Backend.lookup('key.test', 'dflt', {}, nil, :array)
+        end.to raise_error(ArgumentError, /^Resolution type :array is illegal/)
+      end
+
+      it 'will succeed when qualified key used with resolution_type :priority' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :priority).returns({ 'test' => 'value'})
+        Backend.lookup('key.test', 'dflt', {}, nil, :priority).should == 'value'
       end
 
       it 'will fail when qualified key is partially found but not expected array' do
