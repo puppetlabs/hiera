@@ -23,7 +23,7 @@ class Hiera
       if microsoft_windows?
          File.join(common_appdata, 'PuppetLabs', 'hiera', 'etc')
       else
-        '/etc'
+        '/etc/puppetlabs/agent/code'
       end
     end
 
@@ -31,7 +31,7 @@ class Hiera
       if microsoft_windows?
         File.join(common_appdata, 'PuppetLabs', 'hiera', 'var')
       else
-        '/var/lib/hiera'
+        '/etc/puppetlabs/agent/code/hieradata'
       end
     end
 
