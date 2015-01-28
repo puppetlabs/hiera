@@ -255,11 +255,10 @@ class Hiera
           break if value.nil?
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
-            required_type = Array
+            raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
           else
-            required_type = Hash
+            raise Exception, "Hiera type mismatch: Got #{value.class.name} when a non Array object that responds to '[]' was expected to enable lookup using key '#{segment}'" unless value.respond_to?(:'[]') && !value.instance_of?(Array);
           end
-          raise Exception, "Hiera type mismatch: Got #{value.class.name} when #{required_type.name} was expected to enable lookup using key '#{segment}'" unless value.kind_of? required_type
           value = value[segment]
         end
         value
