@@ -85,13 +85,20 @@ array.  This is used in the hiera-puppet project to replace External Node Classi
 creating a Hiera compatible include function.
 
 ### Qualified Key Lookup
-You can use a qualified key to lookup a value that is contained inside a hash:
+You can use a qualified key to lookup a value that is contained inside a hash or array:
 
 <pre>
 $ hiera user
-{"name"=>"hiera", "home"=>"/home/hiera"}
+{"name"=>"kim", "home"=>"/home/kim"}
 $ hiera user.name
-hiera
+kim
+</pre>
+
+<pre>
+$ hiera ssh_users
+["root", "jeff", "gary", "hunter"]
+$ hiera ssh_users.0
+root
 </pre>
 
 ## Future Enhancements

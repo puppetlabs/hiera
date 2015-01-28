@@ -599,27 +599,50 @@ class Hiera
       it 'can use qualified key to lookup value in hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns({ 'test' => 'value'})
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns({ 'test' => 'value'})
         Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'value'
       end
 
-      it 'will fail when qualified key is partially found but not hash' do
+      it 'can use qualified key to lookup value in array' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns(['value 1', 'value 2'])
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns([ 'first', 'second'])
+        Backend.lookup('key.1', 'dflt', {}, nil, nil).should == 'second'
+      end
+
+      it 'will fail when qualified key is partially found but not expected hash' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(['value 1', 'value 2'])
         expect do
           Backend.lookup('key.test', 'dflt', {}, nil, nil)
+        end.to raise_error(Exception, /^Hiera type mismatch:/)
+      end
+
+      it 'will fail when qualified key is partially found but not expected array' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns({ 'test' => 'value'})
+        expect do
+          Backend.lookup('key.2', 'dflt', {}, nil, nil)
         end.to raise_error(Exception, /^Hiera type mismatch:/)
       end
 
       it 'will not fail when qualified key is partially not found' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :hash).returns(nil)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(nil)
         Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'dflt'
       end
 
-      it "can use qualified key in interpolation to lookup value in hash" do
+      it 'will not fail when qualified key is array index out of bounds' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(['value 1', 'value 2'])
+        Backend.lookup('key.33', 'dflt', {}, nil, nil).should == 'dflt'
+      end
+
+      it 'can use qualified key in interpolation to lookup value in hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Hiera::Backend.stubs(:datasourcefiles).yields('foo', 'bar')
@@ -627,12 +650,12 @@ class Hiera
         Backend.lookup('key', 'dflt', {}, nil, nil).should == 'value'
       end
 
-      it "can use qualified key in interpolated default and scope" do
-        Config.load({:yaml => {:datadir => "/tmp"}})
+      it 'can use qualified key in interpolated default and scope' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        scope = { "some" => { "test" => "value"}}
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", scope, nil, :hash)
-        Backend.lookup("key.notfound", "%{some.test}", scope, nil, nil).should == "value"
+        scope = { 'some' => { 'test' => 'value'}}
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', scope, nil, nil)
+        Backend.lookup('key.notfound', '%{some.test}', scope, nil, nil).should == 'value'
       end
     end
 

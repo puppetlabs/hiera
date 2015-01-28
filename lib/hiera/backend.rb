@@ -197,11 +197,11 @@ class Hiera
       # databases then do so in your constructor, future calls to your
       # backend will not create new instances
 
-      # @param key [String] The key use when doing the lookup
+      # @param key [String] The key to lookup
       # @param scope [#[]] The primary source of data for substitutions.
       # @param order_override [String] An override that will be pre-pended to the hierarchy definition. Can be nil
       # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
-      # return The value that corresponds to the given key or nil if no such value cannot be found
+      # @return [Object] The value that corresponds to the given key or nil if no such value cannot be found
       #
       def lookup(key, default, scope, order_override, resolution_type)
         @backends ||= {}
@@ -211,7 +211,8 @@ class Hiera
         backend_resolution_type = resolution_type
         subsegments = nil
         if segments.size > 1
-          backend_resolution_type = :hash
+          # Backend should not merge parent lookups
+          backend_resolution_type = nil
           subsegments = segments.drop(1)
         end
 
@@ -219,22 +220,22 @@ class Hiera
           if constants.include?("#{backend.capitalize}_backend") || constants.include?("#{backend.capitalize}_backend".to_sym)
             @backends[backend] ||= Backend.const_get("#{backend.capitalize}_backend").new
             new_answer = @backends[backend].lookup(segments[0], scope, order_override, backend_resolution_type)
-            new_answer = qualified_lookup(subsegments, new_answer) if subsegments
+            new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
 
-            if not new_answer.nil?
-              case resolution_type
-              when :array
-                raise Exception, "Hiera type mismatch for key '#{key}': expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
-                answer ||= []
-                answer << new_answer
-              when :hash
-                raise Exception, "Hiera type mismatch for key '#{key}': expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
-                answer ||= {}
-                answer = merge_answer(new_answer,answer)
-              else
-                answer = new_answer
-                break
-              end
+            next if new_answer.nil?
+
+            case resolution_type
+            when :array
+              raise Exception, "Hiera type mismatch for key '#{key}': expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
+              answer ||= []
+              answer << new_answer
+            when :hash
+              raise Exception, "Hiera type mismatch for key '#{key}': expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
+              answer ||= {}
+              answer = merge_answer(new_answer,answer)
+            else
+              answer = new_answer
+              break
             end
           end
         end
@@ -254,10 +255,16 @@ class Hiera
         value = hash
         segments.each do |segment|
           break if value.nil? || value == :undefined
-          raise Exception, "Hiera type mismatch: can't index #{value.class.name} with '#{segment}'" unless value.kind_of? Hash
+          if segment =~ /^[0-9]+$/
+            segment = segment.to_i
+            required_type = Array
+          else
+            required_type = Hash
+          end
+          raise Exception, "Hiera type mismatch: Got #{value.class.name} when #{required_type.name} was expected to enable lookup using key '#{segment}'" unless value.kind_of? required_type
           value = value[segment]
         end
-        value
+        value == :undefined ? nil : value
       end
     end
   end
