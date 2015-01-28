@@ -71,12 +71,9 @@ class Hiera::Interpolate
     private :get_interpolation_method_and_key
 
     def scope_interpolate(data, key, scope, extra_data)
-      value = scope[key]
-      if value.nil? || value == :undefined
-        value = extra_data[key]
-      end
-
-      value
+      segments = key.split('.')
+      value = Hiera::Backend.qualified_lookup(segments, scope)
+      value.nil? ? Hiera::Backend.qualified_lookup(segments, extra_data) : value
     end
     private :scope_interpolate
 
