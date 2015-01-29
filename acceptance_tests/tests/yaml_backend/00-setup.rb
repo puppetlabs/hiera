@@ -2,7 +2,16 @@ test_name "Hiera setup for YAML backend"
 
 agents.each do |agent|
   apply_manifest_on agent, <<-PP
-file { '/etc/hiera.yaml':
+file { '/etc/puppetlabs':
+  ensure  => directory,
+}->
+file { '/etc/puppetlabs/agent':
+  ensure  => directory,
+}->
+file { '/etc/puppetlabs/agent/code':
+  ensure  => directory,
+}->
+file { '/etc/puppetlabs/agent/code/hiera.yaml':
   ensure  => present,
   content => '---
     :backends:
