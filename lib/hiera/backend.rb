@@ -13,7 +13,7 @@ class Hiera
         @wrapped = wrapped
       end
 
-      def lookup(key, scope, order_override, resolution_type, recurse_guard)
+      def lookup(key, scope, order_override, resolution_type, context)
         Hiera.debug("Using Hiera 1.x backend API to access instance of class #{@wrapped.class.name}. Lookup recursion will not be detected")
         @wrapped.lookup(key, scope, order_override, resolution_type)
       end
@@ -134,7 +134,7 @@ class Hiera
       #
       # @api public
       def parse_string(data, scope, extra_data={}, context={:recurse_guard => nil, :order_override => nil})
-        Hiera::Interpolate.interpolate(data, scope, extra_data, context[:recurse_guard], context[:order_override])
+        Hiera::Interpolate.interpolate(data, scope, extra_data, context)
       end
 
       # Parses a answer received from data files
@@ -213,11 +213,18 @@ class Hiera
       # @param scope [#[]] The primary source of data for substitutions.
       # @param order_override [String] An override that will be pre-pended to the hierarchy definition. Can be nil
       # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
+      # @param context [#[]] Context used for internal processing
       # @return [Object] The value that corresponds to the given key or nil if no such value cannot be found
       #
-      def lookup(key, default, scope, order_override, resolution_type, recurse_guard = nil)
+      def lookup(key, default, scope, order_override, resolution_type, context = {:recurse_guard => nil})
         @backends ||= {}
         answer = nil
+
+        # order_override is kept as an explicit argument for backwards compatibility, but should be specified
+        # in the context for internal handling.
+        context ||= {}
+        order_override ||= context[:order_override]
+        context[:order_override] ||= order_override
 
         segments = key.split('.')
         subsegments = nil
@@ -230,7 +237,7 @@ class Hiera
           backend_constant = "#{backend.capitalize}_backend"
           if constants.include?(backend_constant) || constants.include?(backend_constant.to_sym)
             backend = (@backends[backend] ||= find_backend(backend_constant))
-            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, recurse_guard)
+            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, context)
             new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
 
             next if new_answer.nil?
@@ -252,7 +259,7 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope, {}, {:recurse_guard => recurse_guard, :order_override => order_override}) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, {}, context) if answer.nil? and default.is_a?(String)
 
         return default if answer.nil?
         return answer
