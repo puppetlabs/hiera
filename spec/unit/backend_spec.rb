@@ -2,6 +2,14 @@ require 'spec_helper'
 require 'hiera/util'
 
 class Hiera
+  module Backend
+    class Backend1x_backend
+      def lookup(key, scope, order_override, resolution_type)
+        ["a", "b"]
+      end
+    end
+  end
+
   describe Backend do
     describe "#datadir" do
       it "interpolates any values in the configured value" do
@@ -253,7 +261,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("key1", scope, nil, :priority).returns("answer")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("key1", scope, nil, :priority, instance_of(RecursiveGuard)).returns("answer")
 
         Backend.parse_string(input, scope).should == "answer"
       end
@@ -301,7 +309,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("test")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("test")
         Backend.parse_answer(input, scope).should == "test_test_test"
       end
 
@@ -310,7 +318,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns(['test', 'test'])
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns(['test', 'test'])
         Backend.parse_answer(input, scope).should == ['test', 'test']
       end
 
@@ -319,7 +327,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns(['test', 'test'])
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns(['test', 'test'])
         expect do
           Backend.parse_answer(input, scope).should == ['test', 'test']
         end.to raise_error(Hiera::InterpolationInvalidValue, 'Cannot call alias in the string context')
@@ -330,7 +338,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns(['test', 'test'])
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns(['test', 'test'])
         expect do
           Backend.parse_answer(input, scope).should == ['test', 'test']
         end.to raise_error(Hiera::InterpolationInvalidValue, 'Cannot call alias in the string context')
@@ -341,7 +349,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("test")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("test")
         Backend.parse_answer(input, scope).should == ["test_test_test", "test_test_test", ["test_test_test"]]
       end
 
@@ -350,7 +358,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("test")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("test")
         Backend.parse_answer(input, scope).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
       end
 
@@ -359,7 +367,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("foo")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("foo")
         Backend.parse_answer(input, scope).should == {"foo"=>"test"}
       end
 
@@ -368,7 +376,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("foo")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("foo")
         Backend.parse_answer(input, scope).should == {"topkey"=>{"foo" => "test"}}
       end
 
@@ -377,7 +385,7 @@ class Hiera
         scope = {}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("test")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("test")
         Backend.parse_answer(input, scope).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
       end
 
@@ -386,7 +394,7 @@ class Hiera
         scope = {"rspec2" => "scope_rspec"}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("hiera_rspec")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("hiera_rspec")
         Backend.parse_answer(input, scope).should == {"foo"=>"test_hiera_rspec_test", "bar"=>"test_scope_rspec_test"}
       end
 
@@ -395,7 +403,7 @@ class Hiera
         scope = {"rspec" => "scope_rspec"}
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority).returns("hiera_rspec")
+        Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(RecursiveGuard)).returns("hiera_rspec")
         Backend.parse_answer(input, scope).should == "test_hiera_rspec_test_scope_rspec"
       end
 
@@ -457,7 +465,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil).returns("answer")
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, nil).returns("answer")
 
         Backend.lookup("key", "default", {}, nil, nil).should == "answer"
       end
@@ -466,9 +474,9 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("stringval", {}, nil, nil).returns("string")
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil).returns(false)
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("numericval", {}, nil, nil).returns(1)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("stringval", {}, nil, nil, nil).returns("string")
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil, nil).returns(false)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("numericval", {}, nil, nil, nil).returns(1)
 
         Backend.lookup("stringval", "default", {}, nil, nil).should == "string"
         Backend.lookup("boolval", "default", {}, nil, nil).should == false
@@ -550,7 +558,7 @@ class Hiera
         Config.load_backends
 
         Backend.expects(:resolve_answer).with("test_test", :priority).returns("parsed")
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, :priority).returns("test_test")
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, :priority, nil).returns("test_test")
 
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority).should == "parsed"
       end
@@ -559,7 +567,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, nil)
 
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
       end
@@ -567,42 +575,42 @@ class Hiera
       it "keeps string default data as a string" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, nil)
         Backend.lookup("key", "test", {}, nil, nil).should == "test"
       end
 
       it "keeps array default data as an array" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array, nil)
         Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
       end
 
       it "keeps hash default data as a hash" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash, nil)
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
 
       it 'can use qualified key to lookup value in hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns({ 'test' => 'value'})
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns({ 'test' => 'value'})
         Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'value'
       end
 
       it 'can use qualified key to lookup value in array' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns([ 'first', 'second'])
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns([ 'first', 'second'])
         Backend.lookup('key.1', 'dflt', {}, nil, nil).should == 'second'
       end
 
       it 'will fail when qualified key is partially found but not expected hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(['value 1', 'value 2'])
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns(['value 1', 'value 2'])
         expect do
           Backend.lookup('key.test', 'dflt', {}, nil, nil)
         end.to raise_error(Exception, /^Hiera type mismatch:/)
@@ -623,14 +631,14 @@ class Hiera
       it 'will succeed when qualified key used with resolution_type :priority' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :priority).returns({ 'test' => 'value'})
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :priority, nil).returns({ 'test' => 'value'})
         Backend.lookup('key.test', 'dflt', {}, nil, :priority).should == 'value'
       end
 
       it 'will fail when qualified key is partially found but not expected array' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns({ 'test' => 'value'})
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns({ 'test' => 'value'})
         expect do
           Backend.lookup('key.2', 'dflt', {}, nil, nil)
         end.to raise_error(Exception, /^Hiera type mismatch:/)
@@ -639,14 +647,14 @@ class Hiera
       it 'will not fail when qualified key is partially not found' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(nil)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns(nil)
         Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'dflt'
       end
 
       it 'will not fail when qualified key is array index out of bounds' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil).returns(['value 1', 'value 2'])
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, nil).returns(['value 1', 'value 2'])
         Backend.lookup('key.33', 'dflt', {}, nil, nil).should == 'dflt'
       end
 
@@ -662,8 +670,16 @@ class Hiera
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         scope = { 'some' => { 'test' => 'value'}}
-        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', scope, nil, nil)
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', scope, nil, nil, nil)
         Backend.lookup('key.notfound', '%{some.test}', scope, nil, nil).should == 'value'
+      end
+
+      it "handles older backend with 4 argument lookup" do
+        Config.load({})
+        Config.instance_variable_set("@config", {:backends => ["Backend1x"]})
+
+        Hiera.expects(:debug).at_least_once.with(regexp_matches /Using Hiera 1.x backend/)
+        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
       end
     end
 

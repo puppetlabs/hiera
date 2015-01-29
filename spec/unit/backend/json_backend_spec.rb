@@ -25,7 +25,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns(nil)
           Backend.expects(:datafile).with(:json, {}, "two", "json").returns(nil)
 
-          @backend.lookup("key", {}, nil, :priority)
+          @backend.lookup("key", {}, nil, :priority, nil)
         end
 
         it "should retain the data types found in data files" do
@@ -35,9 +35,9 @@ class Hiera
 
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
 
-          @backend.lookup("stringval", {}, nil, :priority).should == "string"
-          @backend.lookup("boolval", {}, nil, :priority).should == true
-          @backend.lookup("numericval", {}, nil, :priority).should == 1
+          @backend.lookup("stringval", {}, nil, :priority, nil).should == "string"
+          @backend.lookup("boolval", {}, nil, :priority, nil).should == true
+          @backend.lookup("numericval", {}, nil, :priority, nil).should == 1
         end
 
         it "should pick data earliest source that has it for priority searches" do
@@ -49,12 +49,12 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
-          @backend.lookup("key", scope, nil, :priority).should == "test_test"
+          @backend.lookup("key", scope, nil, :priority, nil).should == "test_test"
         end
 
         it "should build an array of all data sources for array searches" do
           Hiera::Backend.stubs(:empty_answer).returns([])
-          Backend.stubs(:parse_answer).with('answer', {}).returns("answer")
+          Backend.stubs(:parse_answer).with('answer', {}, nil, nil).returns("answer")
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns("/nonexisting/one.json")
           Backend.expects(:datafile).with(:json, {}, "two", "json").returns("/nonexisting/two.json")
 
@@ -66,18 +66,18 @@ class Hiera
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "answer"})
           @cache.expects(:read_file).with("/nonexisting/two.json", Hash).returns({"key" => "answer"})
 
-          @backend.lookup("key", {}, nil, :array).should == ["answer", "answer"]
+          @backend.lookup("key", {}, nil, :array, nil).should == ["answer", "answer"]
         end
 
         it "should parse the answer for scope variables" do
-          Backend.stubs(:parse_answer).with('test_%{rspec}', {'rspec' => 'test'}).returns("test_test")
+          Backend.stubs(:parse_answer).with('test_%{rspec}', {'rspec' => 'test'}, nil, nil).returns("test_test")
           Backend.expects(:datasources).yields("one")
           Backend.expects(:datafile).with(:json, {"rspec" => "test"}, "one", "json").returns("/nonexisting/one.json")
 
           File.expects(:exist?).with("/nonexisting/one.json").returns(true)
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
-          @backend.lookup("key", {"rspec" => "test"}, nil, :priority).should == "test_test"
+          @backend.lookup("key", {"rspec" => "test"}, nil, :priority, nil).should == "test_test"
         end
       end
     end

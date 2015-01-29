@@ -28,6 +28,11 @@ RSpec.configure do |config|
   end
 end
 
+# So everyone else doesn't have to include this base constant.
+module HieraSpec
+  FIXTURE_DIR = File.join(dir = File.expand_path(File.dirname(__FILE__)), 'unit', 'fixtures') unless defined?(FIXTURE_DIR)
+end
+
 # In ruby 1.8.5 Dir does not have mktmpdir defined, so this monkey patches
 # Dir to include the 1.8.7 definition of that method if it isn't already defined.
 # Method definition borrowed from ruby-1.8.7-p357/lib/ruby/1.8/tmpdir.rb
