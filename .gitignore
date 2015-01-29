@@ -6,7 +6,7 @@ vendor/
 Gemfile.lock
 Gemfile.local
 /.project
-
+.idea/
 acceptance/.bundle
 acceptance/junit
 acceptance/log
