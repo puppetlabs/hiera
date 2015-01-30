@@ -54,7 +54,7 @@ class Hiera
 
         it "should build an array of all data sources for array searches" do
           Hiera::Backend.stubs(:empty_answer).returns([])
-          Backend.stubs(:parse_answer).with('answer', {}, nil, nil).returns("answer")
+          Backend.stubs(:parse_answer).with('answer', {}, {}, anything).returns("answer")
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns("/nonexisting/one.json")
           Backend.expects(:datafile).with(:json, {}, "two", "json").returns("/nonexisting/two.json")
 
@@ -70,7 +70,7 @@ class Hiera
         end
 
         it "should parse the answer for scope variables" do
-          Backend.stubs(:parse_answer).with('test_%{rspec}', {'rspec' => 'test'}, nil, nil).returns("test_test")
+          Backend.stubs(:parse_answer).with('test_%{rspec}', {'rspec' => 'test'}, {}, anything).returns("test_test")
           Backend.expects(:datasources).yields("one")
           Backend.expects(:datafile).with(:json, {"rspec" => "test"}, "one", "json").returns("/nonexisting/one.json")
 

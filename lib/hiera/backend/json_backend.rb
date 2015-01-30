@@ -9,7 +9,7 @@ class Hiera
         @cache = cache || Filecache.new
       end
 
-      def lookup(key, scope, order_override, resolution_type, recurse_guard)
+      def lookup(key, scope, order_override, resolution_type, context)
         answer = nil
 
         Hiera.debug("Looking up #{key} in JSON backend")
@@ -33,7 +33,7 @@ class Hiera
           # the array
           #
           # for priority searches we break after the first found data item
-          new_answer = Backend.parse_answer(data[key], scope, nil, recurse_guard)
+          new_answer = Backend.parse_answer(data[key], scope, {}, context)
           case resolution_type
           when :array
             raise Exception, "Hiera type mismatch for key '#{key}': expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String

@@ -13,7 +13,7 @@ class Hiera
         @wrapped = wrapped
       end
 
-      def lookup(key, scope, order_override, resolution_type, recurse_guard)
+      def lookup(key, scope, order_override, resolution_type, context)
         Hiera.debug("Using Hiera 1.x backend API to access instance of class #{@wrapped.class.name}. Lookup recursion will not be detected")
         @wrapped.lookup(key, scope, order_override, resolution_type)
       end
@@ -83,7 +83,7 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope)
+          source = parse_string(source, scope, {}, :order_override => override)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
         end
       end
@@ -129,34 +129,35 @@ class Hiera
       #   This will not be modified, instead a new string will be returned.
       # @param scope [#[]] The primary source of data for substitutions.
       # @param extra_data [#[]] The secondary source of data for substitutions.
+      # @param context [#[]] Context can include :recurse_guard and :order_override.
       # @return [String] A copy of the data with all instances of <code>%{...}</code> replaced.
       #
       # @api public
-      def parse_string(data, scope, extra_data={}, recurse_guard = nil)
-        Hiera::Interpolate.interpolate(data, scope, extra_data, recurse_guard)
+      def parse_string(data, scope, extra_data={}, context={:recurse_guard => nil, :order_override => nil})
+        Hiera::Interpolate.interpolate(data, scope, extra_data, context)
       end
 
       # Parses a answer received from data files
       #
       # Ultimately it just pass the data through parse_string but
       # it makes some effort to handle arrays of strings as well
-      def parse_answer(data, scope, extra_data={}, recurse_guard = nil)
+      def parse_answer(data, scope, extra_data={}, context={:recurse_guard => nil, :order_override => nil})
         if data.is_a?(Numeric) or data.is_a?(TrueClass) or data.is_a?(FalseClass)
           return data
         elsif data.is_a?(String)
-          return parse_string(data, scope, extra_data, recurse_guard)
+          return parse_string(data, scope, extra_data, context)
         elsif data.is_a?(Hash)
           answer = {}
           data.each_pair do |key, val|
-            interpolated_key = parse_string(key, scope, extra_data, recurse_guard)
-            answer[interpolated_key] = parse_answer(val, scope, extra_data, recurse_guard)
+            interpolated_key = parse_string(key, scope, extra_data, context)
+            answer[interpolated_key] = parse_answer(val, scope, extra_data, context)
           end
 
           return answer
         elsif data.is_a?(Array)
           answer = []
           data.each do |item|
-            answer << parse_answer(item, scope, extra_data, recurse_guard)
+            answer << parse_answer(item, scope, extra_data, context)
           end
 
           return answer
@@ -212,11 +213,18 @@ class Hiera
       # @param scope [#[]] The primary source of data for substitutions.
       # @param order_override [String] An override that will be pre-pended to the hierarchy definition. Can be nil
       # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
+      # @param context [#[]] Context used for internal processing
       # @return [Object] The value that corresponds to the given key or nil if no such value cannot be found
       #
-      def lookup(key, default, scope, order_override, resolution_type, recurse_guard = nil)
+      def lookup(key, default, scope, order_override, resolution_type, context = {:recurse_guard => nil})
         @backends ||= {}
         answer = nil
+
+        # order_override is kept as an explicit argument for backwards compatibility, but should be specified
+        # in the context for internal handling.
+        context ||= {}
+        order_override ||= context[:order_override]
+        context[:order_override] ||= order_override
 
         segments = key.split('.')
         subsegments = nil
@@ -229,7 +237,7 @@ class Hiera
           backend_constant = "#{backend.capitalize}_backend"
           if constants.include?(backend_constant) || constants.include?(backend_constant.to_sym)
             backend = (@backends[backend] ||= find_backend(backend_constant))
-            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, recurse_guard)
+            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, context)
             new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
 
             next if new_answer.nil?
@@ -251,7 +259,7 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope, recurse_guard) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, {}, context) if answer.nil? and default.is_a?(String)
 
         return default if answer.nil?
         return answer
