@@ -7,10 +7,20 @@ describe "Hiera" do
 
     it 'should prevent endless recursion' do
       Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
-      hiera =  Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
       expect do
         hiera.lookup('foo', nil, {})
       end.to raise_error Hiera::InterpolationLoop, 'Detected in [hiera("bar"), hiera("foo")]'
+    end
+  end
+
+  context "when doing interpolation with override" do
+    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'override') }
+
+    it 'should resolve interpolation using the override' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('foo', nil, {}, 'alternate')).to eq('alternate')
     end
   end
 end
