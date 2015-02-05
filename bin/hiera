@@ -105,7 +105,8 @@ def load_scope(source, type=:yaml)
       if Puppet::Util::Package.versioncmp(puppet_version, '3.0.0') < 0
         Puppet.settings.parse
       else
-        Puppet.instance_eval { do_initialize_settings_for_run_mode(:master, []) }
+        raise "Puppet 4 does not support the inventory service" unless Puppet.respond_to?(:initialize_settings_for_run_mode)
+        Puppet.initialize_settings_for_run_mode(:master)
       end
 
       Puppet::Node::Facts.indirection.terminus_class = :rest
