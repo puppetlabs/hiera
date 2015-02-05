@@ -99,10 +99,21 @@ def load_scope(source, type=:yaml)
     # is fine to have the inventory_server option set even if the config
     # doesn't have the fact_terminus set to rest.
     begin
-      require 'puppet/util/run_mode'
-      $puppet_application_mode = Puppet::Util::RunMode[:master]
       require 'puppet'
-      Puppet.settings.parse
+
+      puppet_version = Puppet.version.split(' ').first # handle PE
+      if Puppet::Util::Package.versioncmp(puppet_version, '3.0.0') < 0
+        Puppet.settings.parse
+      else
+        Puppet.settings.initialize_global_settings
+        puppet_app_defaults = Puppet::Settings.app_defaults_for_run_mode(Puppet::Util::RunMode[:master])
+        Puppet.settings.initialize_app_defaults(puppet_app_defaults)
+
+        if Puppet::Util::Package.versioncmp(puppet_version, '3.5.0') >= 0
+          Puppet.push_context(Puppet.base_context(Puppet.settings), "Initial context after settings initialization")
+        end
+      end
+
       Puppet::Node::Facts.indirection.terminus_class = :rest
       scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
       # Puppet makes dumb yaml files that do not promote data reuse.
