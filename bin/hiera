@@ -111,6 +111,22 @@ def load_scope(source, type=:yaml)
         STDERR.puts "Puppet inventory service lookup failed: #{e.class}: #{e}"
         exit 1
     end
+
+  when :puppetdb
+    begin
+      require 'puppet'
+      unless Puppet::Indirector::Terminus.terminus_classes(:facts).include(:puppetdb)
+        raise "PuppetDB facts terminus not present; ensure puppetdb-terminus is installed"
+      end
+      Puppet.initialize_settings
+      Puppet::Node::Facts.indirection.terminus_class = :puppetdb
+      scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
+      # Puppet makes dumb yaml files that do not promote data reuse.
+      scope = scope.values if scope.is_a?(Puppet::Node::Facts)
+    rescue Exception => e
+        STDERR.puts "PuppetDB lookup failed: #{e.class}: #{e}"
+        exit 1
+    end
   else
     raise "Don't know how to load data type #{type}"
   end
@@ -183,6 +199,10 @@ OptionParser.new do |opts|
 
   opts.on("--inventory_service IDENTITY", "-i", "Use facts from a node (via Puppet's inventory service) as scope") do |v|
     initial_scopes << { :type => :inventory_service, :value => v, :name => "Puppet inventory service" }
+  end
+
+  opts.on("--puppetdb IDENTITY", "-p", "Use facts from a node (via PuppetDB) as scope") do |v|
+    initial_scopes << { :type => :puppetdb, :value => v, :name => "PuppetDB" }
   end
 
   opts.on("--format TYPE", "-f", "Output the result in a specific format (ruby, yaml or json); default is 'ruby'") do |v|
