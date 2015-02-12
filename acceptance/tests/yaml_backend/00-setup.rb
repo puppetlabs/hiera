@@ -5,13 +5,10 @@ agents.each do |agent|
 file { '/etc/puppetlabs':
   ensure  => directory,
 }->
-file { '/etc/puppetlabs/agent':
+file { '/etc/puppetlabs/code':
   ensure  => directory,
 }->
-file { '/etc/puppetlabs/agent/code':
-  ensure  => directory,
-}->
-file { '/etc/puppetlabs/agent/code/hiera.yaml':
+file { '/etc/puppetlabs/code/hiera.yaml':
   ensure  => present,
   content => '---
     :backends:
