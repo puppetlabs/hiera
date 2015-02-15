@@ -178,13 +178,13 @@ store as found on your Puppet Masters.
 If no data is found and the facts had a location=dc1 fact the default would be _sites/dc1_
 
 <pre>
-$ hiera acme_version 'sites/%{location}' --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+$ hiera acme_version 'sites/%{location}' --yaml /opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml
 </pre>
 
 You can also supply extra facts on the CLI, assuming Puppet facts did not have a location fact:
 
 <pre>
-$ hiera acme_version 'sites/%{location}' location=dc1 --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+$ hiera acme_version 'sites/%{location}' location=dc1 --yaml /opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml
 </pre>
 
 Or if you use MCollective you can fetch the scope from a remote node's facts:
@@ -210,7 +210,7 @@ require 'hiera'
 require 'puppet'
 
 # load the facts for example.com
-scope = YAML.load_file("/var/lib/puppet/yaml/facts/example.com.yaml").values
+scope = YAML.load_file("/opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml").values
 
 # create a new instance based on config file
 hiera = Hiera.new(:config => "/etc/puppetlabs/code/hiera.yaml")
