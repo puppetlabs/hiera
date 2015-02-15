@@ -138,29 +138,29 @@ A sample configuration file can be seen here:
   - common
 
 :yaml:
-   :datadir: /etc/puppet/hieradata
+   :datadir: /etc/puppetlabs/code/hieradata
 
 :puppet:
    :datasource: data
 </pre>
 
-This configuration will require YAML files in  _/etc/puppet/hieradata_ these need to contain
+This configuration will require YAML files in  _/etc/puppetlabs/code/hieradata_ these need to contain
 Hash data, sample files matching the hierarchy described in the _Why?_ section are below:
 
-_/etc/puppet/hieradata/sites/dc1.yaml_:
+_/etc/puppetlabs/code/hieradata/sites/dc1.yaml_:
 <pre>
 ---
 ntpserver: ntp1.dc1.example.com
 sysadmin: dc1noc@example.com
 </pre>
 
-_/etc/puppet/hieradata/sites/dc2.yaml_:
+_/etc/puppetlabs/code/hieradata/sites/dc2.yaml_:
 <pre>
 ---
 ntpserver: ntp1.dc2.example.com
 </pre>
 
-_/etc/puppet/hieradata/common.yaml_:
+_/etc/puppetlabs/code/hieradata/common.yaml_:
 <pre>
 ---
 sysadmin: "sysadmin@%{domain}"
@@ -178,13 +178,13 @@ store as found on your Puppet Masters.
 If no data is found and the facts had a location=dc1 fact the default would be _sites/dc1_
 
 <pre>
-$ hiera acme_version 'sites/%{location}' --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+$ hiera acme_version 'sites/%{location}' --yaml /opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml
 </pre>
 
 You can also supply extra facts on the CLI, assuming Puppet facts did not have a location fact:
 
 <pre>
-$ hiera acme_version 'sites/%{location}' location=dc1 --yaml /var/lib/puppet/yaml/facts/example.com.yaml
+$ hiera acme_version 'sites/%{location}' location=dc1 --yaml /opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml
 </pre>
 
 Or if you use MCollective you can fetch the scope from a remote node's facts:
@@ -210,10 +210,10 @@ require 'hiera'
 require 'puppet'
 
 # load the facts for example.com
-scope = YAML.load_file("/var/lib/puppet/yaml/facts/example.com.yaml").values
+scope = YAML.load_file("/opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml").values
 
 # create a new instance based on config file
-hiera = Hiera.new(:config => "/etc/puppet/hiera.yaml")
+hiera = Hiera.new(:config => "/etc/puppetlabs/code/hiera.yaml")
 
 # resolve the 'acme_version' variable based on scope
 #
