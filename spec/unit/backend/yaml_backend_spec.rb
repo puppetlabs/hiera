@@ -49,14 +49,19 @@ class Hiera
             Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).yields(["one", "/nonexisting/one.yaml"])
           end
 
-          it "returns nil when the YAML value is nil" do
+          it "throws :no_such_key when key is missing in YAML" do
             @cache.value = "---\n"
+            expect { @backend.lookup("key", {}, nil, :priority, nil) }.to throw_symbol(:no_such_key)
+          end
+
+          it "returns nil when the YAML value is nil" do
+            @cache.value = "key: ~\n"
             @backend.lookup("key", {}, nil, :priority, nil).should be_nil
           end
 
-          it "returns nil when the YAML file is false" do
+          it "throws :no_such_key when the YAML file is false" do
             @cache.value = ""
-            @backend.lookup("key", {}, nil, :priority, nil).should be_nil
+            expect { @backend.lookup("key", {}, nil, :priority, nil) }.to throw_symbol(:no_such_key)
           end
 
           it "raises a TypeError when the YAML value is not a hash" do

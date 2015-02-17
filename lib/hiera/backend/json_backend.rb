@@ -11,6 +11,7 @@ class Hiera
 
       def lookup(key, scope, order_override, resolution_type, context)
         answer = nil
+        found = false
 
         Hiera.debug("Looking up #{key} in JSON backend")
 
@@ -27,6 +28,7 @@ class Hiera
 
           next if data.empty?
           next unless data.include?(key)
+          found = true
 
           # for array resolution we just append to the array whatever
           # we find, we then goes onto the next file and keep adding to
@@ -48,7 +50,7 @@ class Hiera
             break
           end
         end
-
+        throw :no_such_key unless found
         return answer
       end
     end

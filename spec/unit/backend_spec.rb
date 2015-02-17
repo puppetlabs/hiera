@@ -572,29 +572,38 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
 
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, instance_of(Hash))
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, instance_of(Hash)).throws(:no_such_key)
 
         Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
+      end
+
+      it "returns nil instead of the default when key is found with a nil value" do
+        Config.load({:yaml => {:datadir => "/tmp"}})
+        Config.load_backends
+
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, instance_of(Hash)).returns(nil)
+
+        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == nil
       end
 
       it "keeps string default data as a string" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, instance_of(Hash))
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, instance_of(Hash)).throws(:no_such_key)
         Backend.lookup("key", "test", {}, nil, nil).should == "test"
       end
 
       it "keeps array default data as an array" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array, instance_of(Hash))
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array, instance_of(Hash)).throws(:no_such_key)
         Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
       end
 
       it "keeps hash default data as a hash" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
-        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash, instance_of(Hash))
+        Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash, instance_of(Hash)).throws(:no_such_key)
         Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
       end
 
