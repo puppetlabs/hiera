@@ -265,6 +265,33 @@ class Hiera
         return answer
       end
 
+      # Return a string describing where Hiera would be retrieving data, given
+      # the current scope and configuration.
+      def explain(scope)
+        str = "Backend data directories:\n"
+        Config[:backends].each do |backend|
+          str << "  * #{backend}: #{Backend.datadir(backend, scope)}\n"
+        end
+
+        str << "\nExpanded hierarchy:\n"
+        Backend.datasources(scope) do |datasource|
+          str << "  * #{datasource}\n"
+        end
+
+        str << "\nFile lookup order:\n"
+        Config[:backends].each do |backend|
+          datadir = Backend.datadir(backend, scope)
+          next unless datadir
+
+          Backend.datasources(scope) do |source|
+            path = File.join(datadir, "#{source}.#{backend}")
+            str << "  * #{path}\n"
+          end
+        end
+
+        str
+      end
+
       def clear!
         @backends = {}
       end
