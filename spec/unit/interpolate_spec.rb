@@ -14,6 +14,16 @@ describe "Hiera" do
     end
   end
 
+  context "when not finding value for interpolated key" do
+    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'interpolate') }
+
+    it 'should resolve the interpolation to an empty string' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('niltest', nil, {})).to eq('Missing key ##. Key with nil ##')
+    end
+  end
+
   context "when doing interpolation with override" do
     let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'override') }
 

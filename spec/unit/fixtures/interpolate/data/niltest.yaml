@@ -1,0 +1,2 @@
+niltest: 'Missing key #%{hiera("knotfound")}#. Key with nil #%{hiera("knil")}#'
+knil: null
