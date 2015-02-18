@@ -25,7 +25,7 @@ class Hiera
           Backend.expects(:datafile).with(:json, {}, "one", "json").returns(nil)
           Backend.expects(:datafile).with(:json, {}, "two", "json").returns(nil)
 
-          @backend.lookup("key", {}, nil, :priority, nil)
+          expect { @backend.lookup("key", {}, nil, :priority, nil) }.to throw_symbol(:no_such_key)
         end
 
         it "should retain the data types found in data files" do

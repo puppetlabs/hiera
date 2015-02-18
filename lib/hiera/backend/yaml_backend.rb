@@ -10,6 +10,7 @@ class Hiera
 
       def lookup(key, scope, order_override, resolution_type, context)
         answer = nil
+        found = false
 
         Hiera.debug("Looking up #{key} in YAML backend")
 
@@ -20,6 +21,7 @@ class Hiera
 
           next if data.empty?
           next unless data.include?(key)
+          found = true
 
           # Extra logging that we found the key. This can be outputted
           # multiple times if the resolution type is array or hash but that
@@ -47,7 +49,7 @@ class Hiera
             break
           end
         end
-
+        throw :no_such_key unless found
         return answer
       end
 

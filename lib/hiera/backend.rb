@@ -15,7 +15,12 @@ class Hiera
 
       def lookup(key, scope, order_override, resolution_type, context)
         Hiera.debug("Using Hiera 1.x backend API to access instance of class #{@wrapped.class.name}. Lookup recursion will not be detected")
-        @wrapped.lookup(key, scope, order_override, resolution_type)
+        value = @wrapped.lookup(key, scope, order_override, resolution_type)
+
+        # The most likely cause when an old backend returns nil is that the key was not found. In any case, it is
+        # impossible to know the difference between that and a found nil. The throw here preserves the old behavior.
+        throw (:no_such_key) if value.nil?
+        value
       end
     end
 
@@ -233,14 +238,20 @@ class Hiera
           subsegments = segments.drop(1)
         end
 
+        found = false
         Config[:backends].each do |backend|
           backend_constant = "#{backend.capitalize}_backend"
           if constants.include?(backend_constant) || constants.include?(backend_constant.to_sym)
             backend = (@backends[backend] ||= find_backend(backend_constant))
-            new_answer = backend.lookup(segments[0], scope, order_override, resolution_type, context)
-            new_answer = qualified_lookup(subsegments, new_answer) unless subsegments.nil?
-
-            next if new_answer.nil?
+            found_in_backend = false
+            new_answer = catch(:no_such_key) do
+              value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
+              value = qualified_lookup(subsegments, value) unless subsegments.nil?
+              found_in_backend = true
+              value
+            end
+            next unless found_in_backend
+            found = true
 
             case resolution_type
             when :array
@@ -259,9 +270,9 @@ class Hiera
         end
 
         answer = resolve_answer(answer, resolution_type) unless answer.nil?
-        answer = parse_string(default, scope, {}, context) if answer.nil? and default.is_a?(String)
+        answer = parse_string(default, scope, {}, context) if !found && default.is_a?(String)
 
-        return default if answer.nil?
+        return default if !found && answer.nil?
         return answer
       end
 
@@ -272,12 +283,14 @@ class Hiera
       def qualified_lookup(segments, hash)
         value = hash
         segments.each do |segment|
-          break if value.nil?
+          throw :no_such_key if value.nil?
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
             raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
+            throw :no_such_key unless segment < value.size
           else
             raise Exception, "Hiera type mismatch: Got #{value.class.name} when a non Array object that responds to '[]' was expected to enable lookup using key '#{segment}'" unless value.respond_to?(:'[]') && !value.instance_of?(Array);
+            throw :no_such_key unless value.include?(segment)
           end
           value = value[segment]
         end
