@@ -72,6 +72,21 @@ class Hiera
           Config.load('/dev/null')
         end
       end
+
+      describe "if deep_merge can't be loaded" do
+        let(:error_message) { "Must have 'deep_merge' gem installed for the configured merge_behavior." }
+        before(:each) do
+          Config.expects(:require).with("deep_merge").raises(LoadError, "unable to load")
+        end
+
+        it "should error if merge_behavior is 'deep'" do
+          expect { Config.load(:merge_behavior => :deep) }.to raise_error(Hiera::Error, error_message)
+        end
+
+        it "should error if merge_behavior is 'deeper'" do
+          expect { Config.load(:merge_behavior => :deeper) }.to raise_error(Hiera::Error, error_message)
+        end
+      end
     end
 
     describe "#load_backends" do

@@ -54,8 +54,7 @@ class Hiera::Config
         begin
           require "deep_merge"
         rescue LoadError
-          Hiera.error "Must have 'deep_merge' gem installed for the configured merge_behavior."
-          raise
+          raise Hiera::Error, "Must have 'deep_merge' gem installed for the configured merge_behavior."
         end
       end
     end
