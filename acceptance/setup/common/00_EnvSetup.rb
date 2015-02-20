@@ -46,11 +46,5 @@ hosts.each do |host|
   when /solaris/
     step "#{host} Install json from rubygems"
     on host, 'gem install json'
-
-    step "#{host} Install deep_merge from rubygems"
-    on host, 'gem install deep_merge'
-  else
-    step "#{host} Install deep_merge from rubygems"
-    on host, 'gem install deep_merge'
   end
 end
