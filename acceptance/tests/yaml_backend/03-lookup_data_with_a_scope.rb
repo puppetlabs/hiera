@@ -2,22 +2,28 @@ begin test_name "Lookup data with a scope"
 
   agents.each do |agent|
 
+    puppetcodedir = agent.puppet()[:codedir]
+    hieradatadir = "#{puppetcodedir}/hieradata"
+
     teardown do
       apply_manifest_on agent, <<-PP
-      file { '#{agent['hieradatadir']}':
+      file { '#{hieradatadir}':
         ensure  => directory,
         recurse => true,
         purge   => true,
         force   => true,
       }
-      file { '/etc/puppet/scope.yaml': ensure => absent }
-      file { '/etc/puppet/scope.json': ensure => absent }
+      file { '#{puppetcodedir}/scope.yaml': ensure => absent }
+      file { '#{puppetcodedir}/scope.json': ensure => absent }
       PP
     end
 
     step 'Setup'
       apply_manifest_on agent, <<-PP
-      file { '#{agent['hieradatadir']}/global.yaml':
+      file { '#{hieradatadir}':
+        ensure  => directory,
+      }->
+      file { '#{hieradatadir}/global.yaml':
         ensure  => present,
         content => "---
           http_port: 8080
@@ -34,7 +40,7 @@ begin test_name "Lookup data with a scope"
         "
       }
 
-      file { '#{agent['hieradatadir']}/production.yaml':
+      file { '#{hieradatadir}/production.yaml':
         ensure  => present,
         content => "---
           http_port: 9090
@@ -43,7 +49,7 @@ begin test_name "Lookup data with a scope"
         "
       }
 
-      file { '/etc/puppet/scope.yaml':
+      file { '#{puppetcodedir}/scope.yaml':
         ensure  => present,
         content => "---
           environment: production
@@ -52,7 +58,7 @@ begin test_name "Lookup data with a scope"
       PP
 
     step "Try to lookup string data using a scope from a yaml file"
-      on agent, hiera('monitor', '--yaml', '/etc/puppet/scope.yaml'),
+      on agent, hiera('monitor', '--yaml', "#{puppetcodedir}/scope.yaml"),
         :acceptable_exit_codes => [0] do
         assert_output <<-OUTPUT
           STDOUT> enable
