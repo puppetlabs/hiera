@@ -2,9 +2,12 @@ begin test_name "Lookup data using the default options"
 
   agents.each do |agent|
 
+    puppetcodedir = agent.puppet()[:codedir]
+    hieradatadir = "#{puppetcodedir}/hieradata"
+
     step 'Setup'
       apply_manifest_on agent, <<-PP
-        file { '#{agent['hieradatadir']}':
+        file { '#{hieradatadir}':
           ensure  => directory,
           recurse => true,
           purge   => true,
@@ -13,7 +16,7 @@ begin test_name "Lookup data using the default options"
     PP
 
       apply_manifest_on agent, <<-PP
-        file { '#{agent['hieradatadir']}/global.yaml':
+        file { '#{hieradatadir}/global.yaml':
           ensure  => present,
           content => "---
             http_port: 8080

@@ -1,6 +1,8 @@
 test_name "Hiera setup for YAML backend"
 
 agents.each do |agent|
+  puppetcodedir = agent.puppet()[:codedir]
+  hieradatadir = "#{puppetcodedir}/hieradata"
   apply_manifest_on agent, <<-PP
 file { '/etc/puppetlabs':
   ensure  => directory,
@@ -20,11 +22,11 @@ file { '/etc/puppetlabs/code/hiera.yaml':
       - "global"
 
     :yaml:
-      :datadir: "#{agent['hieradatadir']}"
+      :datadir: "#{hieradatadir}"
   '
 }
 
-file { '#{agent['hieradatadir']}':
+file { '#{hieradatadir}':
   ensure  => directory,
   recurse => true,
   purge   => true,
