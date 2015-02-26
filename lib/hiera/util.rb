@@ -9,7 +9,7 @@ class Hiera
 
     def microsoft_windows?
       return false unless file_alt_separator
-      
+
       begin
         require 'win32/dir'
         true
@@ -21,7 +21,7 @@ class Hiera
 
     def config_dir
       if microsoft_windows?
-         File.join(common_appdata, 'PuppetLabs', 'hiera', 'etc')
+         File.join(common_appdata, 'PuppetLabs', 'code')
       else
         '/etc/puppetlabs/code'
       end
@@ -29,7 +29,7 @@ class Hiera
 
     def var_dir
       if microsoft_windows?
-        File.join(common_appdata, 'PuppetLabs', 'hiera', 'var')
+        File.join(common_appdata, 'PuppetLabs', 'code', 'hieradata')
       else
         '/etc/puppetlabs/code/hieradata'
       end
