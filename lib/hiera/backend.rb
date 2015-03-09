@@ -15,7 +15,7 @@ class Hiera
 
       def lookup(key, scope, order_override, resolution_type, context)
         Hiera.debug("Using Hiera 1.x backend API to access instance of class #{@wrapped.class.name}. Lookup recursion will not be detected")
-        value = @wrapped.lookup(key, scope, order_override, resolution_type)
+        value = @wrapped.lookup(key, scope, order_override, resolution_type.is_a?(Hash) ? :hash : resolution_type)
 
         # The most likely cause when an old backend returns nil is that the key was not found. In any case, it is
         # impossible to know the difference between that and a found nil. The throw here preserves the old behavior.
@@ -180,8 +180,10 @@ class Hiera
         end
       end
 
-      # Merges two hashes answers with the configured merge behavior.
-      #         :merge_behavior: {:native|:deep|:deeper}
+      # Merges two hashes answers with the given or configured merge behavior. Behavior can be given
+      # by passing _resolution_type_ as a Hash
+      #
+      #  :merge_behavior: {:native|:deep|:deeper}
       #
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/danielsdeleo/deep_merge)
       #
@@ -189,12 +191,26 @@ class Hiera
       #  :deep   => Use Hash.deep_merge
       #  :deeper => Use Hash.deep_merge!
       #
-      def merge_answer(left,right)
-        case Config[:merge_behavior]
+      # @param left [Hash] left side of the merge
+      # @param right [Hash] right side of the merge
+      # @param resolution_type [String,Hash] The merge type, or if hash, the merge behavior and options
+      # @return [Hash] The merged result
+      # @see Hiera#lookup
+      #
+      def merge_answer(left,right,resolution_type=nil)
+        behavior, options =
+          if resolution_type.is_a?(Hash)
+            merge = resolution_type.clone
+            [merge.delete(:behavior), merge]
+          else
+            [Config[:merge_behavior], Config[:deep_merge_options] || {}]
+          end
+
+        case behavior
         when :deeper,'deeper'
-          left.deep_merge!(right, Config[:deep_merge_options] || {})
+          left.deep_merge!(right, options)
         when :deep,'deep'
-          left.deep_merge(right, Config[:deep_merge_options] || {})
+          left.deep_merge(right, options)
         else # Native and undefined
           left.merge(right)
         end
@@ -216,8 +232,8 @@ class Hiera
 
       # @param key [String] The key to lookup
       # @param scope [#[]] The primary source of data for substitutions.
-      # @param order_override [String] An override that will be pre-pended to the hierarchy definition. Can be nil
-      # @param resolution_type [Symbol] One of :hash, :array, or :priority. Can be nil which is the same as :priority
+      # @param order_override [#[],nil] An override that will be pre-pended to the hierarchy definition.
+      # @param resolution_type [Symbol,Hash,nil] One of :hash, :array,:priority or a Hash with deep merge behavior and options
       # @param context [#[]] Context used for internal processing
       # @return [Object] The value that corresponds to the given key or nil if no such value cannot be found
       #
@@ -231,10 +247,12 @@ class Hiera
         order_override ||= context[:order_override]
         context[:order_override] ||= order_override
 
+        strategy = resolution_type.is_a?(Hash) ? :hash : resolution_type
+
         segments = key.split('.')
         subsegments = nil
         if segments.size > 1
-          raise ArgumentError, "Resolution type :#{resolution_type} is illegal when doing segmented key lookups" unless resolution_type.nil? || resolution_type == :priority
+          raise ArgumentError, "Resolution type :#{strategy} is illegal when doing segmented key lookups" unless strategy.nil? || strategy == :priority
           subsegments = segments.drop(1)
         end
 
@@ -253,7 +271,7 @@ class Hiera
             next unless found_in_backend
             found = true
 
-            case resolution_type
+            case strategy
             when :array
               raise Exception, "Hiera type mismatch for key '#{key}': expected Array and got #{new_answer.class}" unless new_answer.kind_of? Array or new_answer.kind_of? String
               answer ||= []
@@ -261,7 +279,7 @@ class Hiera
             when :hash
               raise Exception, "Hiera type mismatch for key '#{key}': expected Hash and got #{new_answer.class}" unless new_answer.kind_of? Hash
               answer ||= {}
-              answer = merge_answer(new_answer,answer)
+              answer = merge_answer(new_answer, answer, resolution_type)
             else
               answer = new_answer
               break
@@ -269,7 +287,7 @@ class Hiera
           end
         end
 
-        answer = resolve_answer(answer, resolution_type) unless answer.nil?
+        answer = resolve_answer(answer, strategy) unless answer.nil?
         answer = parse_string(default, scope, {}, context) if !found && default.is_a?(String)
 
         return default if !found && answer.nil?
