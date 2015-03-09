@@ -722,6 +722,17 @@ class Hiera
         Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
       end
 
+      it "disregards configuration when 'merge' parameter is given as a Hash" do
+        Config.load({:merge_behavior => :deep})
+        Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
+        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper' }).should == {"a" => "answer", "b" => "bnswer"}
+      end
+
+      it "propagates deep merge options when given Hash 'merge' parameter" do
+        Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, { :knockout_prefix => '-' }).returns({"a" => "answer", "b" => "bnswer"})
+        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper', :knockout_prefix => '-'}).should == {"a" => "answer", "b" => "bnswer"}
+      end
+
       it "passes Config[:deep_merge_options] into calls to deep_merge" do
         Config.load({:merge_behavior => :deep, :deep_merge_options => { :knockout_prefix => '-' } })
         Hash.any_instance.expects('deep_merge').with({"b" => "bnswer"}, {:knockout_prefix => '-'}).returns({"a" => "answer", "b" => "bnswer"})
