@@ -1,11 +1,11 @@
+---
 HOSTS:
-  agent-rhel7-x86_64:
+  agent:
     roles:
-      - master
-      - agent
-    platform: el-7-x86_64
-    template: redhat-7-x86_64
+    - agent
+    platform: ubuntu-utopic-i386
     hypervisor: vcloud
+    template: ubuntu-1410-i386
 CONFIG:
   datastore: instance0
   resourcepool: delivery/Quality Assurance/FOSS/Dynamic

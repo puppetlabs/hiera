@@ -1,13 +1,12 @@
+---
 HOSTS:
-  master:
+  agent:
     roles:
-      - master
-      - agent
-    platform: fedora-20-x86_64
+    - agent
+    platform: centos-6-i386
     hypervisor: vcloud
-    template: fedora-20-x86_64
+    template: centos-6-i386
 CONFIG:
-  filecount: 12
   datastore: instance0
   resourcepool: delivery/Quality Assurance/FOSS/Dynamic
   folder: Delivery/Quality Assurance/FOSS/Dynamic

@@ -1,13 +1,12 @@
+---
 HOSTS:
-  master:
+  agent:
     roles:
-      - master
-      - agent
-    platform: fedora-19-x86_64
+    - agent
+    platform: ubuntu-trusty-i386
     hypervisor: vcloud
-    template: fedora-19-x86_64
+    template: ubuntu-1404-i386
 CONFIG:
-  filecount: 12
   datastore: instance0
   resourcepool: delivery/Quality Assurance/FOSS/Dynamic
   folder: Delivery/Quality Assurance/FOSS/Dynamic
