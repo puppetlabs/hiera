@@ -1,13 +1,12 @@
+---
 HOSTS:
-  host:
+  agent:
     roles:
-      - master
-      - agent
-    platform: el-7-x86_64
+    - agent
+    platform: fedora-21-i386
     hypervisor: vcloud
-    template: Delivery/Quality Assurance/Templates/vCloud/redhat-7-x86_64
+    template: fedora-21-i386
 CONFIG:
-  filecount: 12
   datastore: instance0
   resourcepool: delivery/Quality Assurance/FOSS/Dynamic
   folder: Delivery/Quality Assurance/FOSS/Dynamic
