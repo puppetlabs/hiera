@@ -1,7 +1,16 @@
+# These two need to be loaded sperately.
+# If we load packaging.rake first, and it isn't available,
+# running `rake spec` in a bare repo will fail since neither
+# rubygems nor `rake_task` will have loaded. However, when we load
+# packaging.rake last, package building fails.
+begin
+  load File.join(File.dirname(__FILE__), 'ext', 'packaging', 'packaging.rake')
+rescue LoadError
+end
+
 begin
   require 'rubygems'
   require 'rspec/core/rake_task'
-  load File.join(File.dirname(__FILE__), 'ext', 'packaging', 'packaging.rake')
 rescue LoadError
 end
 
