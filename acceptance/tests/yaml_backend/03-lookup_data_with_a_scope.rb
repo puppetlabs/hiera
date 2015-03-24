@@ -54,7 +54,7 @@ begin test_name "Lookup data with a scope"
       PP
 
     step "Try to lookup string data using a scope from a yaml file"
-      on agent, hiera('monitor', '--yaml', "#{codedir}/scope.yaml"),
+      on agent, hiera('monitor', '--yaml', "\"#{codedir}/scope.yaml\""),
         :acceptable_exit_codes => [0] do
         assert_output <<-OUTPUT
           STDOUT> enable
