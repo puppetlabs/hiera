@@ -46,7 +46,7 @@ begin test_name "Lookup data with Hash search"
       PP
 
     step "Try to lookup data using hash search"
-      on agent, hiera('users', '--yaml', "#{codedir}/scope.yaml", '--hash'),
+      on agent, hiera('users', '--yaml', "\"#{codedir}/scope.yaml\"", '--hash'),
         :acceptable_exit_codes => [0] do
         assert_match /joe[^}]+"uid"=>1000}/, result.output
         assert_match /pete[^}]+"uid"=>1001}/, result.output

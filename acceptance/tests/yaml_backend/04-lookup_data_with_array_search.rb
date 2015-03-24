@@ -42,7 +42,7 @@ begin test_name "Lookup data with Array search"
       PP
 
     step "Try to lookup data using array search"
-      on agent, hiera('ntpservers', '--yaml', "#{codedir}/scope.yaml", '--array'),
+      on agent, hiera('ntpservers', '--yaml', "\"#{codedir}/scope.yaml\"", '--array'),
         :acceptable_exit_codes => [0] do
         assert_output <<-OUTPUT
           STDOUT> ["production.ntp.puppetlabs.com", "global.ntp.puppetlabs.com"]
