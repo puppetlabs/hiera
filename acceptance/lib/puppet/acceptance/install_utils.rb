@@ -147,7 +147,7 @@ module Puppet
               platform_configs_dir
             )
 
-            link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/products/%s/" % [
+            link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/PC1/%s/" % [
               project,
               sha,
               variant,
@@ -155,6 +155,17 @@ module Puppet
               version,
               arch
             ]
+
+            if not link_exists?(link)
+              link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/products/%s/" % [
+                project,
+                sha,
+                variant,
+                fedora_prefix,
+                version,
+                arch
+              ]
+            end
 
             if not link_exists?(link)
               link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/devel/%s/" % [
@@ -166,6 +177,7 @@ module Puppet
                 arch
               ]
             end
+
             if not link_exists?(link)
               raise "Unable to reach a repo directory at #{link}"
             end
@@ -205,9 +217,14 @@ module Puppet
             scp_to host, deb, '/root'
             scp_to host, list, '/root'
             scp_to host, repo_dir, '/root'
+            pc1_check = on(host,
+                           "[[ -d /root/#{project}/#{version}/pool/PC1 ]]",
+                           :acceptable_exit_codes => [0,1])
+
+            repo_name =  pc1_check.exit_code == 0 ? 'PC1' : 'main'
 
             on host, "mv /root/*.list /etc/apt/sources.list.d"
-            on host, "find /etc/apt/sources.list.d/ -name \"*.list\" -exec sed -i \"s/deb\\s\\+http:\\/\\/builds.puppetlabs.lan.*$/deb file:\\/\\/\\/root\\/#{version} #{version} main/\" {} \\;"
+            on host, "find /etc/apt/sources.list.d/ -name \"*.list\" -exec sed -i \"s/deb\\s\\+http:\\/\\/builds.puppetlabs.lan.*$/deb file:\\/\\/\\/root\\/#{version} #{version} #{repo_name}/\" {} \\;"
             on host, "dpkg -i --force-all /root/*.deb"
             on host, "apt-get update"
           else
