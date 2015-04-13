@@ -147,7 +147,7 @@ module Puppet
               platform_configs_dir
             )
 
-            link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/products/%s/" % [
+            link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/PC1/%s/" % [
               project,
               sha,
               variant,
@@ -155,6 +155,17 @@ module Puppet
               version,
               arch
             ]
+
+            if not link_exists?(link)
+              link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/products/%s/" % [
+                project,
+                sha,
+                variant,
+                fedora_prefix,
+                version,
+                arch
+              ]
+            end
 
             if not link_exists?(link)
               link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/devel/%s/" % [
@@ -166,20 +177,24 @@ module Puppet
                 arch
               ]
             end
+
             if not link_exists?(link)
               raise "Unable to reach a repo directory at #{link}"
             end
+
             repo_dir = fetch_remote_dir(link, platform_configs_dir)
+            repo_loc = "/root/#{project}"
 
-            on host, "rm -rf /root/*.repo; rm -rf /root/*.rpm; rm -rf /root/#{arch}"
+            on host, "rm -rf #{repo_loc}"
+            on host, "mkdir -p #{repo_loc}"
 
-            scp_to host, rpm, '/root'
-            scp_to host, repo, '/root'
-            scp_to host, repo_dir, '/root'
+            scp_to host, rpm, repo_loc
+            scp_to host, repo, repo_loc
+            scp_to host, repo_dir, repo_loc
 
-            on host, "mv /root/*.repo /etc/yum.repos.d"
-            on host, "find /etc/yum.repos.d/ -name \"*.repo\" -exec sed -i \"s/baseurl\\s*=\\s*http:\\/\\/builds.puppetlabs.lan.*$/baseurl=file:\\/\\/\\/root\\/#{arch}/\" {} \\;"
-            on host, "rpm -Uvh --force /root/*.rpm"
+            on host, "mv #{repo_loc}/*.repo /etc/yum.repos.d"
+            on host, "find /etc/yum.repos.d/ -name \"*.repo\" -exec sed -i \"s/baseurl\\s*=\\s*http:\\/\\/builds.puppetlabs.lan.*$/baseurl=file:\\/\\/\\/root\\/#{project}\\/#{arch}/\" {} \\;"
+            on host, "rpm -Uvh --force #{repo_loc}/*.rpm"
 
           when /^(debian|ubuntu)-([^-]+)-(.+)$/
             variant = $1
@@ -199,16 +214,23 @@ module Puppet
             )
 
             repo_dir = fetch_remote_dir("http://builds.puppetlabs.lan/%s/%s/repos/apt/%s" % [project, sha, version], platform_configs_dir)
+            repo_loc = "/root/#{project}"
 
-            on host, "rm -rf /root/*.list; rm -rf /root/*.deb; rm -rf /root/#{version}"
+            on host, "rm -rf #{repo_loc}"
+            on host, "mkdir -p #{repo_loc}"
 
-            scp_to host, deb, '/root'
-            scp_to host, list, '/root'
-            scp_to host, repo_dir, '/root'
+            scp_to host, deb, repo_loc
+            scp_to host, list, repo_loc
+            scp_to host, repo_dir, repo_loc
+            pc1_check = on(host,
+                           "[[ -d /root/#{project}/#{version}/pool/PC1 ]]",
+                           :acceptable_exit_codes => [0,1])
 
-            on host, "mv /root/*.list /etc/apt/sources.list.d"
-            on host, "find /etc/apt/sources.list.d/ -name \"*.list\" -exec sed -i \"s/deb\\s\\+http:\\/\\/builds.puppetlabs.lan.*$/deb file:\\/\\/\\/root\\/#{version} #{version} main/\" {} \\;"
-            on host, "dpkg -i --force-all /root/*.deb"
+            repo_name =  pc1_check.exit_code == 0 ? 'PC1' : 'main'
+
+            on host, "mv #{repo_loc}/*.list /etc/apt/sources.list.d"
+            on host, "find /etc/apt/sources.list.d/ -name \"*.list\" -exec sed -i \"s/deb\\s\\+http:\\/\\/builds.puppetlabs.lan.*$/deb file:\\/\\/\\/root\\/#{project}\\/#{version} #{version} #{repo_name}/\" {} \\;"
+            on host, "dpkg -i --force-all #{repo_loc}/*.deb"
             on host, "apt-get update"
           else
             host.logger.notify("No repository installation step for #{platform} yet...")
