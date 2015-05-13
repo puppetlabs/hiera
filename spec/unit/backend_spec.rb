@@ -22,13 +22,13 @@ class Hiera
 
       it "defaults to a directory in var" do
         Config.load({})
-        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
 
         Config.load({:rspec => nil})
-        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
 
         Config.load({:rspec => {}})
-        Backend.datadir(:rspec, {}).should == Hiera::Util.var_dir
+        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
       end
 
       it "fails when the datadir is an array" do
