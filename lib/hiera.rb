@@ -40,9 +40,21 @@ class Hiera
   # If the config option is a string its assumed to be a filename,
   # else a hash of what would have been in the YAML config file
   def initialize(options={})
-    options[:config] ||= File.join(Util.config_dir, 'hiera.yaml')
+    file = File.join(Util.config_dir, 'hiera.yaml')
 
-    @config = Config.load(options[:config])
+    if File.exists?(file)
+      @config = Config.load(file)
+    else
+      @config = Config.load({
+        :backends => ["yaml"],
+        :hierarchy => ["defaults", "%{clientcert}", "%{environment}", "global"],
+        :merge_behavior =>:native,
+        :yaml=> {
+          :datadir => Hiera::Util.var_dir
+        },
+        :logger=>"console"
+      })
+    end
 
     Config.load_backends
   end
