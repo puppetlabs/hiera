@@ -2,7 +2,6 @@
 :backends:
   - yaml
 :hierarchy:
-  - defaults
   - "%{clientcert}"
   - "%{environment}"
   - global
