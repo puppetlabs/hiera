@@ -36,13 +36,13 @@ describe Hiera::Util do
   describe 'Hiera::Util.var_dir' do
     it 'should return the correct path for posix systems' do
       Hiera::Util.expects(:file_alt_separator).returns(nil)
-      Hiera::Util.var_dir.should == '/etc/puppetlabs/code/hieradata'
+      Hiera::Util.var_dir.should == '/etc/puppetlabs/code/environments/%{environment}/hieradata'
     end
 
     it 'should return the correct path for microsoft windows systems' do
       Hiera::Util.expects(:microsoft_windows?).returns(true)
       Hiera::Util.expects(:common_appdata).returns('C:\\ProgramData')
-      Hiera::Util.var_dir.should == 'C:\\ProgramData/PuppetLabs/code/hieradata'
+      Hiera::Util.var_dir.should == 'C:\\ProgramData/PuppetLabs/code/environments/%{environment}/hieradata'
     end
   end
 end

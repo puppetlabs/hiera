@@ -29,9 +29,9 @@ class Hiera
 
     def var_dir
       if microsoft_windows?
-        File.join(common_appdata, 'PuppetLabs', 'code', 'hieradata')
+        File.join(common_appdata, 'PuppetLabs', 'code', 'environments' , '%{environment}' , 'hieradata')
       else
-        '/etc/puppetlabs/code/hieradata'
+        '/etc/puppetlabs/code/environments/%{environment}/hieradata'
       end
     end
 
