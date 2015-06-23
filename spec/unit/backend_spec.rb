@@ -92,7 +92,8 @@ class Hiera
       end
 
       it "parses the names of the hierarchy levels using the given scope" do
-        Backend.expects(:parse_string).with("common", {:rspec => :tests}, {}, {:order_override => nil})
+        Backend.expects(:parse_string).with('nodes/%{::trusted.certname}', {:rspec => :tests}, {}, {:order_override => nil})
+        Backend.expects(:parse_string).with('common', {:rspec => :tests}, {}, {:order_override => nil})
         Backend.datasources({:rspec => :tests}) { }
       end
 

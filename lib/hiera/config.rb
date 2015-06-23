@@ -4,14 +4,14 @@ class Hiera::Config
     # load takes a string or hash as input, strings are treated as filenames
     # hashes are stored as data that would have been in the config file
     #
-    # Unless specified it will only use YAML as backend with a single
-    # 'common' hierarchy and console logger
+    # Unless specified it will only use YAML as backend with a
+    # hierarchy of 'nodes/%{::trusted.certname}' and 'common', and with a
+    # console logger.
     #
-    # @return [Hash] representing the configuration.  e.g.
-    #   {:backends => "yaml", :hierarchy => "common"}
+    # @return [Hash] representing the configuration.
     def load(source)
-      @config = {:backends => "yaml",
-                 :hierarchy => "common",
+      @config = {:backends => ["yaml"],
+                 :hierarchy => ["nodes/%{::trusted.certname}", "common"],
                  :merge_behavior => :native }
 
       if source.is_a?(String)
