@@ -78,11 +78,6 @@ def beaker_test(mode = :packages, options = {})
     final_options[:install] << "#{build_giturl('hiera')}##{sha}"
   end
 
-  if mode == :peaio
-    final_options[:puppet_agent_sha] = sha
-    final_options[:puppet_agent_version] = sha
-  end
-
   options_file = 'merged_options.rb'
   File.open(options_file, 'w') do |merged|
     merged.puts <<-EOS
