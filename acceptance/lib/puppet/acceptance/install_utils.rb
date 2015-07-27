@@ -118,6 +118,9 @@ module Puppet
       def install_repos_on(host, project, sha, repo_configs_dir)
         platform = host['platform'].with_version_codename
         platform_configs_dir = File.join(repo_configs_dir,platform)
+        tld     = sha == 'nightly' ? 'nightlies.puppetlabs.com' : 'builds.puppetlabs.lan'
+        project = sha == 'nightly' ? project + '-latest'        : project
+        sha     = sha == 'nightly' ? nil                        : sha
 
         case platform
           when /^(fedora|el|centos)-(\d+)-(.+)$/
@@ -126,114 +129,42 @@ module Puppet
             version = $2
             arch = $3
 
-            rpm = fetch(
-              "http://yum.puppetlabs.com",
-              "puppetlabs-release-%s-%s.noarch.rpm" % [variant, version],
-              platform_configs_dir
-            )
-
-            pattern = "pl-%s-%s-%s-%s%s-%s.repo"
-            repo_filename = pattern % [
+            repo_filename = "pl-%s%s-%s-%s%s-%s.repo" % [
               project,
-              sha,
+              sha ? '-' + sha : '',
               variant,
               fedora_prefix,
               version,
               arch
             ]
-            repo = fetch(
-              "http://builds.puppetlabs.lan/%s/%s/repo_configs/rpm/" % [project, sha],
-              repo_filename,
-              platform_configs_dir
-            )
+            repo_url = "http://%s/%s/%s/repo_configs/rpm/%s" % [tld, project, sha, repo_filename]
 
-            link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/PC1/%s/" % [
-              project,
-              sha,
-              variant,
-              fedora_prefix,
-              version,
-              arch
-            ]
-
-            if not link_exists?(link)
-              link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/products/%s/" % [
-                project,
-                sha,
-                variant,
-                fedora_prefix,
-                version,
-                arch
-              ]
-            end
-
-            if not link_exists?(link)
-              link = "http://builds.puppetlabs.lan/%s/%s/repos/%s/%s%s/devel/%s/" % [
-                project,
-                sha,
-                variant,
-                fedora_prefix,
-                version,
-                arch
-              ]
-            end
-
-            if not link_exists?(link)
-              raise "Unable to reach a repo directory at #{link}"
-            end
-
-            repo_dir = fetch_remote_dir(link, platform_configs_dir)
-            repo_loc = "/root/#{project}"
-
-            on host, "rm -rf #{repo_loc}"
-            on host, "mkdir -p #{repo_loc}"
-
-            scp_to host, rpm, repo_loc
-            scp_to host, repo, repo_loc
-            scp_to host, repo_dir, repo_loc
-
-            on host, "mv #{repo_loc}/*.repo /etc/yum.repos.d"
-            on host, "find /etc/yum.repos.d/ -name \"*.repo\" -exec sed -i \"s/baseurl\\s*=\\s*http:\\/\\/builds.puppetlabs.lan.*$/baseurl=file:\\/\\/\\/root\\/#{project}\\/#{arch}/\" {} \\;"
-            on host, "rpm -Uvh --force #{repo_loc}/*.rpm"
-
+            on host, "curl -o /etc/yum.repos.d/#{repo_filename} #{repo_url}"
           when /^(debian|ubuntu)-([^-]+)-(.+)$/
             variant = $1
             version = $2
             arch = $3
 
-            deb = fetch(
-              "http://apt.puppetlabs.com/",
-              "puppetlabs-release-%s.deb" % version,
-              platform_configs_dir
-            )
+            list_filename = "pl-%s%s-%s.list" % [
+              project,
+              sha ? '-' + sha : '',
+              version
+            ]
+            list_url = "http://%s/%s/%s/repo_configs/deb/%s" % [tld, project, sha, list_filename]
 
-            list = fetch(
-              "http://builds.puppetlabs.lan/%s/%s/repo_configs/deb/" % [project, sha],
-              "pl-%s-%s-%s.list" % [project, sha, version],
-              platform_configs_dir
-            )
-
-            repo_dir = fetch_remote_dir("http://builds.puppetlabs.lan/%s/%s/repos/apt/%s" % [project, sha, version], platform_configs_dir)
-            repo_loc = "/root/#{project}"
-
-            on host, "rm -rf #{repo_loc}"
-            on host, "mkdir -p #{repo_loc}"
-
-            scp_to host, deb, repo_loc
-            scp_to host, list, repo_loc
-            scp_to host, repo_dir, repo_loc
-            pc1_check = on(host,
-                           "[[ -d /root/#{project}/#{version}/pool/PC1 ]]",
-                           :acceptable_exit_codes => [0,1])
-
-            repo_name =  pc1_check.exit_code == 0 ? 'PC1' : 'main'
-
-            on host, "mv #{repo_loc}/*.list /etc/apt/sources.list.d"
-            on host, "find /etc/apt/sources.list.d/ -name \"*.list\" -exec sed -i \"s/deb\\s\\+http:\\/\\/builds.puppetlabs.lan.*$/deb file:\\/\\/\\/root\\/#{project}\\/#{version} #{version} #{repo_name}/\" {} \\;"
-            on host, "dpkg -i --force-all #{repo_loc}/*.deb"
+            on host, "curl -o /etc/apt/sources.list.d/#{list_filename} #{list_url}"
             on host, "apt-get update"
           else
-            host.logger.notify("No repository installation step for #{platform} yet...")
+            if project == 'puppet-agent'
+              opts = {
+                :puppet_collection => 'PC1',
+                :puppet_agent_sha => ENV['SHA'],
+                :puppet_agent_version => ENV['SUITE_VERSION'] || ENV['SHA']
+              }
+              install_puppet_agent_dev_repo_on(agent, opts)
+            else
+              fail_test("No repository installation step for #{platform} yet...")
+            end
         end
       end
 
