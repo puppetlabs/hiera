@@ -9,11 +9,16 @@ rvm:
   - 2.0.0
   - 2.1.6
   - 2.2.2
-  - ruby-head
 
 env:
   - "CHECK=spec"
+  - "CHECK=commits"
 
 matrix:
-  allow_failures:
-    - rvm: ruby-head
+  exclude:
+    - rvm: 2.2.2
+      env: "CHECK=commits"
+    - rvm: 2.0.0
+      env: "CHECK=commits"
+    - rvm: 1.9.3
+      env: "CHECK=commits"
