@@ -48,12 +48,8 @@ if File.exist?(build_defs_file)
   end
 end
 
-if defined?(RSpec::Core::RakeTask)
-  desc "Run all specs"
-  RSpec::Core::RakeTask.new(:spec) do |t|
-    t.pattern = 'spec/**/*_spec.rb'
-  end
-  task :test => :spec
+task :spec do
+  sh %{rspec #{ENV['TEST'] || ENV['TESTS'] || 'spec'}}
 end
 
 task :test => :spec
