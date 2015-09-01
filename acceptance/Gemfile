@@ -10,7 +10,7 @@ def location_for(place, fake_version = nil)
   end
 end
 
-gem "beaker", *location_for(ENV['BEAKER_VERSION'] || "~> 2.19")
+gem "beaker", *location_for(ENV['BEAKER_VERSION'] || "~> 2.22")
 gem 'rake', "~> 10.1.0"
 
 if File.exists? "#{__FILE__}.local"
