@@ -1,9 +1,8 @@
 require 'rake/clean'
 require 'pp'
 require 'yaml'
-$LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
-require 'puppet/acceptance/git_utils'
-extend Puppet::Acceptance::GitUtils
+require 'beaker/dsl/install_utils'
+extend Beaker::DSL::InstallUtils
 
 ONE_DAY_IN_SECS = 24 * 60 * 60
 REPO_CONFIGS_DIR = "repo-configs"
@@ -75,7 +74,7 @@ def beaker_test(mode = :packages, options = {})
 
   if mode == :git
     final_options[:install] ||= []
-    final_options[:install] << "#{build_giturl('hiera')}##{sha}"
+    final_options[:install] << "#{build_git_url('hiera')}##{sha}"
   end
 
   options_file = 'merged_options.rb'
