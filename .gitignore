@@ -10,3 +10,4 @@ Gemfile.local
 acceptance/.bundle
 acceptance/junit
 acceptance/log
+acceptance/tmp
