@@ -13,7 +13,7 @@ group :development, :test do
   gem 'mocha', "~> 0.10.5", :require => false
   gem 'json', "~> 1.7", :require => false, :platforms => :ruby
   gem "yarjuf", "~> 1.0"
-  gem 'dali', "~> 2.7.4"
+  gem 'dalli', "~> 2.7.4"
 end
 
 
