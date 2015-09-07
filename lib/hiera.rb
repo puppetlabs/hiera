@@ -11,6 +11,7 @@ class Hiera
   require "hiera/noop_logger"
   require "hiera/fallback_logger"
   require "hiera/filecache"
+  require "hiera/memcache"
 
   class << self
     attr_reader :logger
