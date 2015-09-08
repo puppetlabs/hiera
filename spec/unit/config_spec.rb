@@ -34,23 +34,23 @@ class Hiera
         File.expects(:exist?).with("/nonexisting").returns(true)
         YAML.expects(:load_file).with("/nonexisting").returns(YAML.load(""))
 
-        Config.load("/nonexisting").should == default_config
+        expect(Config.load("/nonexisting")).to eq(default_config)
       end
 
       it "should use hash data as source if supplied" do
         config = Config.load({"rspec" => "test"})
-        config["rspec"].should == "test"
+        expect(config["rspec"]).to eq("test")
       end
 
       it "should merge defaults with the loaded or supplied config" do
         config = Config.load({})
-        config.should == {:backends => ["yaml"], :hierarchy => ['nodes/%{::trusted.certname}', 'common'],
-          :logger => "console", :merge_behavior=>:native}
+        expect(config).to eq({:backends => ["yaml"], :hierarchy => ['nodes/%{::trusted.certname}', 'common'],
+          :logger => "console", :merge_behavior=>:native})
       end
 
       it "should force :backends to be a flattened array" do
-        Config.load({:backends => [["foo", ["bar"]]]}).should == {:backends => ["foo", "bar"],
-          :hierarchy => ['nodes/%{::trusted.certname}', 'common'], :logger => "console", :merge_behavior=>:native}
+        expect(Config.load({:backends => [["foo", ["bar"]]]})).to eq({:backends => ["foo", "bar"],
+          :hierarchy => ['nodes/%{::trusted.certname}', 'common'], :logger => "console", :merge_behavior=>:native})
       end
 
       it "should load the supplied logger" do
@@ -112,8 +112,8 @@ class Hiera
     describe "#include?" do
       it "should correctly report inclusion" do
         Config.load({})
-        Config.include?(:foo).should == false
-        Config.include?(:logger).should == true
+        expect(Config.include?(:foo)).to eq(false)
+        expect(Config.include?(:logger)).to eq(true)
       end
     end
   end
