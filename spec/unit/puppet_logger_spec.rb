@@ -4,13 +4,13 @@ describe Hiera::Puppet_logger do
   it "is not suitable when Puppet is not defined" do
     ensure_puppet_not_defined
 
-    Hiera::Puppet_logger.suitable?.should == false
+    expect(Hiera::Puppet_logger.suitable?).to eq(false)
   end
 
   it "is suitable when Puppet is defined" do
     ensure_puppet_defined
 
-    Hiera::Puppet_logger.suitable?.should == true
+    expect(Hiera::Puppet_logger.suitable?).to eq(true)
   end
 
   after :each do
