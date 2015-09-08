@@ -9,7 +9,7 @@ end
 
 group :development, :test do
   gem 'rake', "~> 10.1.0"
-  gem 'rspec', "~> 2.14.0", :require => false
+  gem 'rspec', "~> 3.3", :require => false
   gem 'mocha', "~> 0.10.5", :require => false
   gem 'json', "~> 1.7", :require => false, :platforms => :ruby
   gem "yarjuf", "~> 1.0"
