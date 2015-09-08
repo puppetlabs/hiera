@@ -4,19 +4,19 @@ describe Hiera::Util do
   describe 'Hiera::Util.posix?' do
     it 'should return true on posix systems' do
       Etc.expects(:getpwuid).with(0).returns(true)
-      expect(Hiera::Util.posix?).to be_true
+      expect(Hiera::Util.posix?).to be_truthy
     end
 
     it 'should return false on non posix systems' do
       Etc.expects(:getpwuid).with(0).returns(nil)
-      expect(Hiera::Util.posix?).to be_false
+      expect(Hiera::Util.posix?).to be_falsey
     end
   end
 
   describe 'Hiera::Util.microsoft_windows?' do
     it 'should return false on posix systems' do
       Hiera::Util.expects(:file_alt_separator).returns(nil)
-      expect(Hiera::Util.microsoft_windows?).to be_false
+      expect(Hiera::Util.microsoft_windows?).to be_falsey
     end
   end
 
