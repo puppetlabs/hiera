@@ -18,7 +18,7 @@ describe "Hiera" do
 
       Hiera.logger = "no_such_logger"
 
-      Hiera.logger.should be Hiera::Console_logger
+      expect(Hiera.logger).to be Hiera::Console_logger
     end
 
     it "falls back to the Console logger when the logger class could not be found" do
@@ -27,7 +27,7 @@ describe "Hiera" do
 
       Hiera.logger = "no_constant"
 
-      Hiera.logger.should be Hiera::Console_logger
+      expect(Hiera.logger).to be Hiera::Console_logger
     end
   end
 

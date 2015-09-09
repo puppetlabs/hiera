@@ -35,9 +35,9 @@ class Hiera
 
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"stringval" => "string", "boolval" => true, "numericval" => 1}).times(3)
 
-          @backend.lookup("stringval", {}, nil, :priority, nil).should == "string"
-          @backend.lookup("boolval", {}, nil, :priority, nil).should == true
-          @backend.lookup("numericval", {}, nil, :priority, nil).should == 1
+          expect(@backend.lookup("stringval", {}, nil, :priority, nil)).to eq("string")
+          expect(@backend.lookup("boolval", {}, nil, :priority, nil)).to eq(true)
+          expect(@backend.lookup("numericval", {}, nil, :priority, nil)).to eq(1)
         end
 
         it "should pick data earliest source that has it for priority searches" do
@@ -49,7 +49,7 @@ class Hiera
           File.stubs(:exist?).with("/nonexisting/one.json").returns(true)
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
-          @backend.lookup("key", scope, nil, :priority, nil).should == "test_test"
+          expect(@backend.lookup("key", scope, nil, :priority, nil)).to eq("test_test")
         end
 
         it "should build an array of all data sources for array searches" do
@@ -66,7 +66,7 @@ class Hiera
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "answer"})
           @cache.expects(:read_file).with("/nonexisting/two.json", Hash).returns({"key" => "answer"})
 
-          @backend.lookup("key", {}, nil, :array, nil).should == ["answer", "answer"]
+          expect(@backend.lookup("key", {}, nil, :array, nil)).to eq(["answer", "answer"])
         end
 
         it "should parse the answer for scope variables" do
@@ -77,7 +77,7 @@ class Hiera
           File.expects(:exist?).with("/nonexisting/one.json").returns(true)
           @cache.expects(:read_file).with("/nonexisting/one.json", Hash).returns({"key" => "test_%{rspec}"})
 
-          @backend.lookup("key", {"rspec" => "test"}, nil, :priority, nil).should == "test_test"
+          expect(@backend.lookup("key", {"rspec" => "test"}, nil, :priority, nil)).to eq("test_test")
         end
       end
     end
