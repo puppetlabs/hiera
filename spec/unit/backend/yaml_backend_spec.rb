@@ -41,7 +41,7 @@ class Hiera
           Backend.expects(:datasourcefiles).with(:yaml, {}, "yaml", nil).yields(["one", "/nonexisting/one.yaml"])
           @cache.value = "---\nkey: answer"
 
-          @backend.lookup("key", {}, nil, :priority, nil).should == "answer"
+          expect(@backend.lookup("key", {}, nil, :priority, nil)).to eq("answer")
         end
 
         describe "handling unexpected YAML values" do
@@ -56,7 +56,7 @@ class Hiera
 
           it "returns nil when the YAML value is nil" do
             @cache.value = "key: ~\n"
-            @backend.lookup("key", {}, nil, :priority, nil).should be_nil
+            expect(@backend.lookup("key", {}, nil, :priority, nil)).to be_nil
           end
 
           it "throws :no_such_key when the YAML file is false" do
@@ -75,7 +75,7 @@ class Hiera
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"answer"})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>"answer"})
 
-          @backend.lookup("key", {}, nil, :array, nil).should == ["answer", "answer"]
+          expect(@backend.lookup("key", {}, nil, :array, nil)).to eq(["answer", "answer"])
         end
 
         it "should ignore empty hash of data sources for hash searches" do
@@ -84,7 +84,7 @@ class Hiera
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
 
-          @backend.lookup("key", {}, nil, :hash, nil).should == {"a" => "answer"}
+          expect(@backend.lookup("key", {}, nil, :hash, nil)).to eq({"a" => "answer"})
         end
 
         it "should build a merged hash of data sources for hash searches" do
@@ -93,7 +93,7 @@ class Hiera
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>{"a"=>"answer"}})
           @cache.expects(:read_file).with("/nonexisting/two.yaml", Hash).returns({"key"=>{"b"=>"answer", "a"=>"wrong"}})
 
-          @backend.lookup("key", {}, nil, :hash, nil).should == {"a" => "answer", "b" => "answer"}
+          expect(@backend.lookup("key", {}, nil, :hash, nil)).to eq({"a" => "answer", "b" => "answer"})
         end
 
         it "should fail when trying to << a Hash" do
@@ -119,7 +119,7 @@ class Hiera
 
           @cache.expects(:read_file).with("/nonexisting/one.yaml", Hash).returns({"key"=>"test_%{rspec}"})
 
-          @backend.lookup("key", {"rspec" => "test"}, nil, :priority, nil).should == "test_test"
+          expect(@backend.lookup("key", {"rspec" => "test"}, nil, :priority, nil)).to eq("test_test")
         end
 
         it "should retain datatypes found in yaml files" do
@@ -128,9 +128,9 @@ class Hiera
 
           @cache.value = "---\nstringval: 'string'\nboolval: true\nnumericval: 1"
 
-          @backend.lookup("stringval", {}, nil, :priority, nil).should == "string"
-          @backend.lookup("boolval", {}, nil, :priority, nil).should == true
-          @backend.lookup("numericval", {}, nil, :priority, nil).should == 1
+          expect(@backend.lookup("stringval", {}, nil, :priority, nil)).to eq("string")
+          expect(@backend.lookup("boolval", {}, nil, :priority, nil)).to eq(true)
+          expect(@backend.lookup("numericval", {}, nil, :priority, nil)).to eq(1)
         end
       end
     end

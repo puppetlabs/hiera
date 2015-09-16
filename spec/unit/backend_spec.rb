@@ -17,18 +17,18 @@ class Hiera
 
         dir = Backend.datadir(:rspec, { "interpolate" => "my_data" })
 
-        dir.should == "/tmp/my_data"
+        expect(dir).to eq("/tmp/my_data")
       end
 
       it "defaults to a directory in var" do
         Config.load({})
-        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
+        expect(Backend.datadir(:rspec, { "environment" => "foo" })).to eq(Hiera::Util.var_dir % { :environment => "foo"})
 
         Config.load({:rspec => nil})
-        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
+        expect(Backend.datadir(:rspec, { "environment" => "foo" })).to eq(Hiera::Util.var_dir % { :environment => "foo"})
 
         Config.load({:rspec => {}})
-        Backend.datadir(:rspec, { "environment" => "foo" }).should == Hiera::Util.var_dir % { :environment => "foo"}
+        expect(Backend.datadir(:rspec, { "environment" => "foo" })).to eq(Hiera::Util.var_dir % { :environment => "foo"})
       end
 
       it "fails when the datadir is an array" do
@@ -44,13 +44,13 @@ class Hiera
       it "translates a non-existant datafile into nil" do
         Hiera.expects(:debug).with("Cannot find datafile /nonexisting/test.yaml, skipping")
         Backend.expects(:datadir).returns("/nonexisting")
-        Backend.datafile(:yaml, {}, "test", "yaml").should == nil
+        expect(Backend.datafile(:yaml, {}, "test", "yaml")).to eq(nil)
       end
 
       it "concatenates the datadir and datafile and format to produce the full datafile filename" do
         Backend.expects(:datadir).returns("/nonexisting")
         File.expects(:exist?).with("/nonexisting/test.yaml").returns(true)
-        Backend.datafile(:yaml, {}, "test", "yaml").should == "/nonexisting/test.yaml"
+        expect(Backend.datafile(:yaml, {}, "test", "yaml")).to eq("/nonexisting/test.yaml")
       end
     end
 
@@ -58,17 +58,17 @@ class Hiera
       it "iterates over the datasources in the order of the given hierarchy" do
         expected = ["one", "two"]
         Backend.datasources({}, nil, ["one", "two"]) do |backend|
-          backend.should == expected.delete_at(0)
+          expect(backend).to eq(expected.delete_at(0))
         end
 
-        expected.empty?.should == true
+        expect(expected.empty?).to eq(true)
       end
 
       it "uses the configured hierarchy no specific hierarchy is given" do
         Config.load(:hierarchy => "test")
 
         Backend.datasources({}) do |backend|
-          backend.should == "test"
+          expect(backend).to eq("test")
         end
       end
 
@@ -76,7 +76,7 @@ class Hiera
         Config.load({})
 
         Backend.datasources({}) do |backend|
-          backend.should == "common"
+          expect(backend).to eq("common")
         end
       end
 
@@ -85,10 +85,10 @@ class Hiera
 
         expected = ["override", "common"]
         Backend.datasources({}, "override") do |backend|
-          backend.should == expected.delete_at(0)
+          expect(backend).to eq(expected.delete_at(0))
         end
 
-        expected.empty?.should == true
+        expect(expected.empty?).to eq(true)
       end
 
       it "parses the names of the hierarchy levels using the given scope" do
@@ -102,29 +102,29 @@ class Hiera
 
         expected = ["common"]
         Backend.datasources({}, "%{rspec}") do |backend|
-          backend.should == expected.delete_at(0)
+          expect(backend).to eq(expected.delete_at(0))
         end
 
-        expected.empty?.should == true
+        expect(expected.empty?).to eq(true)
       end
     end
 
     describe "#parse_string" do
       it "passes nil through untouched" do
-        Backend.parse_string(nil, {}).should == nil
+        expect(Backend.parse_string(nil, {})).to eq(nil)
       end
 
       it "does not modify the input data" do
         data = "%{value}"
         Backend.parse_string(data, { "value" => "replacement" })
 
-        data.should == "%{value}"
+        expect(data).to eq("%{value}")
       end
 
       it "passes non-string data through untouched" do
         input = { "not a" => "string" }
 
-        Backend.parse_string(input, {}).should == input
+        expect(Backend.parse_string(input, {})).to eq(input)
       end
 
       @scope_interpolation_tests = {
@@ -138,18 +138,18 @@ class Hiera
         it "replaces interpolations with data looked up in the scope" do
           scope = {"part1" => "value of part1", "part2" => "value of part2"}
 
-          Backend.parse_string(input, scope).should == expected
+          expect(Backend.parse_string(input, scope)).to eq(expected)
         end
       end
 
       it "replaces interpolations with data looked up in extra_data when scope does not contain the value" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {}, {"rspec" => "extra"}).should == "test_extra_test"
+        expect(Backend.parse_string(input, {}, {"rspec" => "extra"})).to eq("test_extra_test")
       end
 
       it "prefers data from scope over data from extra_data" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"}).should == "test_test_test"
+        expect(Backend.parse_string(input, {"rspec" => "test"}, {"rspec" => "fail"})).to eq("test_test_test")
       end
 
       @interprets_nil_in_scope_tests = {
@@ -159,7 +159,7 @@ class Hiera
 
       @interprets_nil_in_scope_tests.each do |input, expected|
         it "interprets nil in scope as a non-value" do
-          Backend.parse_string(input, {"rspec" => nil}).should == expected
+          expect(Backend.parse_string(input, {"rspec" => nil})).to eq(expected)
         end
       end
 
@@ -171,18 +171,18 @@ class Hiera
       @interprets_false_in_scope_tests.each do |input, expected|
         it "interprets false in scope as a real value" do
           input = "test_%{scope('rspec')}_test"
-          Backend.parse_string(input, {"rspec" => false}).should == expected
+          expect(Backend.parse_string(input, {"rspec" => false})).to eq(expected)
         end
       end
 
       it "interprets false in extra_data as a real value" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {}, {"rspec" => false}).should == "test_false_test"
+        expect(Backend.parse_string(input, {}, {"rspec" => false})).to eq("test_false_test")
       end
 
       it "interprets nil in extra_data as a non-value" do
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, {}, {"rspec" => nil}).should == "test__test"
+        expect(Backend.parse_string(input, {}, {"rspec" => nil})).to eq("test__test")
       end
 
       @interprets_undefined_in_scope_tests = {
@@ -197,7 +197,7 @@ class Hiera
 
       @exact_lookup_tests.each do |input, expected|
         it "looks up the interpolated value exactly as it appears in the input" do
-          Backend.parse_string(input, {"::rspec::data" => "value"}).should == expected
+          expect(Backend.parse_string(input, {"::rspec::data" => "value"})).to eq(expected)
         end
       end
 
@@ -207,7 +207,7 @@ class Hiera
       }
       @surrounding_whitespace_tests.each do |input, expected|
         it "does not remove any surrounding whitespace when parsing the key to lookup" do
-          Backend.parse_string(input, {"\trspec::data " => "value"}).should == expected
+          expect(Backend.parse_string(input, {"\trspec::data " => "value"})).to eq(expected)
         end
       end
 
@@ -218,7 +218,7 @@ class Hiera
 
       @leading_double_colon_tests.each do |input, expected|
         it "does not try removing leading :: when a full lookup fails (#17434)" do
-          Backend.parse_string(input, {"rspec::data" => "value"}).should == expected
+          expect(Backend.parse_string(input, {"rspec::data" => "value"})).to eq(expected)
         end
       end
 
@@ -228,19 +228,19 @@ class Hiera
       }
       @double_colon_key_tests.each do |input, expected|
         it "does not try removing leading sections separated by :: when a full lookup fails (#17434)" do
-          Backend.parse_string(input, {"data" => "value"}).should == expected
+          expect(Backend.parse_string(input, {"data" => "value"})).to eq(expected)
         end
       end
 
       it "does not try removing unknown, preceeding characters when looking up values" do
         input = "test_%{$var}_test"
-        Backend.parse_string(input, {"$var" => "value"}).should == "test_value_test"
+        expect(Backend.parse_string(input, {"$var" => "value"})).to eq("test_value_test")
       end
 
       it "looks up recursively" do
         scope = {"rspec" => "%{first}", "first" => "%{last}", "last" => "final"}
         input = "test_%{rspec}_test"
-        Backend.parse_string(input, scope).should == "test_final_test"
+        expect(Backend.parse_string(input, scope)).to eq("test_final_test")
       end
 
       it "raises an error if the recursive lookup results in an infinite loop" do
@@ -254,7 +254,7 @@ class Hiera
       it "replaces repeated occurances of the same lookup" do
         scope = {"rspec" => "value"}
         input = "it replaces %{rspec} and %{rspec}"
-        Backend.parse_string(input, scope).should == "it replaces value and value"
+        expect(Backend.parse_string(input, scope)).to eq("it replaces value and value")
       end
 
       it "replaces hiera interpolations with data looked up in hiera" do
@@ -264,7 +264,7 @@ class Hiera
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("key1", scope, nil, :priority, instance_of(Hash)).returns("answer")
 
-        Backend.parse_string(input, scope).should == "answer"
+        expect(Backend.parse_string(input, scope)).to eq("answer")
       end
 
       it "interpolation passes the order_override back into the backend" do
@@ -275,39 +275,39 @@ class Hiera
       it "replaces literal interpolations with their argument" do
         scope = {}
         input = "%{literal('%')}{rspec::data}"
-        Backend.parse_string(input, scope).should == "%{rspec::data}"
+        expect(Backend.parse_string(input, scope)).to eq("%{rspec::data}")
       end
     end
 
     describe "#parse_answer" do
       it "interpolates values in strings" do
         input = "test_%{rspec}_test"
-        Backend.parse_answer(input, {"rspec" => "test"}).should == "test_test_test"
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq("test_test_test")
       end
 
       it "interpolates each string in an array" do
         input = ["test_%{rspec}_test", "test_%{rspec}_test", ["test_%{rspec}_test"]]
-        Backend.parse_answer(input, {"rspec" => "test"}).should == ["test_test_test", "test_test_test", ["test_test_test"]]
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq(["test_test_test", "test_test_test", ["test_test_test"]])
       end
 
       it "interpolates each string in a hash" do
         input = {"foo" => "test_%{rspec}_test", "bar" => "test_%{rspec}_test"}
-        Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq({"foo"=>"test_test_test", "bar"=>"test_test_test"})
       end
 
       it "interpolates string in hash keys" do
         input = {"%{rspec}" => "test"}
-        Backend.parse_answer(input, {"rspec" => "foo"}).should == {"foo"=>"test"}
+        expect(Backend.parse_answer(input, {"rspec" => "foo"})).to eq({"foo"=>"test"})
       end
 
       it "interpolates strings in nested hash keys" do
         input = {"topkey" => {"%{rspec}" => "test"}}
-        Backend.parse_answer(input, {"rspec" => "foo"}).should == {"topkey"=>{"foo" => "test"}}
+        expect(Backend.parse_answer(input, {"rspec" => "foo"})).to eq({"topkey"=>{"foo" => "test"}})
       end
 
       it "interpolates strings in a mixed structure of arrays and hashes" do
         input = {"foo" => "test_%{rspec}_test", "bar" => ["test_%{rspec}_test", "test_%{rspec}_test"]}
-        Backend.parse_answer(input, {"rspec" => "test"}).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq({"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]})
       end
 
       it "interpolates hiera lookups values in strings" do
@@ -316,7 +316,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("test")
-        Backend.parse_answer(input, scope).should == "test_test_test"
+        expect(Backend.parse_answer(input, scope)).to eq("test_test_test")
       end
 
       it "interpolates alias lookups with non-string types" do
@@ -325,7 +325,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns(['test', 'test'])
-        Backend.parse_answer(input, scope).should == ['test', 'test']
+        expect(Backend.parse_answer(input, scope)).to eq(['test', 'test'])
       end
 
       it 'fails if alias interpolation is attempted in a string context with a prefix' do
@@ -335,7 +335,7 @@ class Hiera
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns(['test', 'test'])
         expect do
-          Backend.parse_answer(input, scope).should == ['test', 'test']
+          expect(Backend.parse_answer(input, scope)).to eq(['test', 'test'])
         end.to raise_error(Hiera::InterpolationInvalidValue, 'Cannot call alias in the string context')
       end
 
@@ -346,7 +346,7 @@ class Hiera
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns(['test', 'test'])
         expect do
-          Backend.parse_answer(input, scope).should == ['test', 'test']
+          expect(Backend.parse_answer(input, scope)).to eq(['test', 'test'])
         end.to raise_error(Hiera::InterpolationInvalidValue, 'Cannot call alias in the string context')
       end
 
@@ -356,7 +356,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("test")
-        Backend.parse_answer(input, scope).should == ["test_test_test", "test_test_test", ["test_test_test"]]
+        expect(Backend.parse_answer(input, scope)).to eq(["test_test_test", "test_test_test", ["test_test_test"]])
       end
 
       it "interpolates hiera lookups in each string in a hash" do
@@ -365,7 +365,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("test")
-        Backend.parse_answer(input, scope).should == {"foo"=>"test_test_test", "bar"=>"test_test_test"}
+        expect(Backend.parse_answer(input, scope)).to eq({"foo"=>"test_test_test", "bar"=>"test_test_test"})
       end
 
       it "interpolates hiera lookups in string in hash keys" do
@@ -374,7 +374,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("foo")
-        Backend.parse_answer(input, scope).should == {"foo"=>"test"}
+        expect(Backend.parse_answer(input, scope)).to eq({"foo"=>"test"})
       end
 
       it "interpolates hiera lookups in strings in nested hash keys" do
@@ -383,7 +383,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("foo")
-        Backend.parse_answer(input, scope).should == {"topkey"=>{"foo" => "test"}}
+        expect(Backend.parse_answer(input, scope)).to eq({"topkey"=>{"foo" => "test"}})
       end
 
       it "interpolates hiera lookups in strings in a mixed structure of arrays and hashes" do
@@ -392,7 +392,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("test")
-        Backend.parse_answer(input, scope).should == {"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]}
+        expect(Backend.parse_answer(input, scope)).to eq({"foo"=>"test_test_test", "bar"=>["test_test_test", "test_test_test"]})
       end
 
       it "interpolates hiera lookups and scope lookups in the same string" do
@@ -401,7 +401,7 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("hiera_rspec")
-        Backend.parse_answer(input, scope).should == {"foo"=>"test_hiera_rspec_test", "bar"=>"test_scope_rspec_test"}
+        expect(Backend.parse_answer(input, scope)).to eq({"foo"=>"test_hiera_rspec_test", "bar"=>"test_scope_rspec_test"})
       end
 
       it "interpolates hiera and scope lookups with the same lookup query in a single string" do
@@ -410,43 +410,43 @@ class Hiera
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.stubs(:lookup).with("rspec", scope, nil, :priority, instance_of(Hash)).returns("hiera_rspec")
-        Backend.parse_answer(input, scope).should == "test_hiera_rspec_test_scope_rspec"
+        expect(Backend.parse_answer(input, scope)).to eq("test_hiera_rspec_test_scope_rspec")
       end
 
       it "passes integers unchanged" do
         input = 1
-        Backend.parse_answer(input, {"rspec" => "test"}).should == 1
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq(1)
       end
 
       it "passes floats unchanged" do
         input = 0.233
-        Backend.parse_answer(input, {"rspec" => "test"}).should == 0.233
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq(0.233)
       end
 
       it "passes the boolean true unchanged" do
         input = true
-        Backend.parse_answer(input, {"rspec" => "test"}).should == true
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq(true)
       end
 
       it "passes the boolean false unchanged" do
         input = false
-        Backend.parse_answer(input, {"rspec" => "test"}).should == false
+        expect(Backend.parse_answer(input, {"rspec" => "test"})).to eq(false)
       end
 
       it "interpolates lookups using single or double quotes" do
         input =  "test_%{scope(\"rspec\")}_test_%{scope('rspec')}"
         scope = {"rspec" => "scope_rspec"}
-        Backend.parse_answer(input, scope).should == "test_scope_rspec_test_scope_rspec"
+        expect(Backend.parse_answer(input, scope)).to eq("test_scope_rspec_test_scope_rspec")
       end
     end
 
     describe "#resolve_answer" do
       it "flattens and removes duplicate values from arrays during an array lookup" do
-        Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array).should == ["foo", "bar"]
+        expect(Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :array)).to eq(["foo", "bar"])
       end
 
       it "returns the data unchanged during a priority lookup" do
-        Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :priority).should == ["foo", ["foo", "foo"], "bar"]
+        expect(Backend.resolve_answer(["foo", ["foo", "foo"], "bar"], :priority)).to eq(["foo", ["foo", "foo"], "bar"])
       end
     end
 
@@ -473,7 +473,7 @@ class Hiera
 
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, instance_of(Hash)).returns("answer")
 
-        Backend.lookup("key", "default", {}, nil, nil).should == "answer"
+        expect(Backend.lookup("key", "default", {}, nil, nil)).to eq("answer")
       end
 
       it "retains the datatypes as returned by the backend" do
@@ -484,9 +484,9 @@ class Hiera
         Backend::Yaml_backend.any_instance.expects(:lookup).with("boolval", {}, nil, nil, instance_of(Hash)).returns(false)
         Backend::Yaml_backend.any_instance.expects(:lookup).with("numericval", {}, nil, nil, instance_of(Hash)).returns(1)
 
-        Backend.lookup("stringval", "default", {}, nil, nil).should == "string"
-        Backend.lookup("boolval", "default", {}, nil, nil).should == false
-        Backend.lookup("numericval", "default", {}, nil, nil).should == 1
+        expect(Backend.lookup("stringval", "default", {}, nil, nil)).to eq("string")
+        expect(Backend.lookup("boolval", "default", {}, nil, nil)).to eq(false)
+        expect(Backend.lookup("numericval", "default", {}, nil, nil)).to eq(1)
       end
 
       it "calls to all backends till an answer is found" do
@@ -498,7 +498,7 @@ class Hiera
         #Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil)
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "answer"
+        expect(Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil)).to eq("answer")
       end
 
       it "calls to all backends till an answer is found when doing array lookups" do
@@ -509,7 +509,7 @@ class Hiera
         Backend.instance_variable_set("@backends", {"rspec" => backend})
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
-        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :array).should == ["answer"]
+        expect(Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :array)).to eq(["answer"])
       end
 
       it "calls to all backends till an answer is found when doing hash lookups" do
@@ -521,7 +521,7 @@ class Hiera
         Backend.instance_variable_set("@backends", {"rspec" => backend})
         Backend.expects(:constants).returns(["Yaml_backend", "Rspec_backend"]).twice
 
-        Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash).should == thehash
+        expect(Backend.lookup("key", "notfound", {"rspec" => "test"}, nil, :hash)).to eq(thehash)
       end
 
       it "builds a merged hash from all backends for hash searches" do
@@ -532,7 +532,7 @@ class Hiera
         Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
         Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
 
-        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :hash).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.lookup("key", {}, {"rspec" => "test"}, nil, :hash)).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "builds an array from all backends for array searches" do
@@ -543,7 +543,7 @@ class Hiera
         Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
         Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
 
-        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :array).should == ["a", "b", "c", "d"]
+        expect(Backend.lookup("key", {}, {"rspec" => "test"}, nil, :array)).to eq(["a", "b", "c", "d"])
       end
 
       it "uses the earliest backend result for priority searches" do
@@ -556,7 +556,7 @@ class Hiera
         Backend.instance_variable_set("@backends", {"first" => backend1, "second" => backend2})
         Backend.stubs(:constants).returns(["First_backend", "Second_backend"])
 
-        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
+        expect(Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority)).to eq(["a", "b"])
       end
 
       it "parses the answers based on resolution_type" do
@@ -566,7 +566,7 @@ class Hiera
         Backend.expects(:resolve_answer).with("test_test", :priority).returns("parsed")
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, :priority, instance_of(Hash)).returns("test_test")
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority).should == "parsed"
+        expect(Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, :priority)).to eq("parsed")
       end
 
       it "returns the default with variables parsed if nothing is found" do
@@ -575,7 +575,7 @@ class Hiera
 
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, instance_of(Hash)).throws(:no_such_key)
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == "test_test"
+        expect(Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil)).to eq("test_test")
       end
 
       it "returns nil instead of the default when key is found with a nil value" do
@@ -584,42 +584,42 @@ class Hiera
 
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {"rspec" => "test"}, nil, nil, instance_of(Hash)).returns(nil)
 
-        Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil).should == nil
+        expect(Backend.lookup("key", "test_%{rspec}", {"rspec" => "test"}, nil, nil)).to eq(nil)
       end
 
       it "keeps string default data as a string" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, nil, instance_of(Hash)).throws(:no_such_key)
-        Backend.lookup("key", "test", {}, nil, nil).should == "test"
+        expect(Backend.lookup("key", "test", {}, nil, nil)).to eq("test")
       end
 
       it "keeps array default data as an array" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :array, instance_of(Hash)).throws(:no_such_key)
-        Backend.lookup("key", ["test"], {}, nil, :array).should == ["test"]
+        expect(Backend.lookup("key", ["test"], {}, nil, :array)).to eq(["test"])
       end
 
       it "keeps hash default data as a hash" do
         Config.load({:yaml => {:datadir => "/tmp"}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with("key", {}, nil, :hash, instance_of(Hash)).throws(:no_such_key)
-        Backend.lookup("key", {"test" => "value"}, {}, nil, :hash).should == {"test" => "value"}
+        expect(Backend.lookup("key", {"test" => "value"}, {}, nil, :hash)).to eq({"test" => "value"})
       end
 
       it 'can use qualified key to lookup value in hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns({ 'test' => 'value'})
-        Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'value'
+        expect(Backend.lookup('key.test', 'dflt', {}, nil, nil)).to eq('value')
       end
 
       it 'can use qualified key to lookup value in array' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns([ 'first', 'second'])
-        Backend.lookup('key.1', 'dflt', {}, nil, nil).should == 'second'
+        expect(Backend.lookup('key.1', 'dflt', {}, nil, nil)).to eq('second')
       end
 
       it 'will fail when qualified key is partially found but not expected hash' do
@@ -647,7 +647,7 @@ class Hiera
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, :priority, instance_of(Hash)).returns({ 'test' => 'value'})
-        Backend.lookup('key.test', 'dflt', {}, nil, :priority).should == 'value'
+        expect(Backend.lookup('key.test', 'dflt', {}, nil, :priority)).to eq('value')
       end
 
       it 'will fail when qualified key is partially found but not expected array' do
@@ -663,14 +663,14 @@ class Hiera
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns(nil)
-        Backend.lookup('key.test', 'dflt', {}, nil, nil).should == 'dflt'
+        expect(Backend.lookup('key.test', 'dflt', {}, nil, nil)).to eq('dflt')
       end
 
       it 'will not fail when qualified key is array index out of bounds' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns(['value 1', 'value 2'])
-        Backend.lookup('key.33', 'dflt', {}, nil, nil).should == 'dflt'
+        expect(Backend.lookup('key.33', 'dflt', {}, nil, nil)).to eq('dflt')
       end
 
       it 'can use qualified key in interpolation to lookup value in hash' do
@@ -678,7 +678,7 @@ class Hiera
         Config.load_backends
         Hiera::Backend.stubs(:datasourcefiles).yields('foo', 'bar')
         Hiera::Filecache.any_instance.expects(:read_file).at_most(2).returns({'key' => '%{hiera(\'some.subkey\')}', 'some' => { 'subkey' => 'value' }})
-        Backend.lookup('key', 'dflt', {}, nil, nil).should == 'value'
+        expect(Backend.lookup('key', 'dflt', {}, nil, nil)).to eq('value')
       end
 
       it 'can use qualified key in interpolated default and scope' do
@@ -686,7 +686,7 @@ class Hiera
         Config.load_backends
         scope = { 'some' => { 'test' => 'value'}}
         Backend::Yaml_backend.any_instance.expects(:lookup).with('key', scope, nil, nil, instance_of(Hash))
-        Backend.lookup('key.notfound', '%{some.test}', scope, nil, nil).should == 'value'
+        expect(Backend.lookup('key.notfound', '%{some.test}', scope, nil, nil)).to eq('value')
       end
 
       it "handles older backend with 4 argument lookup" do
@@ -694,7 +694,7 @@ class Hiera
         Config.instance_variable_set("@config", {:backends => ["Backend1x"]})
 
         Hiera.expects(:debug).at_least_once.with(regexp_matches /Using Hiera 1.x backend/)
-        Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority).should == ["a", "b"]
+        expect(Backend.lookup("key", {}, {"rspec" => "test"}, nil, :priority)).to eq(["a", "b"])
       end
     end
 
@@ -708,36 +708,36 @@ class Hiera
       it "uses Hash.merge when configured with :merge_behavior => :native" do
         Config.load({:merge_behavior => :native})
         Hash.any_instance.expects(:merge).with({"b" => "bnswer"}).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "uses deep_merge! when configured with :merge_behavior => :deeper" do
         Config.load({:merge_behavior => :deeper})
         Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "uses deep_merge when configured with :merge_behavior => :deep" do
         Config.load({:merge_behavior => :deep})
         Hash.any_instance.expects('deep_merge').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "disregards configuration when 'merge' parameter is given as a Hash" do
         Config.load({:merge_behavior => :deep})
         Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper' }).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper' })).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "propagates deep merge options when given Hash 'merge' parameter" do
         Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, { :knockout_prefix => '-' }).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper', :knockout_prefix => '-'}).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}, {:behavior => 'deeper', :knockout_prefix => '-'})).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
       it "passes Config[:deep_merge_options] into calls to deep_merge" do
         Config.load({:merge_behavior => :deep, :deep_merge_options => { :knockout_prefix => '-' } })
         Hash.any_instance.expects('deep_merge').with({"b" => "bnswer"}, {:knockout_prefix => '-'}).returns({"a" => "answer", "b" => "bnswer"})
-        Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"}).should == {"a" => "answer", "b" => "bnswer"}
+        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
       end
     end
   end
