@@ -19,7 +19,7 @@ class Hiera
           file = File.join(dir, "testing")
           write_file(file, "my data")
 
-          @cache.read(file).should == "my data"
+          expect(@cache.read(file)).to eq("my data")
         end
       end
 
@@ -27,10 +27,10 @@ class Hiera
         Dir.mktmpdir do |dir|
           file = File.join(dir, "testing")
           write_file(file, "my data")
-          @cache.read(file).should == "my data"
+          expect(@cache.read(file)).to eq("my data")
 
           write_file(file, "changed data")
-          @cache.read(file).should == "changed data"
+          expect(@cache.read(file)).to eq("changed data")
         end
       end
 
@@ -43,7 +43,7 @@ class Hiera
             "a string"
           end
 
-          data.should == { :testing => "hash" }
+          expect(data).to eq({ :testing => "hash" })
         end
       end
 
@@ -56,7 +56,7 @@ class Hiera
             raise ArgumentError, "testing error"
           end
 
-          data.should == { :testing => "hash" }
+          expect(data).to eq({ :testing => "hash" })
         end
       end
 
@@ -80,7 +80,7 @@ class Hiera
           file = File.join(dir, "testing")
           write_file(file, "my data")
 
-          @cache.read_file(file).should == "my data"
+          expect(@cache.read_file(file)).to eq("my data")
         end
       end
 
@@ -88,10 +88,10 @@ class Hiera
         Dir.mktmpdir do |dir|
           file = File.join(dir, "testing")
           write_file(file, "my data")
-          @cache.read_file(file).should == "my data"
+          expect(@cache.read_file(file)).to eq("my data")
 
           write_file(file, "changed data")
-          @cache.read_file(file).should == "changed data"
+          expect(@cache.read_file(file)).to eq("changed data")
         end
       end
 
@@ -113,9 +113,9 @@ class Hiera
           file = File.join(dir, "testing")
           write_file(file, "my data")
 
-          @cache.read_file(file, Hash) do |data|
+          expect(@cache.read_file(file, Hash) do |data|
             { :data => data }
-          end.should == { :data => "my data" }
+          end).to eq({ :data => "my data" })
         end
       end
 

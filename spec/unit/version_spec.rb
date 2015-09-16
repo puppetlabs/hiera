@@ -19,11 +19,11 @@ describe "Hiera.version Public API" do
     end
 
     it "is Hiera::VERSION" do
-      subject.version.should == Hiera::VERSION
+      expect(subject.version).to eq(Hiera::VERSION)
     end
     it "respects the version= setter" do
       subject.version = '1.2.3'
-      subject.version.should == '1.2.3'
+      expect(subject.version).to eq('1.2.3')
     end
   end
 
@@ -34,11 +34,11 @@ describe "Hiera.version Public API" do
         pathname.basename.to_s == "VERSION"
       end.returns('1.2.1-9-g9fda440')
 
-      subject.version.should == '1.2.1-9-g9fda440'
+      expect(subject.version).to eq('1.2.1-9-g9fda440')
     end
     it "respects the version= setter" do
       subject.version = '1.2.3'
-      subject.version.should == '1.2.3'
+      expect(subject.version).to eq('1.2.3')
     end
   end
 end
