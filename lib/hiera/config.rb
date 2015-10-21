@@ -65,7 +65,7 @@ class Hiera::Config
     #
     # @return [Object] return value of {YAML.load_file}
     def yaml_load_file(source)
-      if RUBY_VERSION.between("1.9.3","2.0.9")
+      if RUBY_VERSION  >= "1.9.3" and RUBY_VERSION < "2.1.0"
         YAML::ENGINE.yamler = 'syck'
       end
       YAML.load_file(source)
