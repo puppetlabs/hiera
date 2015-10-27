@@ -263,8 +263,14 @@ class Hiera
             backend = (@backends[backend] ||= find_backend(backend_constant))
             found_in_backend = false
             new_answer = catch(:no_such_key) do
-              value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
-              value = qualified_lookup(subsegments, value) unless subsegments.nil?
+              if subsegments.nil? 
+                value = backend.lookup(key, scope, order_override, resolution_type, context)
+              elsif backend.respond_to?(:lookup_with_segments)
+                value = backend.lookup_with_segments(segments, scope, order_override, resolution_type, context)
+              else
+                value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
+                value = qualified_lookup(subsegments, value) unless subsegments.nil?
+              end
               found_in_backend = true
               value
             end
