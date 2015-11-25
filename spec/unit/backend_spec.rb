@@ -723,18 +723,6 @@ class Hiera
         expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
       end
 
-      it "uses deeper_merge! when configured with :merge_behavior => :deeper_compat" do
-        Config.load({:merge_behavior => :deeper_compat})
-        Hash.any_instance.expects('deeper_merge!').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
-        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
-      end
-
-      it "uses deeper_merge when configured with :merge_behavior => :deep_compat" do
-        Config.load({:merge_behavior => :deep_compat})
-        Hash.any_instance.expects('deeper_merge').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})
-        expect(Backend.merge_answer({"a" => "answer"},{"b" => "bnswer"})).to eq({"a" => "answer", "b" => "bnswer"})
-      end
-
       it "disregards configuration when 'merge' parameter is given as a Hash" do
         Config.load({:merge_behavior => :deep})
         Hash.any_instance.expects('deep_merge!').with({"b" => "bnswer"}, {}).returns({"a" => "answer", "b" => "bnswer"})

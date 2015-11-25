@@ -183,16 +183,13 @@ class Hiera
       # Merges two hashes answers with the given or configured merge behavior. Behavior can be given
       # by passing _resolution_type_ as a Hash
       #
-      #  :merge_behavior: {:native|:deep|:deeper|:deep_compat|:deeper_compat}
+      #  :merge_behavior: {:native|:deep|:deeper}
       #
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/danielsdeleo/deep_merge)
-      # If you also include active support you need a compatibility mode from [deep_merge](https://github.com/danielsdeleo/deep_merge#using-deep_merge-in-rails)
       #
-      #  :native        => Native Hash.merge
-      #  :deep          => Use Hash.deep_merge
-      #  :deeper        => Use Hash.deep_merge!
-      #  :deep_compat   => Use Hash.deeper_merge
-      #  :deeper_compat => Use Hash.deeper_merge!
+      #  :native => Native Hash.merge
+      #  :deep   => Use Hash.deep_merge
+      #  :deeper => Use Hash.deep_merge!
       #
       # @param left [Hash] left side of the merge
       # @param right [Hash] right side of the merge
@@ -210,10 +207,6 @@ class Hiera
           end
 
         case behavior
-        when :deeper_compat,'deeper_compat'
-          left.deeper_merge!(right, options)
-        when :deep_compat,'deep_compat'
-          left.deeper_merge(right, options)
         when :deeper,'deeper'
           left.deep_merge!(right, options)
         when :deep,'deep'
