@@ -2,7 +2,7 @@ require 'hiera/util'
 require 'hiera/interpolate'
 
 begin
-  require 'deep_merge'
+  require 'deep_merge/rails_compat'
 rescue LoadError
 end
 
@@ -186,10 +186,11 @@ class Hiera
       #  :merge_behavior: {:native|:deep|:deeper}
       #
       # Deep merge options use the Hash utility function provided by [deep_merge](https://github.com/danielsdeleo/deep_merge)
+      # It uses the compatibility mode [deep_merge](https://github.com/danielsdeleo/deep_merge#using-deep_merge-in-rails)
       #
       #  :native => Native Hash.merge
-      #  :deep   => Use Hash.deep_merge
-      #  :deeper => Use Hash.deep_merge!
+      #  :deep   => Use Hash.deeper_merge
+      #  :deeper => Use Hash.deeper_merge!
       #
       # @param left [Hash] left side of the merge
       # @param right [Hash] right side of the merge
@@ -208,9 +209,9 @@ class Hiera
 
         case behavior
         when :deeper,'deeper'
-          left.deep_merge!(right, options)
+          left.deeper_merge!(right, options)
         when :deep,'deep'
-          left.deep_merge(right, options)
+          left.deeper_merge(right, options)
         else # Native and undefined
           left.merge(right)
         end
