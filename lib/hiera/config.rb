@@ -53,6 +53,7 @@ class Hiera::Config
       when :deep,'deep',:deeper,'deeper'
         begin
           require "deep_merge"
+          require "deep_merge/rails_compat"
         rescue LoadError
           raise Hiera::Error, "Must have 'deep_merge' gem installed for the configured merge_behavior."
         end
