@@ -41,8 +41,7 @@ class Hiera
           raise(Hiera::InvalidConfigurationError,
                 "datadir for #{backend} cannot be an array")
         end
-
-        parse_string(dir, scope)
+        Hiera::Interpolate.interpolate_config(dir, scope, nil)
       end
 
       # Finds the path to a datafile based on the Backend#datadir
@@ -88,7 +87,7 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope, {}, :order_override => override)
+          source = Hiera::Interpolate.interpolate_config(source, scope, :order_override => override)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
         end
       end
