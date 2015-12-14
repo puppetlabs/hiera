@@ -21,7 +21,7 @@ class Hiera::Interpolate
 
           # Get interp method in case we are aliasing
           if data.is_a?(String) && (match = data.match(INTERPOLATION))
-            interpolate_method, key = get_interpolation_method_and_key(data)
+            interpolate_method, key = get_interpolation_method_and_key(data, new_context)
           else
             interpolate_method = nil
           end
@@ -45,7 +45,7 @@ class Hiera::Interpolate
       if data.is_a?(String) && (match = data.match(INTERPOLATION))
         interpolation_variable = match[1]
         context[:recurse_guard].check(interpolation_variable) do
-          interpolate_method, key = get_interpolation_method_and_key(data)
+          interpolate_method, key = get_interpolation_method_and_key(data, context)
           interpolated_data = send(interpolate_method, data, key, scope, extra_data, context)
 
           # Halt recursion if we encounter a literal.
@@ -59,8 +59,9 @@ class Hiera::Interpolate
     end
     private :do_interpolation
 
-    def get_interpolation_method_and_key(data)
+    def get_interpolation_method_and_key(data, context)
       if (match = data.match(METHOD_INTERPOLATION))
+        Hiera.warn('Use of interpolation methods in hiera configuration file is deprecated') if context[:is_interpolate_config]
         case match[1]
         when 'hiera' then [:hiera_interpolate, match[2]]
         when 'scope' then [:scope_interpolate, match[2]]

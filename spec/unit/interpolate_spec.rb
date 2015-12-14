@@ -10,7 +10,7 @@ describe "Hiera" do
       hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
       expect do
         hiera.lookup('foo', nil, {})
-      end.to raise_error Hiera::InterpolationLoop, 'Detected in [hiera("bar"), hiera("foo")]'
+      end.to raise_error Hiera::InterpolationLoop, 'Lookup recursion detected in [hiera("bar"), hiera("foo")]'
     end
   end
 
@@ -31,6 +31,29 @@ describe "Hiera" do
       Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
       hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
       expect(hiera.lookup('foo', nil, {}, 'alternate')).to eq('alternate')
+    end
+  end
+
+  context 'when doing interpolation in config file' do
+    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'interpolate') }
+
+    it 'should allow and resolve a correctly configured interpolation using "hiera" method' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera_iplm_hiera.yaml'))
+      expect(hiera.lookup('foo', nil, {})).to eq('Foo')
+    end
+
+    it 'should detect interpolation recursion when using "hiera" method' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera_iplm_hiera_bad.yaml'))
+      expect{ hiera.lookup('foo', nil, {}) }.to raise_error(Hiera::InterpolationLoop, "Lookup recursion detected in [hiera('role')]")
+    end
+
+    it 'should issue warning when interpolation methods are used' do
+      Hiera.expects(:warn).with('Use of interpolation methods in hiera configuration file is deprecated').at_least_once
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera_iplm_hiera.yaml'))
+      expect(hiera.lookup('foo', nil, {})).to eq('Foo')
     end
   end
 end
