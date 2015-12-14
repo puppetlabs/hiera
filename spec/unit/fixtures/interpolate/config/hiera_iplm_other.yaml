@@ -1,5 +1,0 @@
-:backends:
-  - yaml
-
-:hierarchy:
-  - "%{scope('osfamily')}"
