@@ -9,12 +9,7 @@ class Hiera::Interpolate
     INTERPOLATION = /%\{([^\}]*)\}/
     METHOD_INTERPOLATION = /%\{(scope|hiera|literal|alias)\(['"]([^"']*)["']\)\}/
 
-
-    def interpolate_config(data, scope, context)
-      interpolate(data, scope, {}, context, true)
-    end
-
-    def interpolate(data, scope, extra_data, context, is_config = false)
+    def interpolate(data, scope, extra_data, context)
       if data.is_a?(String)
         # Wrapping do_interpolation in a gsub block ensures we process
         # each interpolation site in isolation using separate recursion guards.
@@ -22,11 +17,11 @@ class Hiera::Interpolate
         new_context = context.clone
         new_context[:recurse_guard] ||= Hiera::RecursiveGuard.new
         data.gsub(INTERPOLATION) do |match|
-          interp_val = do_interpolation(match, scope, extra_data, new_context, is_config)
+          interp_val = do_interpolation(match, scope, extra_data, new_context)
 
           # Get interp method in case we are aliasing
           if data.is_a?(String) && (match = data.match(INTERPOLATION))
-            interpolate_method, key = get_interpolation_method_and_key(data, is_config)
+            interpolate_method, key = get_interpolation_method_and_key(data)
           else
             interpolate_method = nil
           end
@@ -46,17 +41,17 @@ class Hiera::Interpolate
       end
     end
 
-    def do_interpolation(data, scope, extra_data, context, is_config)
+    def do_interpolation(data, scope, extra_data, context)
       if data.is_a?(String) && (match = data.match(INTERPOLATION))
         interpolation_variable = match[1]
         context[:recurse_guard].check(interpolation_variable) do
-          interpolate_method, key = get_interpolation_method_and_key(data, is_config)
+          interpolate_method, key = get_interpolation_method_and_key(data)
           interpolated_data = send(interpolate_method, data, key, scope, extra_data, context)
 
           # Halt recursion if we encounter a literal.
           return interpolated_data if interpolate_method == :literal_interpolate
 
-          do_interpolation(interpolated_data, scope, extra_data, context, is_config)
+          do_interpolation(interpolated_data, scope, extra_data, context)
         end
       else
         data
@@ -64,19 +59,9 @@ class Hiera::Interpolate
     end
     private :do_interpolation
 
-    def get_interpolation_method_and_key(data, is_config)
+    def get_interpolation_method_and_key(data)
       if (match = data.match(METHOD_INTERPOLATION))
-        key = match[1]
-        if(is_config)
-          if key == 'hiera'
-            # Letting this pass while parsing the config is very likely to result in another attempt to parse
-            # the config and hence, endless recursion.
-            raise Hiera::InterpolationInvalidValue, "Cannot use interpolation method 'hiera' in hiera configuration file"
-          end
-          # Other interpolation methods are allowed but deprecated
-          Hiera.warn('Use of interpolation methods in hiera configuration file is deprecated')
-        end
-        case key
+        case match[1]
         when 'hiera' then [:hiera_interpolate, match[2]]
         when 'scope' then [:scope_interpolate, match[2]]
         when 'literal' then [:literal_interpolate, match[2]]

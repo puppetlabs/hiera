@@ -33,19 +33,4 @@ describe "Hiera" do
       expect(hiera.lookup('foo', nil, {}, 'alternate')).to eq('alternate')
     end
   end
-
-  context 'when doing interpolation in config file' do
-    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'interpolate') }
-
-    it 'should not permit interpolation method "hiera"' do
-      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera_iplm_hiera.yaml'))
-      expect{ hiera.lookup('foo', nil, {}) }.to raise_error(Hiera::InterpolationInvalidValue, "Cannot use interpolation method 'hiera' in hiera configuration file")
-    end
-
-    it 'should issue warning when interpolation methods are used' do
-      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera_iplm_other.yaml'))
-      Hiera.expects(:warn).with('Use of interpolation methods in hiera configuration file is deprecated').at_least_once
-      hiera.lookup('foo', nil, {})
-    end
-  end
 end
