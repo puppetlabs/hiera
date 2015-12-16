@@ -1,6 +1,9 @@
 require 'rake/clean'
 require 'pp'
 require 'yaml'
+require 'securerandom'
+require 'beaker-hostgenerator'
+
 $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
 require 'puppet/acceptance/git_utils'
 extend Puppet::Acceptance::GitUtils
@@ -90,7 +93,19 @@ EOS
   tests = ENV['TESTS'] || ENV['TEST']
   tests_opt = "--tests=#{tests}" if tests
 
-  config_opt = "--hosts=#{config}" if config
+  if config
+    config_opt = "--hosts=#{config}"
+  elsif ENV['PLATFORMS']
+    platforms = ENV['PLATFORMS']
+    cli = BeakerHostGenerator::CLI.new([platforms, '--disable-default-role'])
+    config = "tmp/#{platforms}-#{SecureRandom.uuid}.yaml"
+    config_opt = "--hosts=#{config}"
+    File.open(config, 'w') do |fh|
+      fh.print(cli.execute)
+    end
+  else
+    raise "Either CONFIG or PLATFORMS must be specified"
+  end
 
   overriding_options = ENV['OPTIONS']
 
@@ -229,7 +244,11 @@ def sha
 end
 
 def config
-  ENV['CONFIG']
+  @config || ENV['CONFIG']
+end
+
+def config=(config)
+  @config = config
 end
 
 namespace :ci do
@@ -260,7 +279,7 @@ namespace :ci do
 
     USAGE = <<-EOS
 Requires commit SHA to be put under test as environment variable: SHA='<sha>'.
-Also must set CONFIG=config/nodes/foo.yaml or include it in an options.rb for Beaker.
+Also must set CONFIG=config/nodes/foo.yaml or include it in an options.rb for Beaker, or specify PLATFORM in a form beaker-hostgenerator can consume, e.g. redhat7-64m-debian6-64a.
 You may set TESTS=path/to/test,and/more/tests.
 You may set additional Beaker OPTIONS='--more --options'
 If testing from git checkouts, you may optionally set the github fork to checkout from using FORK='other-puppet-fork'.
