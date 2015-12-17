@@ -42,7 +42,7 @@ class Hiera
                 "datadir for #{backend} cannot be an array")
         end
 
-        parse_string(dir, scope)
+        interpolate_config(dir, scope, nil)
       end
 
       # Finds the path to a datafile based on the Backend#datadir
@@ -88,7 +88,7 @@ class Hiera
         hierarchy.insert(0, override) if override
 
         hierarchy.flatten.map do |source|
-          source = parse_string(source, scope, {}, :order_override => override)
+          source = interpolate_config(source, scope, override)
           yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
         end
       end
@@ -327,6 +327,20 @@ class Hiera
         return backend.method(:lookup).arity == 4 ? Backend1xWrapper.new(backend) : backend
       end
       private :find_backend
+
+      def interpolate_config(entry, scope, override)
+        if @config_lookup_context.nil?
+          @config_lookup_context = { :is_interpolate_config => true, :order_override => override, :recurse_guard => Hiera::RecursiveGuard.new }
+          begin
+            Hiera::Interpolate.interpolate(entry, scope, {}, @config_lookup_context)
+          ensure
+            @config_lookup_context = nil
+          end
+        else
+          # Nested call (will happen when interpolate method 'hiera' is used)
+          Hiera::Interpolate.interpolate(entry, scope, {}, @config_lookup_context.merge(:order_override => override))
+        end
+      end
     end
   end
 end

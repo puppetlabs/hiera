@@ -10,7 +10,7 @@ class Hiera::RecursiveGuard
 
   def check(value, &block)
     if @seen.include?(value)
-      raise Hiera::InterpolationLoop, "Detected in [#{@seen.join(', ')}]"
+      raise Hiera::InterpolationLoop, "Lookup recursion detected in [#{@seen.join(', ')}]"
     end
     @seen.push(value)
     ret = yield

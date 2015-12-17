@@ -92,8 +92,8 @@ class Hiera
       end
 
       it "parses the names of the hierarchy levels using the given scope" do
-        Backend.expects(:parse_string).with('nodes/%{::trusted.certname}', {:rspec => :tests}, {}, {:order_override => nil})
-        Backend.expects(:parse_string).with('common', {:rspec => :tests}, {}, {:order_override => nil})
+        Backend.expects(:interpolate_config).with('nodes/%{::trusted.certname}', {:rspec => :tests}, nil)
+        Backend.expects(:interpolate_config).with('common', {:rspec => :tests}, nil)
         Backend.datasources({:rspec => :tests}) { }
       end
 
@@ -248,7 +248,7 @@ class Hiera
         input = "test_%{first}_test"
         expect do
           Backend.parse_string(input, scope)
-        end.to raise_error Hiera::InterpolationLoop, "Detected in [first, second]"
+        end.to raise_error Hiera::InterpolationLoop, "Lookup recursion detected in [first, second]"
       end
 
       it "replaces repeated occurances of the same lookup" do
