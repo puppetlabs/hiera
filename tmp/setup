@@ -1,0 +1,4 @@
+#!/bin/sh
+sudo mkdir /var/hiera
+sudo chown $USER /var/hiera
+cp tmp/hiera/* /var/hiera
