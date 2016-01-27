@@ -212,12 +212,12 @@ class Hiera
       end
 
       @leading_double_colon_tests = {
-        "test_%{::rspec::data}_test" => "test__test",
-        "test_%{scope('::rspec::data')}_test" => "test__test"
+        "test_%{::rspec::data}_test" => "test_value_test",
+        "test_%{scope('::rspec::data')}_test" => "test_value_test"
       }
 
       @leading_double_colon_tests.each do |input, expected|
-        it "does not try removing leading :: when a full lookup fails (#17434)" do
+        it "does find a matching key with leading :: when a full lookup fails (#17434)" do
           expect(Backend.parse_string(input, {"rspec::data" => "value"})).to eq(expected)
         end
       end

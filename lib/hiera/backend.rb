@@ -307,8 +307,19 @@ class Hiera
 
       def qualified_lookup(segments, hash)
         value = hash
+
         segments.each do |segment|
           throw :no_such_key if value.nil?
+          if segment =~ /^::(.+)/
+            othersegment = $1
+          else
+            othersegment = "::%s" % segment
+          end
+
+          if value.include?(othersegment)
+            value[segment] = value[othersegment]
+          end
+
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
             raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
