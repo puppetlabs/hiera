@@ -1,0 +1,10 @@
+# Docker
+HOSTS:
+  ubuntu:
+    platform: ubuntu-14.04-x64
+    image: ubuntu
+    hypervisor: docker
+    roles:
+    - agent
+CONFIG:
+  type: foss
