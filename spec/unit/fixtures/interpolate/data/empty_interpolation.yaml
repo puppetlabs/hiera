@@ -1,0 +1,6 @@
+empty_interpolation: 'clown%{}shoe'
+escaped_empty_interpolation: 'clown%%{}{shoe}s'
+only_empty_interpolation: '%{}'
+empty_namespace: '%{::}'
+whitespace1: '%{ :: }'
+whitespace2: '%{   }'
