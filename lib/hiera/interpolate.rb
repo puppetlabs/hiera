@@ -44,6 +44,13 @@ class Hiera::Interpolate
     def do_interpolation(data, scope, extra_data, context)
       if data.is_a?(String) && (match = data.match(INTERPOLATION))
         interpolation_variable = match[1]
+
+        # HI-494
+        case interpolation_variable.strip
+        when '', '::'
+          return ''
+        end
+
         context[:recurse_guard].check(interpolation_variable) do
           interpolate_method, key = get_interpolation_method_and_key(data)
           interpolated_data = send(interpolate_method, data, key, scope, extra_data, context)

@@ -24,6 +24,46 @@ describe "Hiera" do
     end
   end
 
+  context "when there are empty interpolations %{} in data" do
+    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'interpolate') }
+
+    it 'should should produce an empty string for the interpolation' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('empty_interpolation', nil, {})).to eq('clownshoe')
+    end
+
+    it 'the empty interpolation can be escaped' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('escaped_empty_interpolation', nil, {})).to eq('clown%{shoe}s')
+    end
+
+    it 'the value can consist of only an empty escape' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('only_empty_interpolation', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of an empty namespace %{::}' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('empty_namespace', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of whitespace %{ :: }' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('whitespace1', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of whitespace %{  }' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('whitespace2', nil, {})).to eq('')
+    end
+  end
+
   context "when doing interpolation with override" do
     let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'override') }
 

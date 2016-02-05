@@ -4,3 +4,4 @@
 :hierarchy:
   - recursive
   - niltest
+  - empty_%{}inter%{::}polation
