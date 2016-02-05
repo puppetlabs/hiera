@@ -46,7 +46,7 @@ class Hiera::Interpolate
         interpolation_variable = match[1]
 
         # HI-494
-        case interpolation_variable.gsub(/\s+/, '')
+        case interpolation_variable.strip
         when '', '::'
           return ''
         end
