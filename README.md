@@ -210,7 +210,7 @@ require 'hiera'
 require 'puppet'
 
 # load the facts for example.com
-scope = YAML.load_file("/opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml").values
+scope = YAML.load_file("/opt/puppetlabs/puppet/cache/yaml/facts/example.com.yaml")
 
 # create a new instance based on config file
 hiera = Hiera.new(:config => "/etc/puppetlabs/code/hiera.yaml")
