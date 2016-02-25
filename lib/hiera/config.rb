@@ -75,7 +75,7 @@ class Hiera::Config
         begin
           require "hiera/backend/#{backend.downcase}_backend"
         rescue LoadError => e
-          fail "Cannot load backend #{backend}: #{e}"
+          raise "Cannot load backend #{backend}: #{e}"
         end
       end
     end
