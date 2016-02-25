@@ -11,6 +11,15 @@ class Hiera
   end
 
   describe Backend do
+    describe "loading non existing backend" do
+      it "fails if a backend cannot be loaded" do
+        Config.load({:datadir => "/tmp/%{interpolate}", :backends => ['bogus']})
+        expect do
+          Config.load_backends
+        end.to raise_error(/Cannot load backend bogus/)
+      end
+    end
+
     describe "#datadir" do
       it "interpolates any values in the configured value" do
         Config.load({:rspec => {:datadir => "/tmp/%{interpolate}"}})
