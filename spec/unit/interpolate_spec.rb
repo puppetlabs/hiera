@@ -12,6 +12,12 @@ describe "Hiera" do
         hiera.lookup('foo', nil, {})
       end.to raise_error Hiera::InterpolationLoop, 'Lookup recursion detected in [hiera("bar"), hiera("foo")]'
     end
+
+    it 'produces a nested hash with arrays from nested aliases with hashes and arrays' do
+      Hiera::Util.expects(:var_dir).at_least_once.returns(File.join(fixtures, 'data'))
+      hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
+      expect(hiera.lookup('root', nil, {}, nil, :hash)).to eq({'a'=>{'aa'=>{'b'=>{'bb'=>['text']}}}})
+    end
   end
 
   context "when not finding value for interpolated key" do

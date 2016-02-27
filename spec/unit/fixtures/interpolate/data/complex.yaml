@@ -1,0 +1,12 @@
+---
+root:
+  a:
+    aa: "%{alias('aaa')}"
+
+aaa:
+  b:
+    bb: "%{alias('bbb')}"
+
+bbb: [ "%{alias('ccc')}" ]
+
+ccc: text
