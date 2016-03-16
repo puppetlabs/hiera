@@ -6,3 +6,5 @@
   - niltest
   - complex
   - empty_%{}inter%{::}polation
+  - dotted_keys
+  - bad_interpolation

@@ -57,8 +57,90 @@ describe "Hiera" do
     end
   end
 
-  context "when doing interpolation with override" do
-    let(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'override') }
+  context 'when there are quoted empty interpolations %{} in data' do
+    it 'should should produce an empty string for the interpolation' do
+      expect(hiera.lookup('quoted_empty_interpolation', nil, {})).to eq('clownshoe')
+    end
+
+    it 'the empty interpolation can be escaped' do
+      expect(hiera.lookup('quoted_escaped_empty_interpolation', nil, {})).to eq('clown%{shoe}s')
+    end
+
+    it 'the value can consist of only an empty escape' do
+      expect(hiera.lookup('quoted_only_empty_interpolation', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of an empty namespace %{::}' do
+      expect(hiera.lookup('quoted_empty_namespace', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of whitespace %{ :: }' do
+      expect(hiera.lookup('quoted_whitespace1', nil, {})).to eq('')
+    end
+
+    it 'the value can consist of whitespace %{  }' do
+      expect(hiera.lookup('quoted_whitespace2', nil, {})).to eq('')
+    end
+  end
+
+  context 'when using dotted keys' do
+    it 'should find an entry using a quoted interpolation' do
+      expect(hiera.lookup('"a.c.scope"', nil, {'a.b' => '(scope) a dot b'})).to eq('a dot c: (scope) a dot b')
+    end
+
+    it 'should find an entry using a quoted interpolation with method hiera' do
+      expect(hiera.lookup('"a.c.hiera"', nil, {'a.b' => '(scope) a dot b'})).to eq('a dot c: (hiera) a dot b')
+    end
+
+    it 'should find an entry using a quoted interpolation with method alias' do
+      expect(hiera.lookup('"a.c.alias"', nil, {'a.b' => '(scope) a dot b'})).to eq('(hiera) a dot b')
+    end
+
+    it 'should use a dotted key to navigate into a structure when it is not quoted' do
+      expect(hiera.lookup('"a.e.scope"', nil, {'a' => { 'd' => '(scope) a dot d is a hash entry'}})).to eq('a dot e: (scope) a dot d is a hash entry')
+    end
+
+    it 'should use a dotted key to navigate into a structure when when it is not quoted with method hiera' do
+      expect(hiera.lookup('"a.e.hiera"', nil, {'a' => { 'd' => '(scope) a dot d is a hash entry'}})).to eq('a dot e: (hiera) a dot d is a hash entry')
+    end
+
+    it 'should find an entry using using a quoted interpolation on dotted key containing numbers' do
+      expect(hiera.lookup('"x.2.scope"', nil, {'x.1' => '(scope) x dot 1'})).to eq('x dot 2: (scope) x dot 1')
+    end
+
+    it 'should find an entry using using a quoted interpolation on dotted key containing numbers using method hiera' do
+      expect(hiera.lookup('"x.2.hiera"', nil, {'x.1' => '(scope) x dot 1'})).to eq('x dot 2: (hiera) x dot 1')
+    end
+
+    it 'should not find a subkey when the dotted key is quoted' do
+      expect(hiera.lookup('"a.f.scope"', nil, {'a' => { 'f' => '(scope) a dot f is a hash entry'}})).to eq('a dot f: ')
+    end
+
+    it 'should not find a subkey when the dotted key is quoted with method hiera' do
+      expect(hiera.lookup('"a.f.hiera"', nil, {'a' => { 'f' => '(scope) a dot f is a hash entry'}})).to eq('a dot f: ')
+    end
+  end
+
+  context 'when bad interpolation expressions are encountered' do
+    it 'should produce an error when different quotes are used on either side' do
+      expect { hiera.lookup('quote_mismatch', nil, {}) }.to raise_error(/Unbalanced quotes in interpolation expression: \%\{'the\.key"\}/)
+    end
+
+    it 'should produce an error when different quotes are used on either side in a method argument' do
+      expect { hiera.lookup('quote_mismatch_arg', nil, {}) }.to raise_error(/Argument to interpolation method 'hiera' must be quoted, got ''the.key"'/)
+    end
+
+    it 'should produce an error unless a known interpolation method is used' do
+      expect { hiera.lookup('non_existing_method', nil, {}) }.to raise_error(/Invalid interpolation method 'flubber'/)
+    end
+
+    it 'should produce an error when different quotes are used on either side in a top-level key' do
+      expect { hiera.lookup("'the.key\"", nil, {}) }.to raise_error(/Unbalanced quotes in key: 'the.key"/)
+    end
+  end
+
+  context 'when doing interpolation with override' do
+    let!(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'override') }
 
     it 'should resolve interpolation using the override' do
       expect(hiera.lookup('foo', nil, {}, 'alternate')).to eq('alternate')

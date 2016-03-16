@@ -2,6 +2,7 @@ class Hiera
 
   # Matches a key that is quoted using a matching pair of either single or double quotes.
   QUOTED_KEY = /^(?:"([^"]+)"|'([^']+)')$/
+  QUOTES = /[",]/
 
   module Util
     module_function
@@ -45,6 +46,16 @@ class Hiera
 
     def common_appdata
       Dir::COMMON_APPDATA
+    end
+
+    def split_key(key)
+      match_data = key.match(QUOTED_KEY)
+      if match_data.nil?
+        raise yield('Unbalanced quotes') if key =~ QUOTES
+        key.split('.')
+      else
+        [match_data[1] || match_data[2]]
+      end
     end
   end
 end
