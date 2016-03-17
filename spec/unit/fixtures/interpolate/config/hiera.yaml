@@ -7,4 +7,5 @@
   - complex
   - empty_%{}inter%{::}polation
   - dotted_keys
+  - weird_keys
   - bad_interpolation

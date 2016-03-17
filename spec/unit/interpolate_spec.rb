@@ -23,6 +23,14 @@ describe "Hiera" do
       hiera = Hiera.new(:config => File.join(fixtures, 'config', 'hiera.yaml'))
       expect(hiera.lookup('root', nil, {}, nil, :hash)).to eq({'a'=>{'aa'=>{'b'=>{'bb'=>['text']}}}})
     end
+
+    it 'allows keys with white space' do
+      expect(hiera.lookup('ws_key', nil, {})).to eq('value for a ws key')
+    end
+
+    it 'allows keys with non alphanumeric characters' do
+      expect(hiera.lookup('angry', nil, {})).to eq('not happy')
+    end
   end
 
   context "when not finding value for interpolated key" do
@@ -104,12 +112,48 @@ describe "Hiera" do
       expect(hiera.lookup('"a.e.hiera"', nil, {'a' => { 'd' => '(scope) a dot d is a hash entry'}})).to eq('a dot e: (hiera) a dot d is a hash entry')
     end
 
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is last' do
+      expect(hiera.lookup('"a.ex.scope"', nil, {'a' => { 'd.x' => '(scope) a dot d.x is a hash entry'}})).to eq('a dot ex: (scope) a dot d.x is a hash entry')
+    end
+
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is last and method is hiera' do
+      expect(hiera.lookup('"a.ex.hiera"', nil, {'a' => { 'd.x' => '(scope) a dot d.x is a hash entry'}})).to eq('a dot ex: (hiera) a dot d.x is a hash entry')
+    end
+
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is first' do
+      expect(hiera.lookup('"a.xe.scope"', nil, {'a.x' => { 'd' => '(scope) a.x dot d is a hash entry'}})).to eq('a dot xe: (scope) a.x dot d is a hash entry')
+    end
+
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is first and method is hiera' do
+      expect(hiera.lookup('"a.xe.hiera"', nil, {'a.x' => { 'd' => '(scope) a.x dot d is a hash entry'}})).to eq('a dot xe: (hiera) a.x dot d is a hash entry')
+    end
+
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is in the middle' do
+      expect(hiera.lookup('"a.xm.scope"', nil, {'a' => { 'd.z' => { 'g' => '(scope) a dot d.z dot g is a hash entry'}}})).to eq('a dot xm: (scope) a dot d.z dot g is a hash entry')
+    end
+
+    it 'should use a mix of quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is in the middle and method is hiera' do
+      expect(hiera.lookup('"a.xm.hiera"', nil, {'a' => { 'd.z' => { 'g' => '(scope) a dot d.z dot g is a hash entry'}}})).to eq('a dot xm: (hiera) a dot d.z dot g is a hash entry')
+    end
+
+    it 'should use a mix of several quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is in the middle' do
+      expect(hiera.lookup('"a.xx.scope"', nil, {'a.x' => { 'd.z' => { 'g' => '(scope) a.x dot d.z dot g is a hash entry'}}})).to eq('a dot xx: (scope) a.x dot d.z dot g is a hash entry')
+    end
+
+    it 'should use a mix of several quoted and dotted keys to navigate into a structure containing dotted keys and quoted key is in the middle and method is hiera' do
+      expect(hiera.lookup('"a.xx.hiera"', nil, {'a.x' => { 'd.z' => { 'g' => '(scope) a.x dot d.z dot g is a hash entry'}}})).to eq('a dot xx: (hiera) a.x dot d.z dot g is a hash entry')
+    end
+
     it 'should find an entry using using a quoted interpolation on dotted key containing numbers' do
       expect(hiera.lookup('"x.2.scope"', nil, {'x.1' => '(scope) x dot 1'})).to eq('x dot 2: (scope) x dot 1')
     end
 
     it 'should find an entry using using a quoted interpolation on dotted key containing numbers using method hiera' do
       expect(hiera.lookup('"x.2.hiera"', nil, {'x.1' => '(scope) x dot 1'})).to eq('x dot 2: (hiera) x dot 1')
+    end
+
+    it 'will allow strange characters in the key' do
+      expect(hiera.lookup('very_angry', nil, {})).to eq('not happy at all')
     end
 
     it 'should not find a subkey when the dotted key is quoted' do
@@ -123,7 +167,23 @@ describe "Hiera" do
 
   context 'when bad interpolation expressions are encountered' do
     it 'should produce an error when different quotes are used on either side' do
-      expect { hiera.lookup('quote_mismatch', nil, {}) }.to raise_error(/Unbalanced quotes in interpolation expression: \%\{'the\.key"\}/)
+      expect { hiera.lookup('quote_mismatch', nil, {}) }.to raise_error(/Syntax error in interpolation expression: \%\{'the\.key"\}/)
+    end
+
+    it 'should produce an if there is only one quote' do
+      expect { hiera.lookup('one_quote', nil, {}) }.to raise_error(/Syntax error in interpolation expression: \%\{the\.'key\}/)
+    end
+
+    it 'should produce an error for an empty segment' do
+      expect { hiera.lookup('empty_segment', nil, {}) }.to raise_error(/Syntax error in interpolation expression: \%\{the\.\.key\}/)
+    end
+
+    it 'should produce an error for an empty quoted segment' do
+      expect { hiera.lookup('empty_quoted_segment', nil, {}) }.to raise_error(/Syntax error in interpolation expression: \%\{the\.''\.key\}/)
+    end
+
+    it 'should produce an error for an partly quoted segment' do
+      expect { hiera.lookup('partly_quoted_segment', nil, {}) }.to raise_error(/Syntax error in interpolation expression: \%\{the\.'pa'key\}/)
     end
 
     it 'should produce an error when different quotes are used on either side in a method argument' do
@@ -134,8 +194,12 @@ describe "Hiera" do
       expect { hiera.lookup('non_existing_method', nil, {}) }.to raise_error(/Invalid interpolation method 'flubber'/)
     end
 
+    it 'should produce an error if there is only one quote' do
+      expect { hiera.lookup('one_quote', nil, {}) }.to raise_error(/Syntax error/)
+    end
+
     it 'should produce an error when different quotes are used on either side in a top-level key' do
-      expect { hiera.lookup("'the.key\"", nil, {}) }.to raise_error(/Unbalanced quotes in key: 'the.key"/)
+      expect { hiera.lookup("'the.key\"", nil, {}) }.to raise_error(/Syntax error in key: 'the.key"/)
     end
   end
 

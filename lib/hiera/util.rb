@@ -49,12 +49,19 @@ class Hiera
     end
 
     def split_key(key)
-      match_data = key.match(QUOTED_KEY)
-      if match_data.nil?
-        raise yield('Unbalanced quotes') if key =~ QUOTES
-        key.split('.')
+      segments = key.split(/(?:"([^"]+)"|'([^']+)'|([^'".]+))/)
+      if segments.empty?
+        # Only happens if the original key was an empty string
+        ''
+      elsif segments.shift == ''
+        count = segments.size
+        raise yield('Syntax error') unless count > 0
+
+        segments.keep_if { |seg| seg != '.' }
+        raise yield('Syntax error') unless segments.size * 2 == count + 1
+        segments
       else
-        [match_data[1] || match_data[2]]
+        raise yield('Syntax error')
       end
     end
   end
