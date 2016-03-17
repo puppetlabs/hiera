@@ -1,4 +1,8 @@
 class Hiera
+
+  # Matches a key that is quoted using a matching pair of either single or double quotes.
+  QUOTED_KEY = /^(?:"([^"]+)"|'([^']+)')$/
+
   module Util
     module_function
 
