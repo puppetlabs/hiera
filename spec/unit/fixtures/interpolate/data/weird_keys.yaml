@@ -1,0 +1,12 @@
+---
+
+'a key with whitespace': 'value for a ws key'
+ws_key: '%{alias("a key with whitespace")}'
+
+'#@!&%|§': 'not happy'
+angry: '%{alias("#@!&%|§")}'
+
+'!$\%!':
+  '#@!&%|§': 'not happy at all'
+
+very_angry: '%{alias("!$\%!.#@!&%|§")}'

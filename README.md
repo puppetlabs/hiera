@@ -101,6 +101,48 @@ $ hiera ssh_users.0
 root
 </pre>
 
+### Use quotes to disable qualified key behavior
+In case you have dotted keys and thus want to avoid using the qualified key semantics, you
+can put segments of a dotted key, or the whole key, within quotes.
+
+Given the following data:
+
+<pre>
+# yaml
+a:
+  b.c:
+    d: 'Data for a => b.c => d'
+</pre>
+
+it is possible to do a lookup of the data like this:
+
+<pre>
+$ hiera 'a."b.c".d'
+Data for a => b.c => d
+</pre>
+
+Quoting works in interpolation expressions as well.
+
+Interpolating from global scope:
+
+<pre>
+# yaml
+other.key: 'scope data: %{a."b.c".d}'
+</pre>
+
+or using an interpolation method:
+
+<pre>
+# yaml
+a:
+  b.c:
+    d: 'Data for a => b.c => d'
+other.key: 'hiera data %{hiera("a.''b.c''.d")}'
+</pre>
+
+Note that two single quotes are used to escape a single quote inside a single quoted string
+(that's YAML syntax, not Hiera) and that the quoted key must be quoted in turn.
+
 ## Future Enhancements
 
  * More backends should be created
