@@ -250,11 +250,13 @@ class Hiera
 
         strategy = resolution_type.is_a?(Hash) ? :hash : resolution_type
 
-        segments = key.split('.')
+        segments = key.split(/(?<!\\)\./)
         subsegments = nil
         if segments.size > 1
           raise ArgumentError, "Resolution type :#{strategy} is illegal when doing segmented key lookups" unless strategy.nil? || strategy == :priority
           subsegments = segments.drop(1)
+        else
+          key = key.gsub(/\\\./, '.')
         end
 
         found = false
