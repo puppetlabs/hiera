@@ -163,6 +163,14 @@ describe "Hiera" do
     it 'should not find a subkey when the dotted key is quoted with method hiera' do
       expect(hiera.lookup('"a.f.hiera"', nil, {'a' => { 'f' => '(scope) a dot f is a hash entry'}})).to eq('a dot f: ')
     end
+
+    it 'should not find a subkey that is matched within a string' do
+      expect{ hiera.lookup('ipl_key', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to enable lookup using key 'subkey'/)
+    end
+
+    it 'should not find a subkey that is matched within a string' do
+      expect{ hiera.lookup('key.subkey', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to enable lookup using key 'subkey'/)
+    end
   end
 
   context 'when bad interpolation expressions are encountered' do

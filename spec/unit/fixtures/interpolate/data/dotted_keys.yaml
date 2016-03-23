@@ -38,3 +38,6 @@ a.f.hiera: 'a dot f: %{hiera("''a.d''")}'
 x.1: '(hiera) x dot 1'
 x.2.scope: "x dot 2: %{'x.1'}"
 x.2.hiera: 'x dot 2: %{hiera("''x.1''")}'
+
+key: subkey
+ipl_key: '- %{hiera("key.subkey")} -'
