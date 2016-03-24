@@ -314,7 +314,9 @@ class Hiera
             raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
             throw :no_such_key unless segment < value.size
           else
-            raise Exception, "Hiera type mismatch: Got #{value.class.name} when a non Array object that responds to '[]' was expected to enable lookup using key '#{segment}'" unless value.respond_to?(:'[]') && !value.instance_of?(Array);
+            unless value.respond_to?(:'[]') && !(value.instance_of?(Array) || value.instance_of?(String))
+              raise Exception, "Hiera type mismatch: Got #{value.class.name} when a hash-like object was expected to enable lookup using key '#{segment}'"
+            end
             throw :no_such_key unless value.include?(segment)
           end
           value = value[segment]
