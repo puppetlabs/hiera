@@ -1,0 +1,43 @@
+---
+a.b: '(hiera) a dot b'
+a.c.scope: "a dot c: %{'a.b'}"
+a.c.hiera: 'a dot c: %{hiera("''a.b''")}'
+a.c.scope: "a dot c: %{'a.b'}"
+a.c.hiera: 'a dot c: %{hiera("''a.b''")}'
+a.c.alias: '%{alias("''a.b''")}'
+a:
+  d: '(hiera) a dot d is a hash entry'
+  d.x: '(hiera) a dot d.x is a hash entry'
+  d.z:
+    g: '(hiera) a dot d.z dot g is a hash entry'
+
+a.x:
+  d: '(hiera) a.x dot d is a hash entry'
+  d.x: '(hiera) a.x dot d.x is a hash entry'
+  d.z:
+    g: '(hiera) a.x dot d.z dot g is a hash entry'
+
+a.e.scope: "a dot e: %{a.d}"
+a.e.hiera: "a dot e: %{hiera('a.d')}"
+
+a.ex.scope: "a dot ex: %{a.'d.x'}"
+a.ex.hiera: 'a dot ex: %{hiera("a.''d.x''")}'
+
+a.xe.scope: "a dot xe: %{'a.x'.d}"
+a.xe.hiera: 'a dot xe: %{hiera("''a.x''.d")}'
+
+a.xm.scope: "a dot xm: %{a.'d.z'.g}"
+a.xm.hiera: 'a dot xm: %{hiera("a.''d.z''.g")}'
+
+a.xx.scope: "a dot xx: %{'a.x'.'d.z'.g}"
+a.xx.hiera: 'a dot xx: %{hiera("''a.x''.''d.z''.g")}'
+
+a.f.scope: "a dot f: %{'a.d'}"
+a.f.hiera: 'a dot f: %{hiera("''a.d''")}'
+
+x.1: '(hiera) x dot 1'
+x.2.scope: "x dot 2: %{'x.1'}"
+x.2.hiera: 'x dot 2: %{hiera("''x.1''")}'
+
+key: subkey
+ipl_key: '- %{hiera("key.subkey")} -'

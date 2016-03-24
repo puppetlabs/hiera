@@ -1,0 +1,9 @@
+---
+quote_mismatch: 'Key delimited with singe quote on one side aand double qoute on the other: %{''the.key"}'
+quote_mismatch_arg: 'Arg delimited with singe quote on one side and double qoute on the other: %{hiera(''the.key")}'
+non_existing_method: 'The method flubber does not exist: %{flubber("hello")}'
+
+one_quote: 'Key with only one quote: %{the.''key}'
+empty_segment: 'Key with only one quote: %{the..key}'
+empty_quoted_segment: 'Key with only one quote: %{the.''''.key}'
+partly_quoted_segment: 'Key with only one quote: %{the.''pa''key}'
