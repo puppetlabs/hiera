@@ -136,7 +136,7 @@ class Hiera
 
       describe "#datasources" do
 
-        it "does some crap" do
+        it "dynamically expands data sources with specified array property" do
           Config.load({:dynamicyaml => {:dynamic_prop => :env}})
 
           scope = {role: "foo", env: ["sub_lab", "lab"]}
