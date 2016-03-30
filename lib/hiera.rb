@@ -100,7 +100,6 @@ class Hiera
   #
   #  - 'knockout_prefix' Set to string value to signify prefix which deletes elements from existing element. Defaults is _undef_
   #  - 'sort_merged_arrays' Set to _true_ to sort all arrays that are merged together. Default is _false_
-  #  - 'unpack_arrays' Set to string value used as a deliminator to join all array values and then split them again. Default is _undef_
   #  - 'merge_hash_arrays' Set to _true_ to merge hashes within arrays. Default is _false_
   #
   # @param key [String] The key to lookup
