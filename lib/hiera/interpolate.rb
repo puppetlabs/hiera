@@ -98,8 +98,8 @@ class Hiera::Interpolate
 
     def scope_interpolate(data, key, scope, extra_data, context)
       segments = Hiera::Util.split_key(key) { |problem| Hiera::InterpolationInvalidValue.new("#{problem} in interpolation expression: #{data}") }
-      catch(:no_such_key) { return Hiera::Backend.qualified_lookup(segments, scope) }
-      catch(:no_such_key) { Hiera::Backend.qualified_lookup(segments, extra_data) }
+      catch(:no_such_key) { return Hiera::Backend.qualified_lookup(segments, scope, key) }
+      catch(:no_such_key) { Hiera::Backend.qualified_lookup(segments, extra_data, key) }
     end
     private :scope_interpolate
 
