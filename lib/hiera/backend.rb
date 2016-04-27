@@ -253,7 +253,9 @@ class Hiera
         segments = Util.split_key(key) { |problem| ArgumentError.new("#{problem} in key: #{key}") }
         subsegments = nil
         if segments.size > 1
-          raise ArgumentError, "Resolution type :#{strategy} is illegal when doing segmented key lookups" unless strategy.nil? || strategy == :priority
+          unless strategy.nil? || strategy == :priority
+            raise ArgumentError, "Resolution type :#{strategy} is illegal when accessing values using dotted keys. Offending key was '#{key}'"
+          end
           subsegments = segments.drop(1)
         end
 
@@ -270,7 +272,7 @@ class Hiera
                 value = backend.lookup_with_segments(segments, scope, order_override, resolution_type, context)
               else
                 value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
-                value = qualified_lookup(subsegments, value) unless subsegments.nil?
+                value = qualified_lookup(subsegments, value, key) unless subsegments.nil?
               end
               found_in_backend = true
               value
@@ -305,17 +307,23 @@ class Hiera
         @backends = {}
       end
 
-      def qualified_lookup(segments, hash)
+      def qualified_lookup(segments, hash, full_key = nil)
         value = hash
         segments.each do |segment|
           throw :no_such_key if value.nil?
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
-            raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
+            unless value.instance_of?(Array)
+              suffix = full_key.nil? ? '' : " from key '#{full_key}'"
+              raise Exception,
+                "Hiera type mismatch: Got #{value.class.name} when Array was expected to access value using '#{segment}'#{suffix}"
+            end
             throw :no_such_key unless segment < value.size
           else
             unless value.respond_to?(:'[]') && !(value.instance_of?(Array) || value.instance_of?(String))
-              raise Exception, "Hiera type mismatch: Got #{value.class.name} when a hash-like object was expected to enable lookup using key '#{segment}'"
+              suffix = full_key.nil? ? '' : " from key '#{full_key}'"
+              raise Exception,
+                "Hiera type mismatch: Got #{value.class.name} when a hash-like object was expected to access value using '#{segment}'#{suffix}"
             end
             throw :no_such_key unless value.include?(segment)
           end

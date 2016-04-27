@@ -682,6 +682,34 @@ class Hiera
         expect(Backend.lookup('key.33', 'dflt', {}, nil, nil)).to eq('dflt')
       end
 
+      it 'will fail when dotted key access is made using a numeric index and value is not array' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns(
+          {'one' => 'value 1', 'two' => 'value 2'})
+        expect {Backend.lookup('key.33', 'dflt', {}, nil, nil)}.to raise_error(Exception,
+          /Got Hash when Array was expected to access value using '33' from key 'key.33'/)
+      end
+
+      it 'will fail when dotted key access is made using a string and value is not hash' do
+        Config.load({:yaml => {:datadir => '/tmp'}})
+        Config.load_backends
+        Backend::Yaml_backend.any_instance.expects(:lookup).with('key', {}, nil, nil, instance_of(Hash)).returns(
+          ['value 1', 'value 2'])
+        expect {Backend.lookup('key.one', 'dflt', {}, nil, nil)}.to raise_error(Exception,
+          /Got Array when a hash-like object was expected to access value using 'one' from key 'key.one'/)
+      end
+
+      it 'will fail when dotted key access is made using resolution type :hash' do
+        expect {Backend.lookup('key.one', 'dflt', {}, nil, :hash)}.to raise_error(Exception,
+          /Resolution type :hash is illegal when accessing values using dotted keys. Offending key was 'key.one'/)
+      end
+
+      it 'will fail when dotted key access is made using resolution type :array' do
+        expect {Backend.lookup('key.one', 'dflt', {}, nil, :array)}.to raise_error(Exception,
+          /Resolution type :array is illegal when accessing values using dotted keys. Offending key was 'key.one'/)
+      end
+
       it 'can use qualified key in interpolation to lookup value in hash' do
         Config.load({:yaml => {:datadir => '/tmp'}})
         Config.load_backends

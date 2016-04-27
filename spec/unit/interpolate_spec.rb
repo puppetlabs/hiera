@@ -165,11 +165,11 @@ describe "Hiera" do
     end
 
     it 'should not find a subkey that is matched within a string' do
-      expect{ hiera.lookup('ipl_key', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to enable lookup using key 'subkey'/)
+      expect{ hiera.lookup('ipl_key', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to access value using 'subkey' from key 'key.subkey'/)
     end
 
     it 'should not find a subkey that is matched within a string' do
-      expect{ hiera.lookup('key.subkey', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to enable lookup using key 'subkey'/)
+      expect{ hiera.lookup('key.subkey', nil, {}) }.to raise_error(/Got String when a hash-like object was expected to access value using 'subkey' from key 'key.subkey'/)
     end
   end
 
