@@ -26,18 +26,22 @@ class Hiera
 
     def config_dir
       if microsoft_windows?
-         File.join(common_appdata, 'PuppetLabs', 'code')
+         File.join(common_appdata, 'PuppetLabs', 'puppet', 'etc')
+      else
+        '/etc/puppetlabs/puppet'
+      end
+    end
+
+    def code_dir
+      if microsoft_windows?
+        File.join(common_appdata, 'PuppetLabs', 'code')
       else
         '/etc/puppetlabs/code'
       end
     end
 
     def var_dir
-      if microsoft_windows?
-        File.join(common_appdata, 'PuppetLabs', 'code', 'environments' , '%{environment}' , 'hieradata')
-      else
-        '/etc/puppetlabs/code/environments/%{environment}/hieradata'
-      end
+      File.join(code_dir, 'environments' , '%{environment}' , 'hieradata')
     end
 
     def file_alt_separator

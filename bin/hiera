@@ -28,7 +28,7 @@ require 'pp'
 
 options = {
   :default => nil,
-  :config  => File.join(Hiera::Util.config_dir, 'hiera.yaml'),
+  :config  => nil,
   :scope   => {},
   :key     => nil,
   :verbose => false,

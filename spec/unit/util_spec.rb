@@ -23,13 +23,26 @@ describe Hiera::Util do
   describe 'Hiera::Util.config_dir' do
     it 'should return the correct path for posix systems' do
       Hiera::Util.expects(:file_alt_separator).returns(nil)
-      expect(Hiera::Util.config_dir).to eq('/etc/puppetlabs/code')
+      expect(Hiera::Util.config_dir).to eq('/etc/puppetlabs/puppet')
     end
 
     it 'should return the correct path for microsoft windows systems' do
       Hiera::Util.expects(:microsoft_windows?).returns(true)
       Hiera::Util.expects(:common_appdata).returns('C:\\ProgramData')
-      expect(Hiera::Util.config_dir).to eq('C:\\ProgramData/PuppetLabs/code')
+      expect(Hiera::Util.config_dir).to eq('C:\\ProgramData/PuppetLabs/puppet/etc')
+    end
+  end
+
+  describe 'Hiera::Util.code_dir' do
+    it 'should return the correct path for posix systems' do
+      Hiera::Util.expects(:file_alt_separator).returns(nil)
+      expect(Hiera::Util.code_dir).to eq('/etc/puppetlabs/code')
+    end
+
+    it 'should return the correct path for microsoft windows systems' do
+      Hiera::Util.expects(:microsoft_windows?).returns(true)
+      Hiera::Util.expects(:common_appdata).returns('C:\\ProgramData')
+      expect(Hiera::Util.code_dir).to eq('C:\\ProgramData/PuppetLabs/code')
     end
   end
 
