@@ -40,9 +40,13 @@ class Hiera
   # If the config option is a string its assumed to be a filename,
   # else a hash of what would have been in the YAML config file
   def initialize(options={})
-    options[:config] ||= File.join(Util.config_dir, 'hiera.yaml')
-
-    @config = Config.load(options[:config])
+    config = options[:config]
+    if config.nil?
+      # Look in codedir first, then confdir
+      config = File.join(Util.code_dir, 'hiera.yaml')
+      config = File.join(Util.config_dir, 'hiera.yaml') unless File.exist?(config)
+    end
+    @config = Config.load(config)
 
     Config.load_backends
   end
