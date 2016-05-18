@@ -92,6 +92,7 @@ end
 #
 def prepare_installation
   InstallOptions.configs = true
+  InstallOptions.batch_files = true
 
   ARGV.options do |opts|
     opts.banner = "Usage: #{File.basename($0)} [options]"
@@ -119,6 +120,9 @@ def prepare_installation
     end
     opts.on('--full', 'Performs a full installation. All', 'optional installation steps are run.') do |full|
       InstallOptions.configs = true
+    end
+    opts.on('--no-batch-files', 'Prevents installation of batch files for windows', 'Default off') do |batch_files|
+      InstallOptions.batch_files = false
     end
     opts.separator("")
     opts.on_tail('--help', "Shows this help text.") do
@@ -238,7 +242,7 @@ def install_binfile(from, op_file, target)
     end
   end
 
-  if is_windows?
+  if is_windows? && InstallOptions.batch_files
     installed_wrapper = false
 
     if File.exists?("#{from}.bat")
