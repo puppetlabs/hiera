@@ -12,7 +12,6 @@ group :development, :test do
   gem 'rspec', "~> 3.3", :require => false
   gem "rspec-legacy_formatters", "~> 1.0", :require => false
   gem 'mocha', "~> 0.10.5", :require => false
-  gem 'json', "~> 1.7", :require => false, :platforms => :ruby
   gem "yarjuf", "~> 2.0"
 end
 
