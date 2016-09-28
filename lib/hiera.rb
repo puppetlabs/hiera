@@ -40,9 +40,13 @@ class Hiera
   # If the config option is a string its assumed to be a filename,
   # else a hash of what would have been in the YAML config file
   def initialize(options={})
-    options[:config] ||= File.join(Util.config_dir, 'hiera.yaml')
-
-    @config = Config.load(options[:config])
+    config = options[:config]
+    if config.nil?
+      # Look in codedir first, then confdir
+      config = File.join(Util.code_dir, 'hiera.yaml')
+      config = File.join(Util.config_dir, 'hiera.yaml') unless File.exist?(config)
+    end
+    @config = Config.load(config)
 
     Config.load_backends
   end
@@ -100,7 +104,6 @@ class Hiera
   #
   #  - 'knockout_prefix' Set to string value to signify prefix which deletes elements from existing element. Defaults is _undef_
   #  - 'sort_merged_arrays' Set to _true_ to sort all arrays that are merged together. Default is _false_
-  #  - 'unpack_arrays' Set to string value used as a deliminator to join all array values and then split them again. Default is _undef_
   #  - 'merge_hash_arrays' Set to _true_ to merge hashes within arrays. Default is _false_
   #
   # @param key [String] The key to lookup

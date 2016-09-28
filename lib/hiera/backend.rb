@@ -89,7 +89,11 @@ class Hiera
 
         hierarchy.flatten.map do |source|
           source = interpolate_config(source, scope, override)
-          yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
+          if source == "" or source =~ /(^\/|\/\/|\/$)/
+            Hiera.debug("Ignoring bad definition in :hierarchy: \'#{source}\'")
+          else
+            yield(source)
+          end
         end
       end
 
@@ -231,7 +235,7 @@ class Hiera
       # databases then do so in your constructor, future calls to your
       # backend will not create new instances
 
-      # @param key [String] The key to lookup
+      # @param key [String] The key to lookup. May be quoted with single or double quotes to avoid subkey traversal on dot characters
       # @param scope [#[]] The primary source of data for substitutions.
       # @param order_override [#[],nil] An override that will be pre-pended to the hierarchy definition.
       # @param resolution_type [Symbol,Hash,nil] One of :hash, :array,:priority or a Hash with deep merge behavior and options
@@ -250,10 +254,12 @@ class Hiera
 
         strategy = resolution_type.is_a?(Hash) ? :hash : resolution_type
 
-        segments = key.split('.')
+        segments = Util.split_key(key) { |problem| ArgumentError.new("#{problem} in key: #{key}") }
         subsegments = nil
         if segments.size > 1
-          raise ArgumentError, "Resolution type :#{strategy} is illegal when doing segmented key lookups" unless strategy.nil? || strategy == :priority
+          unless strategy.nil? || strategy == :priority
+            raise ArgumentError, "Resolution type :#{strategy} is illegal when accessing values using dotted keys. Offending key was '#{key}'"
+          end
           subsegments = segments.drop(1)
         end
 
@@ -265,12 +271,12 @@ class Hiera
             found_in_backend = false
             new_answer = catch(:no_such_key) do
               if subsegments.nil? 
-                value = backend.lookup(key, scope, order_override, resolution_type, context)
+                value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
               elsif backend.respond_to?(:lookup_with_segments)
                 value = backend.lookup_with_segments(segments, scope, order_override, resolution_type, context)
               else
                 value = backend.lookup(segments[0], scope, order_override, resolution_type, context)
-                value = qualified_lookup(subsegments, value) unless subsegments.nil?
+                value = qualified_lookup(subsegments, value, key) unless subsegments.nil?
               end
               found_in_backend = true
               value
@@ -305,16 +311,24 @@ class Hiera
         @backends = {}
       end
 
-      def qualified_lookup(segments, hash)
+      def qualified_lookup(segments, hash, full_key = nil)
         value = hash
         segments.each do |segment|
           throw :no_such_key if value.nil?
           if segment =~ /^[0-9]+$/
             segment = segment.to_i
-            raise Exception, "Hiera type mismatch: Got #{value.class.name} when Array was expected enable lookup using key '#{segment}'" unless value.instance_of?(Array)
+            unless value.instance_of?(Array)
+              suffix = full_key.nil? ? '' : " from key '#{full_key}'"
+              raise Exception,
+                "Hiera type mismatch: Got #{value.class.name} when Array was expected to access value using '#{segment}'#{suffix}"
+            end
             throw :no_such_key unless segment < value.size
           else
-            raise Exception, "Hiera type mismatch: Got #{value.class.name} when a non Array object that responds to '[]' was expected to enable lookup using key '#{segment}'" unless value.respond_to?(:'[]') && !value.instance_of?(Array);
+            unless value.respond_to?(:'[]') && !(value.instance_of?(Array) || value.instance_of?(String))
+              suffix = full_key.nil? ? '' : " from key '#{full_key}'"
+              raise Exception,
+                "Hiera type mismatch: Got #{value.class.name} when a hash-like object was expected to access value using '#{segment}'#{suffix}"
+            end
             throw :no_such_key unless value.include?(segment)
           end
           value = value[segment]
