@@ -89,7 +89,11 @@ class Hiera
 
         hierarchy.flatten.map do |source|
           source = interpolate_config(source, scope, override)
-          yield(source) unless source == "" or source =~ /(^\/|\/\/|\/$)/
+          if source == "" or source =~ /(^\/|\/\/|\/$)/
+            Hiera.debug("Ignoring bad definition in :hierarchy: \'#{source}\'")
+          else
+            yield(source)
+          end
         end
       end
 
