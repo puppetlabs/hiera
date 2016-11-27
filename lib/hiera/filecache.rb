@@ -49,7 +49,7 @@ class Hiera
     # in processing will be propagated to the caller
     def read_file(path, expected_type = Object)
       if stale?(path)
-        data = File.read(path)
+        data = File.read(path, :encoding => 'BOM|UTF-8')
         @cache[path][:data] = block_given? ? yield(data) : data
 
         if !@cache[path][:data].is_a?(expected_type)

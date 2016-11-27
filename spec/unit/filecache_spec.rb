@@ -84,6 +84,24 @@ class Hiera
         end
       end
 
+      it "sets the encoding to UTF-8 when reading a file" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "my data")
+          File.expects(:read).with(file, :encoding => 'BOM|UTF-8')
+          @cache.read_file(file)
+        end
+      end
+
+      it "reads a file with unicode characters" do
+        Dir.mktmpdir do |dir|
+          file = File.join(dir, "testing")
+          write_file(file, "☃")
+
+          expect(@cache.read_file(file)).to eq("☃")
+        end
+      end
+
       it "rereads data when the file changes" do
         Dir.mktmpdir do |dir|
           file = File.join(dir, "testing")
