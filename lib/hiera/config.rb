@@ -26,13 +26,7 @@ class Hiera::Config
                        raise detail
                      end
                    end
-          if config
-            version = config['version'] || config[:version] || 3
-            if version >= 4
-              raise "v4 hiera.yaml is only to be used inside an environment or a module and cannot be given to the global hiera"
-            end
-            @config.merge! config
-          end
+          @config.merge! config if config
         else
           raise "Config file #{source} not found"
         end

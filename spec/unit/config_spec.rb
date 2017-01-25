@@ -12,10 +12,6 @@ class Hiera
         }
       end
 
-      it 'should raise an error if the configuration version is greater than 3' do
-        expect { Hiera.new(:config => File.join(HieraSpec::FIXTURE_DIR, 'badconfig', 'config', 'hiera.yaml')) }.to raise_error(/v4 hiera\.yaml is only to be used inside an environment or a module/)
-      end
-
       it "should raise an error for missing config files" do
         File.expects(:exist?).with("/nonexisting").returns(false)
         YAML.expects(:load_file).with("/nonexisting").never

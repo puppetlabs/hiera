@@ -84,36 +84,6 @@ class Hiera
         end
       end
 
-      it "sets the encoding to UTF-8 when reading a file" do
-        begin
-          original_encoding = Encoding.default_external
-          Encoding.default_external = Encoding::ISO_8859_1
-
-          Dir.mktmpdir do |dir|
-            file = File.join(dir, "testing")
-            write_file(file, "my data")
-            expect(@cache.read_file(file).encoding).to eq(Encoding::UTF_8)
-          end
-        ensure
-          Encoding.default_external = original_encoding
-        end
-      end
-
-      it "reads a file with unicode characters" do
-        begin
-          original_encoding = Encoding.default_external
-          Encoding.default_external = Encoding::ISO_8859_1
-
-          Dir.mktmpdir do |dir|
-            file = File.join(dir, "testing")
-            write_file(file, "\u2603")
-            expect(@cache.read_file(file)).to eq("\u2603")
-          end
-        ensure
-          Encoding.default_external = original_encoding
-        end
-      end
-
       it "rereads data when the file changes" do
         Dir.mktmpdir do |dir|
           file = File.join(dir, "testing")
