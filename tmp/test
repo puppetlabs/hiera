@@ -1,0 +1,47 @@
+#!/bin/sh
+HIERA='bundle exec bin/hiera -c /var/hiera/hiera.yaml'
+
+echo ""
+echo "Basic test, no scope"
+echo -n "expect Commonvalue: got "
+$HIERA key
+
+echo ""
+echo "osfamily=Debian"
+echo -n "expect Commonvalue: got "
+$HIERA key osfamily=Debian
+
+echo ""
+echo "osfamily=RedHat"
+echo -n "expect RedHatvalue: got "
+$HIERA key osfamily=RedHat
+
+echo ""
+echo "fqdn=other"
+echo -n "expect Othervalue: got "
+$HIERA key fqdn=other
+
+echo ""
+echo "fqdn=host.example.com"
+echo -n "expect Commonvalue: got "
+$HIERA key fqdn=host.example.com
+
+echo ""
+echo "::osfamily=Debian"
+echo -n "expect Commonvalue: got "
+$HIERA key ::osfamily=Debian
+
+echo ""
+echo "::osfamily=RedHat"
+echo -n "expect RedHatvalue: got "
+$HIERA key ::osfamily=RedHat
+
+echo ""
+echo "::fqdn=other"
+echo -n "expect Othervalue: got "
+$HIERA key ::fqdn=other
+
+echo ""
+echo "::fqdn=host.example.com"
+echo -n "expect Commonvalue: got "
+$HIERA key ::fqdn=host.example.com

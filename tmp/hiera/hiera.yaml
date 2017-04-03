@@ -1,0 +1,6 @@
+:hierarchy:
+  - "osfamily_%{::osfamily}"
+  - "%{::fqdn}"
+  - common
+:yaml:
+   :datadir: /var/hiera
