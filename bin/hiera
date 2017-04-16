@@ -148,6 +148,10 @@ OptionParser.new do |opts|
     options[:verbose] = true
   end
 
+  opts.on("--explain", "-e", "Describe how Hiera will be looking up data given current scope and configuration") do
+    options[:explain] = true
+  end
+
   opts.on("--array", "-a", "Return all values as an array") do
     options[:resolution_type] = :array
   end
@@ -210,7 +214,10 @@ end
 #
 # The var=val's assign scope
 unless ARGV.empty?
-  options[:key] = ARGV.delete_at(0)
+  # if this is a bareword, ie not a FACT=value argument. Allows explain without a lookup
+  unless ARGV.first =~ /^(.+?)=(.+?)$/
+    options[:key] = ARGV.delete_at(0)
+  end
 
   ARGV.each do |arg|
     if arg =~ /^(.+?)=(.+?)$/
@@ -223,9 +230,10 @@ unless ARGV.empty?
       end
     end
   end
-else
-  STDERR.puts "Please supply a data item to look up"
-  exit 1
+end
+
+unless options[:verbose]
+  Hiera.logger = "noop"
 end
 
 begin
@@ -239,10 +247,17 @@ rescue Exception => e
   end
 end
 
-unless options[:verbose]
-  Hiera.logger = "noop"
+if options[:explain]
+  hiera.explain(options[:scope])
 end
 
-ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
-
-output_answer(ans, options[:format])
+# This conditional allow explain to run with or without a key lookup
+if options[:key]
+  ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
+  output_answer(ans, options[:format])
+else
+  unless options[:explain]
+    STDERR.puts "Please supply a data item to look up"
+    exit 1
+  end
+end

@@ -115,4 +115,11 @@ class Hiera
   def lookup(key, default, scope, order_override=nil, resolution_type=:priority)
     Backend.lookup(key, default, scope, order_override, resolution_type)
   end
+
+  # Just describe where Hiera would be retrieving data, given the current
+  # scope and configuration.
+  #
+  def explain(scope)
+    puts Backend.explain(scope)
+  end
 end
