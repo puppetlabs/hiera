@@ -53,7 +53,9 @@ def load_scope(source, type=:yaml)
 
       raise "Failed to retrieve facts for node #{source}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
 
-      scope = nodestats[:data][:facts]
+      scope = {}
+      nodestats[:data][:facts].each { |key, value| scope["::#{key}"] = value }
+      scope
     rescue Exception => e
       STDERR.puts "MCollective lookup failed: #{e.class}: #{e}"
       exit 1
