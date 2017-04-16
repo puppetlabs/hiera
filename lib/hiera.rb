@@ -31,8 +31,13 @@ class Hiera
       warn("Failed to load #{logger} logger: #{e.class}: #{e}")
     end
 
-    def warn(msg); @logger.warn(msg); end
-    def debug(msg); @logger.debug(msg); end
+    def warn(msg = '', &block)
+      block_given? ? @logger.debug(&block) : @logger.debug(msg)
+    end
+
+    def debug(msg = '', &block)
+      block_given? ? @logger.debug(&block) : @logger.debug(msg)
+    end
   end
 
   attr_reader :options, :config
