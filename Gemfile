@@ -31,12 +31,6 @@ data['gem_platform_dependencies'].each_pair do |gem_platform, info|
   end
 end
 
-mingw = [:mingw]
-mingw << :x64_mingw if Bundler::Dsl::VALID_PLATFORMS.include?(:x64_mingw)
-
-platform(*mingw) do
-  gem 'win32-dir', '~> 0.4.8', :require => false
-end
 if File.exists? "#{__FILE__}.local"
   eval(File.read("#{__FILE__}.local"), binding)
 end
