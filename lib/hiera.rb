@@ -5,6 +5,7 @@ class Hiera
   require "hiera/version"
   require "hiera/config"
   require "hiera/util"
+  require "hiera/util/win32"
   require "hiera/backend"
   require "hiera/console_logger"
   require "hiera/puppet_logger"
