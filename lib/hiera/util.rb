@@ -13,15 +13,7 @@ class Hiera
     end
 
     def microsoft_windows?
-      return false unless file_alt_separator
-
-      begin
-        require 'win32/dir'
-        true
-      rescue LoadError => err
-        warn "Cannot run on Microsoft Windows without the win32-dir gem: #{err}"
-        false
-      end
+      !!file_alt_separator
     end
 
     def config_dir
@@ -49,7 +41,7 @@ class Hiera
     end
 
     def common_appdata
-      Dir::COMMON_APPDATA
+      @common_appdata ||= Hiera::Util::Win32.get_common_appdata()
     end
 
     def split_key(key)

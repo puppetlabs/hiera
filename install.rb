@@ -147,14 +147,10 @@ def prepare_installation
   if InstallOptions.configdir
     configdir = InstallOptions.configdir
   elsif is_windows?
-    begin
-      require 'rubygems'
-      require 'win32/dir'
-    rescue LoadError => e
-      puts "Cannot run on Microsoft Windows without the sys-admin, win32-process, win32-dir & win32-service gems: #{e}"
-      exit(-1)
-    end
-    configdir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "hiera", "etc")
+    path = File.join(File.dirname(__FILE__), "lib", "hiera", "util", "win32")
+    require_relative(path)
+
+    configdir = File.join(Hiera::Util::Win32.get_common_appdata(), "PuppetLabs", "hiera", "etc")
   else
     configdir = "/etc"
   end

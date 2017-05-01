@@ -9,13 +9,6 @@ require 'tmpdir'
 RSpec.configure do |config|
   config.mock_with :mocha
 
-  if Hiera::Util.microsoft_windows? && RUBY_VERSION =~ /^1\./
-    require 'win32console'
-    config.output_stream = $stdout
-    config.error_stream = $stderr
-    config.formatters.each { |f| f.instance_variable_set(:@output, $stdout) }
-  end
-
   config.after :suite do
     # Log the spec order to a file, but only if the LOG_SPEC_ORDER environment variable is
     #  set.  This should be enabled on Jenkins runs, as it can be used with Nick L.'s bisect
