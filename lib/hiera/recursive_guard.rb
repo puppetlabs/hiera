@@ -9,7 +9,7 @@ class Hiera::RecursiveGuard
   end
 
   def check(value, &block)
-    if @seen.include?(value)
+    if @seen.include?(value) and value != "literal('%')"
       raise Hiera::InterpolationLoop, "Lookup recursion detected in [#{@seen.join(', ')}]"
     end
     @seen.push(value)
