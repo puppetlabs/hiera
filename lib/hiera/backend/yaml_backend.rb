@@ -16,7 +16,12 @@ class Hiera
 
         Backend.datasourcefiles(:yaml, scope, "yaml", order_override) do |source, yamlfile|
           data = @cache.read_file(yamlfile, Hash) do |data|
-            YAML.load(data) || {}
+	    # HI-575: Use YAML safe_load where we can.
+            if YAML.respond_to? :safe_load
+	      YAML.safe_load(data) || {}
+	    else
+	      YAML.load(data) || {} # rubocop:disable Security/YAMLLoad
+	    end
           end
 
           next if data.empty?

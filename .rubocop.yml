@@ -1,0 +1,22 @@
+AllCops:
+  Include:
+    - 'lib/**/*.rb'
+    - 'ext/**/*.rb'
+  Exclude:
+    - 'Gemfile'
+    - '**/*.erb'
+    - '**/*.spec'
+    - 'acceptance/**/*'
+    - 'spec/**/*'
+    - 'tasks/**/*'
+
+  DisabledByDefault: true
+
+Security/YAMLLoad:
+   Enabled: true
+
+Security/MarshalLoad:
+   Enabled: true
+
+Security/Eval:
+   Enabled: true

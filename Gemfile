@@ -13,6 +13,11 @@ group :development, :test do
   gem "rspec-legacy_formatters", "~> 1.0", :require => false
   gem 'mocha', "~> 0.10.5", :require => false
   gem "yarjuf", "~> 2.0"
+  if RUBY_VERSION =~ /^1\.9\.3/
+    # No rubocop
+  else
+    gem "rubocop", "~> 0.48.1", :platforms => [:ruby], :require => false
+  end
 end
 
 if File.exists? "#{__FILE__}.local"

@@ -52,6 +52,13 @@ task :spec do
   sh %{rspec #{ENV['TEST'] || ENV['TESTS'] || 'spec'}}
 end
 
+desc 'run static analysis with rubocop'
+task(:rubocop) do
+  require 'rubocop'
+  cli = RuboCop::CLI.new
+  exit_code = cli.run(%w(--display-cop-names --format simple))
+  raise "RuboCop detected offenses" if exit_code != 0
+end
 task :test => :spec
 
 desc "verify that commit messages match CONTRIBUTING.md requirements"

@@ -100,7 +100,14 @@ def load_scope(source, type=:yaml)
       require 'puppet'
       Puppet.settings.parse
       Puppet::Node::Facts.indirection.terminus_class = :rest
-      scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)
+
+      # HI-575: Use YAML safe_load where we can.
+      if YAML.respond_to? :safe_load
+        scope = YAML.safe_load(Puppet::Node::Facts.indirection.find(source).to_yaml)
+      else
+        scope = YAML.load(Puppet::Node::Facts.indirection.find(source).to_yaml)  # rubocop:disable Security/YAMLLoad
+      end
+
       # Puppet makes dumb yaml files that do not promote data reuse.
       scope = scope.values if scope.is_a?(Puppet::Node::Facts)
     rescue Exception => e
