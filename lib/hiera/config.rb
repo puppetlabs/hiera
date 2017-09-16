@@ -29,7 +29,7 @@ class Hiera::Config
           if config
             version = config['version'] || config[:version] || 3
             if version >= 4
-              raise "v4 hiera.yaml is only to be used inside an environment or a module and cannot be given to the global hiera"
+              raise "v#{version} hiera.yaml is only to be used inside an environment or a module and cannot be given to the global hiera"
             end
             @config.merge! config
           end
@@ -48,7 +48,7 @@ class Hiera::Config
         @config[:logger] = "console"
         Hiera.logger = "console"
       end
-    
+
       self.validate!
 
       @config
