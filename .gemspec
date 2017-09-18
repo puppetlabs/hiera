@@ -5,16 +5,9 @@
 # repository](https://github.com/puppetlabs/packaging) for information on how
 # to build release packages.
 
-begin
-  require 'hiera/version'
-rescue LoadError
-  $LOAD_PATH.unshift(File.expand_path("../lib", __FILE__))
-  require 'hiera/version'
-end
-
 Gem::Specification.new do |s|
   s.name = "hiera"
-  version = Hiera.version
+  version = "3.4.0"
   mdata = version.match(/(\d+\.\d+\.\d+)/)
   s.version = mdata ? mdata[1] : version
 
