@@ -329,9 +329,11 @@ class Hiera
               raise Exception,
                 "Hiera type mismatch: Got #{value.class.name} when a hash-like object was expected to access value using '#{segment}'#{suffix}"
             end
-            throw :no_such_key unless value.include?(segment)
+            throw :no_such_key unless value.include?(segment) or value.include?(segment.to_sym)
           end
-          value = value[segment]
+
+          # Because value[segment] could be the boolean false, we must check for nil
+          value = value[segment].nil? ? value[segment.to_sym] : value[segment]
         end
         value
       end
