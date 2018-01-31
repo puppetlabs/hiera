@@ -36,7 +36,7 @@ correct answer easily:
                            \----------------------------------/
 </pre>
 
-In this simple example machines in DC1 and DC2 have their own NTP servers, additionaly
+In this simple example machines in DC1 and DC2 have their own NTP servers, additionally
 DC1 has its own sysadmin contact - perhaps because its a remote DR site - while DC2
 and all the other environments would revert to the common contact that would have the
 machines domain fact expanded into the result.
@@ -157,7 +157,7 @@ YAML backend.
 
 Hiera is also available as a native package via apt (http://apt.puppetlabs.com) and yum (http://yum.puppetlabs.com). Instructions for adding these repositories can be found at http://docs.puppetlabs.com/guides/installation.html#debian-and-ubuntu and http://docs.puppetlabs.com/guides/installation.html#enterprise-linux respectively.
 
-At present JSON (github/ripienaar/hiera-json) and Puppet (hiera-puppet) backends are availble.
+At present JSON (github/ripienaar/hiera-json) and Puppet (hiera-puppet) backends are available.
 
 ## Configuration
 
