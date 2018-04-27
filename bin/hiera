@@ -41,24 +41,6 @@ initial_scopes = Array.new
 # Loads the scope from YAML or JSON files
 def load_scope(source, type=:yaml)
   case type
-  when :mcollective
-    begin
-      require 'mcollective'
-
-      include MCollective::RPC
-
-      util = rpcclient("rpcutil")
-      util.progress = false
-      nodestats = util.custom_request("inventory", {}, source, {"identity" => source}).first
-
-      raise "Failed to retrieve facts for node #{source}: #{nodestats[:statusmsg]}" unless nodestats[:statuscode] == 0
-
-      scope = nodestats[:data][:facts]
-    rescue Exception => e
-      STDERR.puts "MCollective lookup failed: #{e.class}: #{e}"
-      exit 1
-    end
-
   when :yaml
     raise "Cannot find scope #{type} file #{source}" unless File.exist?(source)
 
