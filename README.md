@@ -4,7 +4,8 @@
 
 A simple pluggable Hierarchical Database.
 
--
+**This project is deprecated in favor of Hiera version 5 which is implementation in Puppet.**
+
 **Tutorials:** Check the docs directory for tutorials.
 
 ## Why?
