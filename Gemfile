@@ -8,7 +8,7 @@ group :development do
 end
 
 group :development, :test do
-  gem 'rake', "~> 10.1.0"
+  gem 'rake'
   gem 'rspec', "~> 3.3", :require => false
   gem "rspec-legacy_formatters", "~> 1.0", :require => false
   gem 'mocha', "~> 0.10.5", :require => false
