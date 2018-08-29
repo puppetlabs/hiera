@@ -13,6 +13,15 @@ end
 
 Dir['tasks/**/*.rake'].each { |t| load t }
 
+namespace :package do
+  task :bootstrap do
+    puts 'Bootstrap is no longer needed, using packaging-as-a-gem'
+  end
+  task :implode do
+    puts 'Implode is no longer needed, using packaging-as-a-gem'
+  end
+end
+
 task :spec do
   sh %{rspec #{ENV['TEST'] || ENV['TESTS'] || 'spec'}}
 end
