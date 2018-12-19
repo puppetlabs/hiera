@@ -7,7 +7,7 @@
 
 
 class Hiera
-  VERSION = "3.3.4"
+  VERSION = "3.3.5"
 
   ##
   # version is a public API method intended to always provide a fast and
