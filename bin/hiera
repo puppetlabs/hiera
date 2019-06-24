@@ -225,6 +225,18 @@ unless options[:verbose]
   Hiera.logger = "noop"
 end
 
-ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
+# Currently if --hash is used but the lookup key is not a hash an Exception is thrown.
+# With this begin/rescue will try to lookup the key as hash first, if unsuccessful, try
+# looking up as :priority instead.
+if options[:resolution_type] == :hash
+  begin
+    ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, :hash)
+  rescue Exception => e
+    ans = hiera.lookup(options[:key], options[:default], options[:scope], nil)
+  end
+else
+  ans = hiera.lookup(options[:key], options[:default], options[:scope], nil, options[:resolution_type])
+end
 
 output_answer(ans, options[:format])
+
