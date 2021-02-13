@@ -22,4 +22,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.25"
   s.summary = "Light weight hierarchical data store"
+  s.license = "Apache-2.0"
 end
