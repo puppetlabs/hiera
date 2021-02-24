@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Puppet Labs"]
   s.date = "2013-04-03"
-  s.description = "A pluggable data store for hierarcical data"
+  s.description = "A pluggable data store for hierarchical data"
   s.email = "info@puppetlabs.com"
   s.executables = ["hiera"]
   s.files = ["bin/hiera"]
