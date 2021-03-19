@@ -12,6 +12,7 @@ script: "bundle exec rake $CHECK"
 notifications:
   email: false
 rvm:
+  - 3.0.0
   - 2.7.0
   - 2.3.0
   - 2.2.4
