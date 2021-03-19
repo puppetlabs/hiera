@@ -14,9 +14,6 @@ notifications:
 rvm:
   - 2.3.0
   - 2.2.4
-  - 2.1.8
-  - 2.0.0
-  - 1.9.3
 
 env:
   - "CHECK=spec"
@@ -27,8 +24,4 @@ matrix:
     - rvm: 2.3.0
       env: "CHECK=commits"
     - rvm: 2.2.4
-      env: "CHECK=commits"
-    - rvm: 2.0.0
-      env: "CHECK=commits"
-    - rvm: 1.9.3
       env: "CHECK=commits"
