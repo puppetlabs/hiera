@@ -12,16 +12,9 @@ script: "bundle exec rake $CHECK"
 notifications:
   email: false
 rvm:
+  - 2.7.0
   - 2.3.0
   - 2.2.4
 
 env:
-  - "CHECK=spec"
   - "CHECK=commits"
-
-matrix:
-  exclude:
-    - rvm: 2.3.0
-      env: "CHECK=commits"
-    - rvm: 2.2.4
-      env: "CHECK=commits"
