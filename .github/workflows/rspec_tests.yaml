@@ -22,11 +22,19 @@ jobs:
     steps:
       - name: Checkout current PR
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Install ruby version ${{ matrix.cfg.ruby }}
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.cfg.ruby }}
+
+      - name: Update rubygems and install gems
+        run: |
+          gem update --system --silent --no-document
+          bundle config set without packaging development
+          bundle install --jobs 4 --retry 3
       
       - run: "bundle exec rake spec"
       - run: "bundle exec rake commits"
