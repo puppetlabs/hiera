@@ -28,4 +28,4 @@ jobs:
           bundle config set without packaging development
           bundle install --jobs 4 --retry 3
       - name: Run ${{ matrix.cfg.check }} check
-        run: bundle exec rake commits ${{ matrix.cfg.check }}
+        run: bundle exec ${{ matrix.cfg.check }}
