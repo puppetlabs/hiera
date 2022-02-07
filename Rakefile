@@ -1,17 +1,19 @@
 begin
-  require 'packaging'
-  Pkg::Util::RakeUtils.load_packaging_tasks
-rescue LoadError => e
-  puts "Error loading packaging rake tasks: #{e}"
-end
-
-begin
   require 'rubygems'
   require 'rspec/core/rake_task'
 rescue LoadError
 end
 
 Dir['tasks/**/*.rake'].each { |t| load t }
+
+if Rake.application.top_level_tasks.grep(/^(pl:|package:)/).any?
+  begin
+    require 'packaging'
+    Pkg::Util::RakeUtils.load_packaging_tasks
+  rescue LoadError => e
+    puts "Error loading packaging rake tasks: #{e}"
+  end
+end
 
 namespace :package do
   task :bootstrap do
@@ -33,7 +35,9 @@ task(:commits) do
   # This git command looks at the summary from every commit from this branch not in master.
   # Ideally this would compare against the branch that a PR is submitted against, but I don't
   # know how to get that information. Absent that, comparing with master should work in most cases.
-  %x{git log --no-merges --pretty=%s master..$HEAD}.each_line do |commit_summary|
+  commit_range = 'HEAD^..HEAD'
+  puts "Checking commits #{commit_range}"
+  %x{git log --no-merges --pretty=%s #{commit_range}}.each_line do |commit_summary|
     # This regex tests for the currently supported commit summary tokens: maint, doc, packaging, or hi-<number>.
     # The exception tries to explain it in more full.
     if /^\((maint|doc|packaging|hi-\d+)\)|revert/i.match(commit_summary).nil?
