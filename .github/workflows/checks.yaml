@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout current PR
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Install ruby version ${{ matrix.cfg.ruby }}
         uses: ruby/setup-ruby@v1
@@ -27,5 +29,9 @@ jobs:
           gem update --system --silent --no-document
           bundle config set without packaging development
           bundle install --jobs 4 --retry 3
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Run ${{ matrix.cfg.check }} check
         run: bundle exec ${{ matrix.cfg.check }}
