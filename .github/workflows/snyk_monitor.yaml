@@ -3,7 +3,7 @@ name: Snyk Monitor
 on:
   push:
     branches:
-      - main
+      - maint/main/PA-4191_add_snyk_monitoring
 jobs:
   snyk_monitor:
     if: ${{ github.repository_owner == 'puppetlabs' }}
