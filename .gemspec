@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "1.8.25"
   s.summary = "Light weight hierarchical data store"
   s.license = "Apache-2.0"
+  s.required_ruby_version = '>= 2.5.0'
 end
