@@ -7,7 +7,7 @@
 
 Gem::Specification.new do |s|
   s.name = "hiera"
-  version = "3.10.0"
+  version = "3.11.0"
   mdata = version.match(/(\d+\.\d+\.\d+)/)
   s.version = mdata ? mdata[1] : version
 
