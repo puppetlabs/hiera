@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         cfg:
-          - {check: rake commits, os: ubuntu-18.04, ruby: '2.5'}
+          - {check: rake commits, os: ubuntu-latest, ruby: '2.5'}
 
     runs-on: ${{ matrix.cfg.os }}
     steps:
