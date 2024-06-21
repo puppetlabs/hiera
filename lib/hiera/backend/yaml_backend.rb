@@ -16,7 +16,7 @@ class Hiera
 
         Backend.datasourcefiles(:yaml, scope, "yaml", order_override) do |source, yamlfile|
           data = @cache.read_file(yamlfile, Hash) do |data|
-            YAML.load(data) || {}
+            YAML.safe_load(data, aliases: true) || {}
           end
 
           next if data.empty?

@@ -239,4 +239,22 @@ describe "Hiera" do
       expect{ hiera.lookup('foo', nil, {}) }.to raise_error(Hiera::InterpolationLoop, "Lookup recursion detected in [hiera('role')]")
     end
   end
+
+  context 'when using yaml anchors and aliases' do
+    let!(:fixtures) { File.join(HieraSpec::FIXTURE_DIR, 'aliases') }
+
+    it 'should handle simple aliases' do
+      expect(hiera.lookup('greeting.hello', nil, {})).to eq('hi')
+    end
+
+    it 'should handle block aliases' do
+      expect(hiera.lookup('config.foo', nil, {})).to eq('bar')
+      expect(hiera.lookup('config.sub.val', nil, {})).to eq(1)
+    end
+
+    it 'should even allow aliases from aliases' do
+      expect(hiera.lookup('new_location.bar.baz', nil, {})).to eq('notbaz')
+      expect(hiera.lookup('new_location.bar.foo', nil, {})).to eq('foo')
+    end
+  end
 end

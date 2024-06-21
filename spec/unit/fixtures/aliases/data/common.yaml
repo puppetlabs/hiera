@@ -1,0 +1,29 @@
+---
+
+# string alias
+hello: &hello 'hi'
+greeting:
+  hello: *hello
+
+# block alias
+defaults: &defaults
+  foo: 'bar'
+  sub:
+    val: 1
+
+config:
+  <<: *defaults
+  baz: 'baz'
+
+# alias from alias
+bar: &bar
+  foo: 'foo'
+  baz: 'bazbaz'
+location:
+  planet: 'earth'
+  bar: &newalias
+    <<: *bar
+    baz: 'notbaz'
+new_location:
+  planet: 'mars'
+  bar: *newalias  #new_location.bar.baz is 'notbaz'
