@@ -31,6 +31,153 @@ describe "Hiera" do
     it 'allows keys with non alphanumeric characters' do
       expect(hiera.lookup('angry', nil, {})).to eq('not happy')
     end
+
+    it 'supports substring interpolation with literal arguments' do
+      expect(hiera.lookup('substring_literal', nil, {})).to eq('cde')
+    end
+
+    it 'supports substring interpolation to end of string' do
+      expect(hiera.lookup('substring_literal_to_end', nil, {})).to eq('cdef')
+    end
+
+    it 'supports substring interpolation with scope arguments' do
+      expect(hiera.lookup('substring_scope', nil, {'str' => 'abcdef', 'start' => 1, 'count' => 2})).to eq('bc')
+    end
+
+    it 'supports match interpolation with regex literals' do
+      expect(hiera.lookup('match_regex_true', nil, {})).to eq('true')
+      expect(hiera.lookup('match_regex_false', nil, {})).to eq('false')
+    end
+
+    it 'supports match interpolation with regex parentheses and flags' do
+      expect(hiera.lookup('match_regex_parens', nil, {})).to eq('true')
+      expect(hiera.lookup('match_regex_flags', nil, {})).to eq('true')
+    end
+
+    it 'supports match interpolation with escaped slash in regex' do
+      expect(hiera.lookup('match_regex_escaped_slash', nil, {})).to eq('true')
+    end
+
+    it 'supports match interpolation with plain string matching' do
+      expect(hiera.lookup('match_string_true', nil, {})).to eq('true')
+      expect(hiera.lookup('match_string_false', nil, {})).to eq('false')
+    end
+
+    it 'supports grep_captures interpolation with explicit separator' do
+      expect(hiera.lookup('grep_captures_simple', nil, {})).to eq('abc-123-def')
+    end
+
+    it 'supports grep_captures interpolation with custom separator (all groups)' do
+      expect(hiera.lookup('grep_captures_with_sep', nil, {})).to eq('abc_123_def')
+    end
+
+    it 'supports grep_captures interpolation with specific capture groups' do
+      expect(hiera.lookup('grep_captures_with_groups', nil, {})).to eq('abc_def')
+    end
+
+    it 'supports grep_captures interpolation with all capture groups' do
+      expect(hiera.lookup('grep_captures_all_groups', nil, {})).to eq('abc-123-def')
+    end
+
+    it 'returns empty string when grep_captures does not match' do
+      expect(hiera.lookup('grep_captures_no_match', nil, {})).to eq('')
+    end
+
+    it 'supports grep_captures with complex version-like pattern' do
+      expect(hiera.lookup('grep_captures_version', nil, {})).to eq('12345_widget_prod')
+    end
+
+    it 'supports grep_captures with empty separator to merge captures directly' do
+      expect(hiera.lookup('grep_captures_empty_sep', nil, {})).to eq('abc123')
+    end
+
+    it 'supports grep_captures with quoted regex pattern' do
+      expect(hiera.lookup('grep_captures_quoted_regex', nil, {})).to eq('abc_123')
+    end
+
+    it 'supports match with quoted regex pattern' do
+      expect(hiera.lookup('match_quoted_regex', nil, {})).to eq('true')
+    end
+
+    it 'supports grep_captures with curly brace quantifier in quoted regex' do
+      expect(hiera.lookup('grep_captures_curly_quantifier', nil, {})).to eq('12345_widget')
+    end
+
+    it 'supports version_gt returning true when first version is greater' do
+      expect(hiera.lookup('version_gt_true', nil, {})).to eq('true')
+    end
+
+    it 'supports version_gt returning false when first version is less' do
+      expect(hiera.lookup('version_gt_false', nil, {})).to eq('false')
+    end
+
+    it 'supports version_gt returning false when versions are equal' do
+      expect(hiera.lookup('version_gt_equal', nil, {})).to eq('false')
+    end
+
+    it 'supports version_gte returning true when first version is greater' do
+      expect(hiera.lookup('version_gte_true', nil, {})).to eq('true')
+    end
+
+    it 'supports version_gte returning true when versions are equal' do
+      expect(hiera.lookup('version_gte_equal', nil, {})).to eq('true')
+    end
+
+    it 'supports version_gte returning false when first version is less' do
+      expect(hiera.lookup('version_gte_false', nil, {})).to eq('false')
+    end
+
+    it 'supports version_lt returning true when first version is less' do
+      expect(hiera.lookup('version_lt_true', nil, {})).to eq('true')
+    end
+
+    it 'supports version_lt returning false when first version is greater' do
+      expect(hiera.lookup('version_lt_false', nil, {})).to eq('false')
+    end
+
+    it 'supports version_lt returning false when versions are equal' do
+      expect(hiera.lookup('version_lt_equal', nil, {})).to eq('false')
+    end
+
+    it 'supports version_lte returning true when first version is less' do
+      expect(hiera.lookup('version_lte_true', nil, {})).to eq('true')
+    end
+
+    it 'supports version_lte returning true when versions are equal' do
+      expect(hiera.lookup('version_lte_equal', nil, {})).to eq('true')
+    end
+
+    it 'supports version_lte returning false when first version is greater' do
+      expect(hiera.lookup('version_lte_false', nil, {})).to eq('false')
+    end
+
+    it 'handles semantic versioning correctly (1.10.0 > 1.9.0)' do
+      expect(hiera.lookup('version_semver', nil, {})).to eq('true')
+    end
+
+    it 'handles prerelease versions correctly (1.0.0.alpha < 1.0.0)' do
+      expect(hiera.lookup('version_prerelease', nil, {})).to eq('true')
+    end
+
+    it 'supports grep_captures with 5 groups and selected groups (no separator)' do
+      expect(hiera.lookup('grep_captures_5groups_selected', nil, {})).to eq('abcd123@#$')
+    end
+
+    it 'supports grep_captures with 5 groups and underscore separator' do
+      expect(hiera.lookup('grep_captures_5groups_underscore', nil, {})).to eq('abcd_123_@#$')
+    end
+
+    it 'supports grep_captures with 5 groups and explicit empty separator' do
+      expect(hiera.lookup('grep_captures_5groups_empty', nil, {})).to eq('abcd123@#$')
+    end
+
+    it 'supports grep_captures with 5 groups returning all groups concatenated' do
+      expect(hiera.lookup('grep_captures_5groups_all', nil, {})).to eq('abcd123ABC@#$456')
+    end
+
+    it 'supports grep_captures with 5 groups and separator only (all groups)' do
+      expect(hiera.lookup('grep_captures_5groups_sep_only', nil, {})).to eq('abcd-123-ABC-@#$-456')
+    end
   end
 
   context "when not finding value for interpolated key" do

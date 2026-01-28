@@ -10,3 +10,47 @@ angry: '%{alias("#@!&%|§")}'
   '#@!&%|§': 'not happy at all'
 
 very_angry: '%{alias("!$\%!.#@!&%|§")}'
+
+substring_literal: "%{substring('abcdef', 2, 3)}"
+substring_literal_to_end: "%{substring('abcdef', 2)}"
+substring_scope: "%{substring($str, $start, $count)}"
+
+match_regex_true: "%{match('abcdef', /cde/)}"
+match_regex_false: "%{match('abcdef', /xyz/)}"
+match_regex_parens: "%{match('abcdef', /(c(d)e)/)}"
+match_regex_flags: "%{match('ABCDEF', /cde/i)}"
+match_regex_escaped_slash: "%{match('a/b/c', /a\\/b/)}"
+match_string_true: "%{match('abcdef', 'cde')}"
+match_string_false: "%{match('abcdef', 'xyz')}"
+
+grep_captures_simple: "%{grep_captures('abc-123-def', /([a-z]+)-(\\d+)-([a-z]+)/, '-')}"
+grep_captures_with_sep: "%{grep_captures('abc-123-def', /([a-z]+)-(\\d+)-([a-z]+)/, '_')}"
+grep_captures_with_groups: "%{grep_captures('abc-123-def', /([a-z]+)-(\\d+)-([a-z]+)/, '_', [1,3])}"
+grep_captures_all_groups: "%{grep_captures('abc-123-def', /([a-z]+)-(\\d+)-([a-z]+)/, '-', [1,2,3])}"
+grep_captures_no_match: "%{grep_captures('xyz', /([a-z]+)-(\\d+)/)}"
+grep_captures_version: "%{grep_captures('12345-widget-org-prod-99', /(\\d+)-(\\w+)-(\\w+)-(\\w+)-(\\d+)/, '_', [1,2,4])}"
+grep_captures_empty_sep: "%{grep_captures('abc-123-def', /([a-z]+)-(\\d+)-([a-z]+)/, '', [1,2])}"
+grep_captures_quoted_regex: '%{grep_captures(''abc-123-def'', ''/([a-z]+)-(\d+)-([a-z]+)/'', ''_'', [1,2])}'
+match_quoted_regex: '%{match(''abc123'', ''/\d+/'')}'
+grep_captures_curly_quantifier: '%{grep_captures(''12345-widget'', ''/(\d{3,5})-(\w+)/'', ''_'', [1,2])}'
+
+version_gt_true: "%{version_gt('2.0.0', '1.0.0')}"
+version_gt_false: "%{version_gt('1.0.0', '2.0.0')}"
+version_gt_equal: "%{version_gt('1.0.0', '1.0.0')}"
+version_gte_true: "%{version_gte('2.0.0', '1.0.0')}"
+version_gte_equal: "%{version_gte('1.0.0', '1.0.0')}"
+version_gte_false: "%{version_gte('1.0.0', '2.0.0')}"
+version_lt_true: "%{version_lt('1.0.0', '2.0.0')}"
+version_lt_false: "%{version_lt('2.0.0', '1.0.0')}"
+version_lt_equal: "%{version_lt('1.0.0', '1.0.0')}"
+version_lte_true: "%{version_lte('1.0.0', '2.0.0')}"
+version_lte_equal: "%{version_lte('1.0.0', '1.0.0')}"
+version_lte_false: "%{version_lte('2.0.0', '1.0.0')}"
+version_semver: "%{version_gte('1.10.0', '1.9.0')}"
+version_prerelease: "%{version_lt('1.0.0.alpha', '1.0.0')}"
+
+grep_captures_5groups_selected: '%{grep_captures(''abcd 1234 ABCD !@#$ 4567'', ''/^([a-z]+).*?(\d{3}).*(ABC).* !(.{3}) (\d{3})/'', [1,2,4])}'
+grep_captures_5groups_underscore: '%{grep_captures(''abcd 1234 ABCD !@#$ 4567'', ''/^([a-z]+).*?(\d{3}).*(ABC).* !(.{3}) (\d{3})/'', ''_'', [1,2,4])}'
+grep_captures_5groups_empty: '%{grep_captures(''abcd 1234 ABCD !@#$ 4567'', ''/^([a-z]+).*?(\d{3}).*(ABC).* !(.{3}) (\d{3})/'', '''', [1,2,4])}'
+grep_captures_5groups_all: '%{grep_captures(''abcd 1234 ABCD !@#$ 4567'', ''/^([a-z]+).*?(\d{3}).*(ABC).* !(.{3}) (\d{3})/'')}'  
+grep_captures_5groups_sep_only: '%{grep_captures(''abcd 1234 ABCD !@#$ 4567'', ''/^([a-z]+).*?(\d{3}).*(ABC).* !(.{3}) (\d{3})/'', ''-'')}'
