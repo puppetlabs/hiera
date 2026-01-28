@@ -144,6 +144,96 @@ other.key: 'hiera data %{hiera("a.''b.c''.d")}'
 Note that two single quotes are used to escape a single quote inside a single quoted string
 (that's YAML syntax, not Hiera) and that the quoted key must be quoted in turn.
 
+### Interpolation Functions
+
+Hiera supports interpolation functions that can manipulate strings and perform pattern matching.
+These functions can be used in both data values and hierarchy paths in `hiera.yaml`.
+
+#### substring
+
+Extract a portion of a string:
+
+<pre>
+# substring(string, start)        - from start index to end
+# substring(string, start, count) - from start index, count characters
+
+path: "nodes/%{substring($certname, 0, 4)}"
+value: "%{substring('abcdef', 2, 3)}"  # returns 'cde'
+</pre>
+
+Arguments can be:
+- Quoted literals: `'string'` or `"string"`
+- Scope variables: `$varname` or `varname`
+- Integers: `0`, `5`, etc.
+
+Indexing is 0-based. Negative indices are supported (e.g., `-1` for last character).
+
+#### match
+
+Test if a string matches a pattern:
+
+<pre>
+# match(string, /regex/)  - returns 'true' or 'false'
+# match(string, 'needle') - returns 'true' if string contains needle
+
+is_web: "%{match($role, '/^web/')}"
+has_db: "%{match($hostname, 'db')}"
+</pre>
+
+Regex literals support flags:
+- `i` - case insensitive
+- `m` - multiline
+- `x` - extended (ignore whitespace)
+
+<pre>
+# Case-insensitive match
+match_result: "%{match('HELLO', '/hello/i')}"  # returns 'true'
+</pre>
+
+#### grep_captures
+
+Extract capture groups from a regex match and join them with a separator:
+
+<pre>
+# grep_captures(string, '/regex/')                      - returns all capture groups concatenated
+# grep_captures(string, '/regex/', separator)           - returns all groups joined by separator
+# grep_captures(string, '/regex/', [groups])            - returns specified groups concatenated
+# grep_captures(string, '/regex/', separator, [groups]) - returns specified groups joined by separator
+
+# Extract all capture groups (default: concatenated)
+all: "%{grep_captures('abc-123-def', '/([a-z]+)-(\d+)-([a-z]+)/')}"  # returns 'abc123def'
+
+# Extract all groups with separator
+parts: "%{grep_captures('abc-123-def', '/([a-z]+)-(\d+)-([a-z]+)/', '-')}"  # returns 'abc-123-def'
+
+# Extract specific groups (concatenated)
+selected: "%{grep_captures('abc-123-def', '/([a-z]+)-(\d+)-([a-z]+)/', [1,3])}"  # returns 'abcdef'
+
+# Extract specific groups with custom separator
+custom: "%{grep_captures('abc-123-def', '/([a-z]+)-(\d+)-([a-z]+)/', '_', [1,3])}"  # returns 'abc_def'
+</pre>
+
+**Tip:** Wrap regex patterns in single quotes (`'/pattern/'`) for cleaner syntax:
+- Curly brace quantifiers work: `'/\d{3,5}/'`
+- No double-escaping needed: `'/\d+/'` instead of `/\\d+/`
+
+#### Version Comparison Functions
+
+Compare semantic versions using `Gem::Version` comparison:
+
+<pre>
+# version_gt(a, b)  - returns 'true' if a > b
+# version_gte(a, b) - returns 'true' if a >= b
+# version_lt(a, b)  - returns 'true' if a < b
+# version_lte(a, b) - returns 'true' if a <= b
+
+is_newer: "%{version_gt($app_version, '2.0.0')}"      # true if app_version > 2.0.0
+is_compatible: "%{version_gte($ruby_version, '2.7.0')}"  # true if ruby >= 2.7.0
+needs_upgrade: "%{version_lt($os_version, '8.0')}"    # true if os < 8.0
+</pre>
+
+Handles semantic versioning correctly (`1.10.0 > 1.9.0`) and prerelease versions (`1.0.0.alpha < 1.0.0`).
+
 ## Future Enhancements
 
  * More backends should be created

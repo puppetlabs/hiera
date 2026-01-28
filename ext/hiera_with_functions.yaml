@@ -1,0 +1,40 @@
+# Example hiera.yaml demonstrating interpolation functions
+#
+# This configuration shows how to use substring() and match() functions
+# in hierarchy paths for dynamic data source resolution.
+#
+---
+:backends:
+  - yaml
+
+:logger: console
+
+:hierarchy:
+  # Node-specific data using full certname
+  - name: "node"
+    path: "nodes/%{certname}.yaml"
+  
+  # Group nodes by first 4 characters of certname
+  # e.g., web01.example.com -> nodes/prefix/web0
+  - name: "node prefix"
+    path: "nodes/prefix/%{substring($certname, 0, 4)}.yaml"
+  
+  # Role-based configuration
+  - name: "role"
+    path: "roles/%{role}.yaml"
+  
+  # Environment-specific
+  - name: "environment"
+    path: "env/%{environment}.yaml"
+  
+  # OS family with major version only
+  # e.g., CentOS 7.9.2009 -> os/CentOS/7
+  - name: "os"
+    path: "os/%{operatingsystem}/%{substring($operatingsystemrelease, 0, 1)}.yaml"
+  
+  # Common defaults
+  - name: "common"
+    path: "common.yaml"
+
+:yaml:
+  :datadir: /etc/puppetlabs/code/hieradata
